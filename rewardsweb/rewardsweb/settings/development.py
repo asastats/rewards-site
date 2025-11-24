@@ -54,4 +54,4 @@ LIVE_TEST_SERVER_ADDRESS = get_env_variable(
     "DJANGO_LIVE_TEST_SERVER_ADDRESS", "0.0.0.0:8081"
 )
 
-ISSUE_TRACKER_NAME = "test"  # "rewards-site"
+ISSUE_TRACKER_NAME = "channel"  # "rewards-site" "test"

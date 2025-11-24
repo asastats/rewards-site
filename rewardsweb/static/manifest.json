@@ -24,8 +24,8 @@
       "node_modules/@perawallet/connect/dist/App-428f5096.js"
     ]
   },
-  "_index-DD2Zj1gE.js": {
-    "file": "assets/index-DD2Zj1gE.js",
+  "_index-CLJo1Ytg.js": {
+    "file": "assets/index-CLJo1Ytg.js",
     "name": "index",
     "isDynamicEntry": true,
     "imports": [
@@ -42,19 +42,19 @@
     "src": "index.html",
     "isEntry": true,
     "dynamicImports": [
-      "_index-DD2Zj1gE.js",
+      "_index-CLJo1Ytg.js",
       "__vite-optional-peer-dep:@agoralabs-sh/avm-web-provider:@txnlab/use-wallet",
       "node_modules/lute-connect/dist/main.esm.js",
       "_index-BF62KPoo.js"
     ]
   },
   "node_modules/@blockshake/defly-connect/dist/App-58ab7d48.js": {
-    "file": "assets/App-58ab7d48-CAFIoEqt.js",
+    "file": "assets/App-58ab7d48-BoQNvH2A.js",
     "name": "App-58ab7d48",
     "src": "node_modules/@blockshake/defly-connect/dist/App-58ab7d48.js",
     "isDynamicEntry": true,
     "imports": [
-      "_index-DD2Zj1gE.js",
+      "_index-CLJo1Ytg.js",
       "index.html",
       "_bowser-6lpdwbQt.js"
     ]

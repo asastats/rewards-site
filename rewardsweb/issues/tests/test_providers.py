@@ -1,5 +1,8 @@
 """Testing module for :py:mod:`issues.providers` module."""
 
+import os
+from unittest import mock
+
 import pytest
 from django.conf import settings
 
@@ -11,32 +14,115 @@ from issues.providers import (
     GithubProvider,
     GitlabProvider,
 )
-from utils.constants.ui import MISSING_TOKEN_TEXT
+from utils.constants.ui import MISSING_API_TOKEN_TEXT
+
+
+class DummyBaseIssueProvider(BaseIssueProvider):
+
+    def _get_client(self, issue_tracker_api_token):
+        super()._get_client(issue_tracker_api_token)
+        return f"{issue_tracker_api_token}"
+
+    def _get_repository(self):
+        super()._get_repository()
+        return "repo"
+
+    def _close_issue_with_labels_impl(self, issue_number, labels_to_set, comment):
+        super()._close_issue_with_labels_impl(issue_number, labels_to_set, comment)
+        return f"{issue_number} {labels_to_set} {comment}"
+
+    def _create_issue_impl(self, title, body, labels):
+        super()._create_issue_impl(title, body, labels)
+        return f"title: {title}, body: {body} labels:{labels}"
+
+    def _fetch_issues_impl(self, state, since):
+        super()._fetch_issues_impl(state, since)
+        return f"state: {state} since: {since}"
+
+    def _get_issue_by_number_impl(self, issue_number):
+        super()._get_issue_by_number_impl(issue_number)
+        return issue_number
+
+    def _set_labels_to_issue_impl(self, issue_number, labels_to_set):
+        super()._set_labels_to_issue_impl(issue_number, labels_to_set)
+        return f"issue_number: {issue_number} labels_to_set: {labels_to_set}"
+
+
+class TestBaseIssueProvider:
+    """Testing class for :class:`issues.providers.BaseIssueProvider` interface."""
+
+    def test_issues_providers_baseissueprovider_is_abstract(self):
+        with pytest.raises(TypeError) as exc_info:
+            BaseIssueProvider()
+
+        assert "Can't instantiate abstract class" in str(exc_info.value)
+
+    def test_issues_providers_baseissueprovider_get_client(self):
+        c = DummyBaseIssueProvider(None)
+        assert c._get_client("ABC") == "ABC"
+
+    def test_issues_providers_baseissueprovider_get_repository(self):
+        c = DummyBaseIssueProvider(None)
+        assert c._get_repository() == "repo"
+
+    def test_issues_providers_baseissueprovider_close_issue_with_labels_impl(self):
+        c = DummyBaseIssueProvider(None)
+        assert (
+            c._close_issue_with_labels_impl("issue_number", "labels_to_set", "comment")
+            == "issue_number labels_to_set comment"
+        )
+
+    def test_issues_providers_baseissueprovider_create_issue_impl(self):
+        c = DummyBaseIssueProvider(None)
+        assert (
+            c._create_issue_impl("title", "body", "labels")
+            == "title: title, body: body labels:labels"
+        )
+
+    def test_issues_providers_baseissueprovider_fetch_issues_impl(self):
+        c = DummyBaseIssueProvider(None)
+        assert c._fetch_issues_impl("state", "since") == "state: state since: since"
+
+    def test_issues_providers_baseissueprovider_get_issue_by_number_impl(self):
+        c = DummyBaseIssueProvider(None)
+        assert c._get_issue_by_number_impl("issue_number") == "issue_number"
+
+    def test_issues_providers_baseissueprovider_set_labels_to_issue_impl(self):
+        c = DummyBaseIssueProvider(None)
+        assert (
+            c._set_labels_to_issue_impl("issue_number", "labels_to_set")
+            == "issue_number: issue_number labels_to_set: labels_to_set"
+        )
 
 
 class TestIssuesProvidersBitbucketApp:
     """Testing class for :class:`issues.providers.BitbucketApp`."""
 
     # # jwt_token
-    def est_issues_providers_bitbucketapp_jwt_token_no_env_vars(self, mocker):
-        mocked_getenv = mocker.patch("os.getenv", return_value=None)
+    def test_issues_providers_bitbucketapp_jwt_token_no_env_vars(self, mocker):
+        mocked_get_env = mocker.patch(
+            "issues.providers.get_env_variable", return_value=None
+        )
         instance = BitbucketApp()
         assert instance.jwt_token() is None
-        mocked_getenv.assert_has_calls(
+        mocked_get_env.assert_has_calls(
             [
-                mocker.call("BITBUCKET_CLIENT_KEY"),
-                mocker.call("BITBUCKET_SHARED_SECRET"),
+                mocker.call("BITBUCKET_CLIENT_KEY", ""),
+                mocker.call("BITBUCKET_SHARED_SECRET", ""),
             ]
         )
 
-    def est_issues_providers_bitbucketapp_jwt_token_success(self, mocker):
-        mocker.patch("os.getenv", side_effect=["test_client_key", "test_shared_secret"])
+    def test_issues_providers_bitbucketapp_jwt_token_success(self, mocker):
+        mocker.patch(
+            "issues.providers.get_env_variable",
+            side_effect=["test_client_key", "test_shared_secret"],
+        )
         mock_datetime = mocker.MagicMock()
         mock_timedelta = mocker.MagicMock()
-        mocker.patch("bitbucketapp.datetime", mock_datetime)
-        mocker.patch("bitbucketapp.timedelta", mock_timedelta)
+        mocker.patch("issues.providers.datetime", mock_datetime)
+        mocker.patch("issues.providers.timedelta", mock_timedelta)
         mock_jwt = mocker.MagicMock()
-        mocker.patch("bitbucketapp.jwt", mock_jwt)
+        mocker.patch("issues.providers.jwt", mock_jwt)
 
         instance = BitbucketApp()
         instance.jwt_token()
@@ -49,7 +135,7 @@ class TestIssuesProvidersBitbucketApp:
         assert "exp" in args[0]
 
     # # access_token
-    def est_issues_providers_bitbucketapp_access_token_no_jwt(self, mocker):
+    def test_issues_providers_bitbucketapp_access_token_no_jwt(self, mocker):
         mock_jwt_token = mocker.patch.object(
             BitbucketApp, "jwt_token", return_value=None
         )
@@ -57,12 +143,12 @@ class TestIssuesProvidersBitbucketApp:
         assert instance.access_token() is None
         mock_jwt_token.assert_called_once_with()
 
-    def est_issues_providers_bitbucketapp_access_token_request_fails(self, mocker):
+    def test_issues_providers_bitbucketapp_access_token_request_fails(self, mocker):
         mocker.patch.object(BitbucketApp, "jwt_token", return_value="test_jwt")
         mock_response = mocker.MagicMock()
         mock_response.status_code = 400
         mocked_requests = mocker.patch(
-            "bitbucketapp.requests.post", return_value=mock_response
+            "issues.providers.requests.post", return_value=mock_response
         )
         instance = BitbucketApp()
         assert instance.access_token() is None
@@ -72,13 +158,13 @@ class TestIssuesProvidersBitbucketApp:
             data={"grant_type": "urn:bitbucket:oauth2:jwt"},
         )
 
-    def est_issues_providers_bitbucketapp_access_token_success(self, mocker):
+    def test_issues_providers_bitbucketapp_access_token_success(self, mocker):
         mocker.patch.object(BitbucketApp, "jwt_token", return_value="test_jwt")
         mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"access_token": "test_token"}
         mocked_requests = mocker.patch(
-            "bitbucketapp.requests.post", return_value=mock_response
+            "issues.providers.requests.post", return_value=mock_response
         )
         instance = BitbucketApp()
         assert instance.access_token() == "test_token"
@@ -326,6 +412,56 @@ class TestIssuesProvidersBitbucketProvider:
         provider.client.issue_comment.assert_called_once()
         provider.client.set_issue_status.assert_called_once()
 
+    def test_issues_providers_bitbucketprovider_close_issue_with_labels_impl_no_labels_or_comment(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        provider._close_issue_with_labels_impl(1, None, None)
+        provider.client.update_issue.assert_not_called()
+        provider.client.issue_comment.assert_not_called()
+        provider.client.set_issue_status.assert_called_once()
+
+    def test_issues_providers_bitbucketprovider_close_issue_with_labels_impl_only_labels(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        provider._close_issue_with_labels_impl(1, ["label1"], None)
+        provider.client.update_issue.assert_called_once_with(
+            repo="repo_slug", issue_id=1, components=["label1"]
+        )
+        provider.client.issue_comment.assert_not_called()
+        provider.client.set_issue_status.assert_called_once_with(
+            repo="repo_slug", issue_id=1, status="resolved"
+        )
+
+    def test_issues_providers_bitbucketprovider_close_issue_with_labels_impl_only_comment(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        provider._close_issue_with_labels_impl(1, None, "comment")
+        provider.client.update_issue.assert_not_called()
+        provider.client.issue_comment.assert_called_once_with(
+            repo="repo_slug", issue_id=1, content="comment"
+        )
+        provider.client.set_issue_status.assert_called_once_with(
+            repo="repo_slug", issue_id=1, status="resolved"
+        )
+
     # # _create_issue_impl
     def test_issues_providers_bitbucketprovider_create_issue_impl(self, mocker):
         mocker.patch("issues.providers.BitbucketProvider._get_client")
@@ -336,6 +472,29 @@ class TestIssuesProvidersBitbucketProvider:
         provider.client = mocker.MagicMock()
         provider._create_issue_impl("title", "body", ["label1"])
         provider.client.create_issue.assert_called_once()
+
+    def test_issues_providers_bitbucketprovider_create_issue_impl_default_fields(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+
+        title = "Test Title"
+        body = "Test Body"
+        labels = ["bug"]
+        provider._create_issue_impl(title, body, labels)
+
+        provider.client.create_issue.assert_called_once_with(
+            repo="repo_slug",
+            title=title,
+            content=body,
+            kind="bug",
+            priority="major",
+        )
 
     # # _fetch_issues_impl
     def test_issues_providers_bitbucketprovider_fetch_issues_impl(self, mocker):
@@ -362,6 +521,106 @@ class TestIssuesProvidersBitbucketProvider:
         provider.client.get_issue.return_value = issue
         provider._get_issue_by_number_impl(1)
         provider.client.get_issue.assert_called_once_with(repo="repo_slug", issue_id=1)
+
+    def test_issues_providers_bitbucketprovider_get_issue_by_number_impl_resolved(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        issue.state = "resolved"
+        issue.edited_on = "some_date"
+        issue.assignee = None
+        issue.reporter = None
+        provider.client.get_issue.return_value = issue
+
+        result = provider._get_issue_by_number_impl(1)
+        assert result["issue"]["closed_at"] == "some_date"
+
+    def test_issues_providers_bitbucketprovider_get_issue_by_number_impl_no_components(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        # Ensure 'components' attribute does not exist
+        del issue.components
+        issue.assignee = None
+        issue.reporter = None
+        provider.client.get_issue.return_value = issue
+
+        result = provider._get_issue_by_number_impl(1)
+        assert result["issue"]["labels"] == []
+
+    def test_issues_providers_bitbucketprovider_get_issue_by_number_impl_assign_report(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        issue.assignee = {"display_name": "test_assignee"}
+        issue.reporter = {"display_name": "test_reporter"}
+        provider.client.get_issue.return_value = issue
+
+        result = provider._get_issue_by_number_impl(1)
+        assert result["issue"]["assignees"] == ["test_assignee"]
+        assert result["issue"]["user"] == "test_reporter"
+
+    # # _set_labels_to_issue_impl
+    def test_issues_providers_bitbucketprovider_set_labels_to_issue_impl_resolved(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        issue.components = "components"
+        provider.client.get_issue.return_value = issue
+        result = provider._set_labels_to_issue_impl(100, ["label1", "label2"])
+        assert "Added components" in result["message"]
+        assert result["current_labels"] == "components"
+        provider.client.update_issue.assert_called_once_with(
+            repo="repo_slug", issue_id=100, components=["label1", "label2"]
+        )
+        provider.client.get_issue.assert_called_once_with(
+            repo="repo_slug", issue_id=100
+        )
+
+    def test_issues_providers_bitbucketprovider_set_labels_to_issue_impl_no_components(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        issue = (1, 2)
+        provider.client.get_issue.return_value = issue
+        result = provider._set_labels_to_issue_impl(100, ["label1", "label2"])
+        assert "Added components" in result["message"]
+        assert result["current_labels"] == []
+        provider.client.update_issue.assert_called_once_with(
+            repo="repo_slug", issue_id=100, components=["label1", "label2"]
+        )
+        provider.client.get_issue.assert_called_once_with(
+            repo="repo_slug", issue_id=100
+        )
 
 
 class TestIssuesProvidersGithubProvider:
@@ -400,6 +659,109 @@ class TestIssuesProvidersGithubProvider:
         mocked_github.assert_called_once_with(auth=mocked_auth_token.return_value)
         mocked_githubapp.assert_not_called()
 
+    def test_issues_providers_githubprovider_get_client_with_app_token(self, mocker):
+        mocked_auth_token = mocker.patch("issues.providers.Auth.Token")
+        mocked_github = mocker.patch("issues.providers.Github")
+        mock_app_client = mocker.MagicMock()
+        mocker.patch("issues.providers.GitHubApp.client", return_value=mock_app_client)
+        user = mocker.MagicMock()
+        user.profile.issue_tracker_api_token = "some_token"
+        provider = GithubProvider(user)
+        returned = provider._get_client()
+        assert returned == mock_app_client
+        mocked_auth_token.assert_not_called()
+        mocked_github.assert_not_called()
+
+    def test_issues_providers_githubprovider_get_client_no_token(self, mocker):
+        mocker.patch("issues.providers.GitHubApp.client", return_value=None)
+        user = mocker.MagicMock()
+        user.profile.issue_tracker_api_token = ""
+        provider = GithubProvider(user)
+        returned = provider._get_client()
+        assert returned is False
+
+    def test_issues_providers_githubprovider_get_client_functionality(self, mocker):
+        mocked_auth_token = mocker.patch("issues.providers.Auth.Token")
+        mocked_github = mocker.patch("issues.providers.Github")
+        mocker.patch("issues.providers.GitHubApp.client", return_value=None)
+        user, token = mocker.MagicMock(), mocker.MagicMock()
+        user.profile.issue_tracker_api_token = token
+        provider = GithubProvider(user)
+        mocked_auth_token.reset_mock()
+        mocked_github.reset_mock()
+        returned = provider._get_client()
+        assert returned == mocked_github.return_value
+        mocked_auth_token.assert_called_once_with(token)
+        mocked_github.assert_called_once_with(auth=mocked_auth_token.return_value)
+
+    # # _close_issue_with_labels_impl
+    def test_issues_providers_githubprovider_close_issue_with_labels_impl_no_labels(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+
+        provider = GithubProvider(mocker.MagicMock())
+        provider.repo = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        issue.user = None
+        provider.repo.get_issue.return_value = issue
+        issue_number, labels_to_set, comment = 101, [], "comment"
+        result = provider._close_issue_with_labels_impl(
+            issue_number, labels_to_set, comment
+        )
+        assert "Closed issue" in result["message"]
+        assert result["issue_state"] == issue.state
+        issue.create_comment.assert_called_once_with(comment)
+        issue.set_labels.assert_not_called()
+
+    def test_issues_providers_githubprovider_close_issue_with_labels_impl_no_comment(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        provider = GithubProvider(mocker.MagicMock())
+        provider.repo = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        provider.repo.get_issue.return_value = issue
+        issue_number, labels_to_set, comment = 101, ["label1", "label2"], ""
+        result = provider._close_issue_with_labels_impl(
+            issue_number, labels_to_set, comment
+        )
+        assert "Closed issue" in result["message"]
+        assert result["issue_state"] == issue.state
+        issue.set_labels.assert_called_once_with("label1", "label2")
+        issue.create_comment.assert_not_called()
+
+    # # _fetch_issues_impl
+    def test_issues_providers_githubprovider_fetch_issues_impl_functionality(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        provider = GithubProvider(mocker.MagicMock())
+        provider.repo = mocker.MagicMock()
+        state, since = "state", "since"
+        returned = provider._fetch_issues_impl(state, since)
+        assert returned == provider.repo.get_issues.return_value
+        provider.repo.get_issues.assert_called_once_with(
+            state=state, sort="updated", direction="asc", since=since
+        )
+
+    # # _get_issue_by_number_impl
+    def test_issues_providers_githubprovider_get_issue_by_number_impl_no_user(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        provider = GithubProvider(mocker.MagicMock())
+        provider.repo = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        issue.user = None
+        provider.repo.get_issue.return_value = issue
+        result = provider._get_issue_by_number_impl(1)
+        assert result["issue"]["user"] is None
+
     # # _get_repository
     def test_issues_providers_githubprovider_get_repository_for_client_none(
         self, mocker
@@ -434,7 +796,41 @@ class TestIssuesProvidersGithubProvider:
         returned = provider.close_issue_with_labels(
             mocker.MagicMock(), mocker.MagicMock()
         )
-        assert returned == {"success": False, "error": MISSING_TOKEN_TEXT}
+        assert returned == {"success": False, "error": MISSING_API_TOKEN_TEXT}
+
+    def test_issues_providers_githubprovider_close_issue_with_labels_for_exception(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        mocker.patch(
+            "issues.providers.GithubProvider._close_issue_with_labels_impl",
+            side_effect=Exception("error1"),
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.close_issue_with_labels(
+            mocker.MagicMock(), mocker.MagicMock()
+        )
+        assert returned == {"success": False, "error": "error1"}
+
+    def test_issues_providers_githubprovider_close_issue_with_labels_functionality(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        result = {"foo": "bar"}
+        mocker.patch(
+            "issues.providers.BaseIssueProvider._close_issue_with_labels_impl",
+            return_value=result,
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.close_issue_with_labels(
+            mocker.MagicMock(), mocker.MagicMock()
+        )
+        assert returned["success"]
+        assert "Closed issue" in returned["message"]
 
     # # create_issue
     def test_issues_providers_githubprovider_create_issue_for_no_client(self, mocker):
@@ -444,7 +840,33 @@ class TestIssuesProvidersGithubProvider:
         provider = GithubProvider(user)
         provider.client = None
         returned = provider.create_issue(mocker.MagicMock(), mocker.MagicMock())
-        assert returned == {"success": False, "error": MISSING_TOKEN_TEXT}
+        assert returned == {"success": False, "error": MISSING_API_TOKEN_TEXT}
+
+    def test_issues_providers_githubprovider_create_issue_for_exception(self, mocker):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        mocker.patch(
+            "issues.providers.GithubProvider._create_issue_impl",
+            side_effect=Exception("error1"),
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.create_issue(mocker.MagicMock(), mocker.MagicMock())
+        assert returned == {"success": False, "error": "error1"}
+
+    def test_issues_providers_githubprovider_create_issue_functionality(self, mocker):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        result = {"foo": "bar"}
+        mocker.patch(
+            "issues.providers.BaseIssueProvider._create_issue_impl",
+            return_value=result,
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.create_issue(mocker.MagicMock(), mocker.MagicMock())
+        assert returned["success"]
+        assert "issue_number" in returned
 
     # # fetch_issues
     def test_issues_providers_githubprovider_fetch_issues_for_no_client(self, mocker):
@@ -456,6 +878,34 @@ class TestIssuesProvidersGithubProvider:
         returned = provider.fetch_issues()
         assert returned == []
 
+    def test_issues_providers_githubprovider_fetch_issues_for_exception(self, mocker):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        mocker.patch(
+            "issues.providers.GithubProvider._fetch_issues_impl",
+            side_effect=Exception("error1"),
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        with mock.patch("issues.providers.logger") as mocked_logger:
+            returned = provider.fetch_issues()
+            mocked_logger.error.assert_called_once_with("Error fetching issues: error1")
+        assert returned == []
+
+    def test_issues_providers_githubprovider_fetch_issues_functionality(self, mocker):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        issues = mocker.MagicMock()
+        mocker.patch(
+            "issues.providers.GithubProvider._fetch_issues_impl",
+            return_value=issues,
+        )
+
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.fetch_issues()
+        assert returned == issues
+
     # # issue_by_number
     def test_issues_providers_githubprovider_issue_by_number_for_no_client(
         self, mocker
@@ -466,7 +916,37 @@ class TestIssuesProvidersGithubProvider:
         provider = GithubProvider(user)
         provider.client = None
         returned = provider.issue_by_number(mocker.MagicMock())
-        assert returned == {"success": False, "error": MISSING_TOKEN_TEXT}
+        assert returned == {"success": False, "error": MISSING_API_TOKEN_TEXT}
+
+    def test_issues_providers_githubprovider_issue_by_number_for_exception(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        mocker.patch(
+            "issues.providers.GithubProvider._get_issue_by_number_impl",
+            side_effect=Exception("error1"),
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.issue_by_number(mocker.MagicMock())
+        assert returned == {"success": False, "error": "error1"}
+
+    def test_issues_providers_githubprovider_issue_by_number_functionality(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        result = {"foo": "bar"}
+        mocker.patch(
+            "issues.providers.BaseIssueProvider._get_issue_by_number_impl",
+            return_value=result,
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.issue_by_number(mocker.MagicMock())
+        assert returned["success"]
+        assert "Retrieved issue" in returned["message"]
 
     # # set_labels_to_issue
     def test_issues_providers_githubprovider_set_labels_to_issue_for_no_client(
@@ -478,7 +958,37 @@ class TestIssuesProvidersGithubProvider:
         provider = GithubProvider(user)
         provider.client = None
         returned = provider.set_labels_to_issue(mocker.MagicMock(), mocker.MagicMock())
-        assert returned == {"success": False, "error": MISSING_TOKEN_TEXT}
+        assert returned == {"success": False, "error": MISSING_API_TOKEN_TEXT}
+
+    def test_issues_providers_githubprovider_set_labels_to_issue_for_exception(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        mocker.patch(
+            "issues.providers.GithubProvider._set_labels_to_issue_impl",
+            side_effect=Exception("error1"),
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.set_labels_to_issue(mocker.MagicMock(), mocker.MagicMock())
+        assert returned == {"success": False, "error": "error1"}
+
+    def test_issues_providers_githubprovider_set_labels_to_issue_functionality(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        result = {"foo": "bar"}
+        mocker.patch(
+            "issues.providers.BaseIssueProvider._set_labels_to_issue_impl",
+            return_value=result,
+        )
+        user = mocker.MagicMock()
+        provider = GithubProvider(user)
+        returned = provider.set_labels_to_issue(mocker.MagicMock(), mocker.MagicMock())
+        assert returned["success"]
+        assert "Added labels" in returned["message"]
 
 
 class TestIssuesProvidersGitlabProvider:
@@ -489,27 +999,97 @@ class TestIssuesProvidersGitlabProvider:
 
     # # __init__
     def test_issues_providers_gitlabprovider_init_functionality(self, mocker):
-        mocked_client = mocker.patch("issues.providers.GitlabProvider._get_client")
-        mocked_repo = mocker.patch("issues.providers.GitlabProvider._get_repository")
+        mocked_client_instance = mocker.MagicMock()
+        mocked_client = mocker.patch(
+            "issues.providers.GitlabProvider._get_client",
+            return_value=mocked_client_instance,
+        )
+        mocked_repo_instance = mocker.MagicMock()
+        mocked_repo = mocker.patch(
+            "issues.providers.GitlabProvider._get_repository",
+            return_value=mocked_repo_instance,
+        )
         user = mocker.MagicMock()
         provider = GitlabProvider(user)
         assert provider.user == user
-        assert provider.client == mocked_client.return_value
-        assert provider.repo == mocked_repo.return_value
+        assert provider.client == mocked_client_instance
+        assert provider.repo == mocked_repo_instance
         mocked_client.assert_called_once_with(issue_tracker_api_token=None)
         mocked_repo.assert_called_once_with()
 
     # # _get_client
-    def test_issues_providers_gitlabprovider_get_client(self, mocker):
+    def test_issues_providers_gitlabprovider_get_client_with_issue_tracker_api_token(
+        self, mocker
+    ):
+        mocked_get_env_variable = mocker.patch("issues.providers.get_env_variable")
         mocked_gitlab = mocker.patch("issues.providers.Gitlab")
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
         issue_tracker_api_token = mocker.MagicMock()
         provider = GitlabProvider(mocker.MagicMock())
         mocked_gitlab.reset_mock()
+        mocked_get_env_variable.reset_mock()
         url = "https://gitlab.com"
+        mocked_get_env_variable = mocker.patch(
+            "issues.providers.get_env_variable", return_value=url
+        )
         returned = provider._get_client(issue_tracker_api_token=issue_tracker_api_token)
         assert returned == mocked_gitlab.return_value
         mocked_gitlab.assert_called_once_with(
             url=url, private_token=issue_tracker_api_token
+        )
+
+    def test_issues_providers_gitlabprovider_get_client_with_pat(self, mocker):
+        mocked_get_env_variable = mocker.patch("issues.providers.get_env_variable")
+        mocked_gitlab = mocker.patch(
+            "issues.providers.Gitlab",
+        )
+        mocked_gitlab = mocker.patch("issues.providers.Gitlab")
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        user = mocker.MagicMock()
+        user.profile.issue_tracker_api_token = None
+        provider = GitlabProvider(user)
+        mocked_gitlab.reset_mock()
+        mocked_get_env_variable.reset_mock()
+        mocked_get_env_variable = mocker.patch(
+            "issues.providers.get_env_variable",
+            side_effect=["https://gitlab.com", "test_pat_token"],
+        )
+        returned = provider._get_client()
+        mocked_gitlab.assert_called_once_with(
+            url="https://gitlab.com", private_token="test_pat_token"
+        )
+        assert returned == mocked_gitlab.return_value
+
+    def test_issues_providers_gitlabprovider_get_client_no_token(self, mocker):
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        mocked_get_env_variable = mocker.patch(
+            "issues.providers.get_env_variable", return_value=None
+        )
+        mock_user = mocker.MagicMock()
+        mock_user.profile.issue_tracker_api_token = None
+        provider = GitlabProvider(mock_user)
+        mocked_get_env_variable.reset_mock()
+        assert provider._get_client() is None
+
+    def test_issues_providers_gitlabprovider_get_client_functionality(self, mocker):
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        mocked_get_env_variable = mocker.patch("issues.providers.get_env_variable")
+        mocked_gitlab = mocker.patch("issues.providers.Gitlab")
+        mocker.patch.dict(os.environ, {}, clear=True)
+        mock_user = mocker.MagicMock()
+        token = mocker.MagicMock()
+        mock_user.profile.issue_tracker_api_token = token
+        provider = GitlabProvider(mock_user)
+        mocked_gitlab.reset_mock()
+        mocked_get_env_variable.reset_mock()
+        mocked_get_env_variable = mocker.patch(
+            "issues.providers.get_env_variable",
+            side_effect=["https://gitlab.com", ""],
+        )
+        returned = provider._get_client()
+        assert returned == mocked_gitlab.return_value
+        mocked_gitlab.assert_called_once_with(
+            url="https://gitlab.com", private_token=token
         )
 
     # # _get_repository
@@ -534,6 +1114,35 @@ class TestIssuesProvidersGitlabProvider:
             f"{settings.ISSUE_TRACKER_OWNER}/{settings.ISSUE_TRACKER_NAME}"
         )
 
+    def test_issues_providers_gitlabprovider_get_project_no_project_id(self, mocker):
+        mocker.patch(
+            "issues.providers.GitlabProvider._get_client",
+            return_value=mocker.MagicMock(),
+        )
+        mocker.patch(
+            "issues.providers.GitlabProvider._get_repository", return_value=None
+        )
+        mocker.patch(
+            "issues.providers.os.getenv",
+            side_effect=lambda key, default=None: (
+                None if key == "GITLAB_PROJECT_ID" else default
+            ),
+        )
+        provider = GitlabProvider(mocker.MagicMock())
+        assert provider._get_project() is None
+
+    def test_issues_providers_gitlabprovider_get_project_functionality(self, mocker):
+        mocker.patch.dict(os.environ, {"GITLAB_PROJECT_ID": "test_project_id"})
+        mock_client = mocker.MagicMock()
+        mocker.patch(
+            "issues.providers.GitlabProvider._get_client", return_value=mock_client
+        )
+        provider = GitlabProvider(mocker.MagicMock())
+        mock_client.projects.get.reset_mock()
+        returned = provider._get_project()
+        assert returned == mock_client.projects.get.return_value
+        mock_client.projects.get.assert_called_once_with("test_project_id")
+
     # # _close_issue_with_labels_impl
     def test_issues_providers_gitlabprovider_close_issue_with_labels_impl(self, mocker):
         mocker.patch("issues.providers.GitlabProvider._get_client")
@@ -541,6 +1150,9 @@ class TestIssuesProvidersGitlabProvider:
         user = mocker.MagicMock()
         provider = GitlabProvider(user)
         mock_issue = mocker.MagicMock()
+        # Use PropertyMock to assert labels attribute setting
+        mock_labels_property = mocker.PropertyMock()
+        type(mock_issue).labels = mock_labels_property
         provider.repo = mocker.MagicMock()
         provider.repo.issues.get.return_value = mock_issue
 
@@ -555,6 +1167,39 @@ class TestIssuesProvidersGitlabProvider:
         mock_issue.save.assert_called_once()
         assert result["issue_state"] == mock_issue.state
         assert result["current_labels"] == mock_issue.labels
+
+    def test_issues_providers_gitlabprovider_close_issue_with_labels_impl_no_labels(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GitlabProvider._get_client")
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = GitlabProvider(user)
+        mock_issue = mocker.MagicMock()
+        mock_issue.labels = []  # Initialize labels as an empty list
+        provider.repo = mocker.MagicMock()
+        provider.repo.issues.get.return_value = mock_issue
+
+        comment = "Closing this issue."
+        provider._close_issue_with_labels_impl(1, None, comment)
+
+        assert mock_issue.labels == []
+
+    def test_issues_providers_gitlabprovider_close_issue_with_labels_impl_no_comment(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GitlabProvider._get_client")
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = GitlabProvider(user)
+        mock_issue = mocker.MagicMock()
+        provider.repo = mocker.MagicMock()
+        provider.repo.issues.get.return_value = mock_issue
+        labels_to_set = ["bug", "critical"]
+
+        provider._close_issue_with_labels_impl(1, labels_to_set, None)
+
+        mock_issue.notes.create.assert_not_called()
 
     # # _create_issue_impl
     def test_issues_providers_gitlabprovider_create_issue_impl(self, mocker):
@@ -625,6 +1270,34 @@ class TestIssuesProvidersGitlabProvider:
         assert result["issue"]["number"] == mock_issue.iid
         assert result["issue"]["title"] == mock_issue.title
 
+    def test_issues_providers_gitlabprovider_get_issue_by_number_impl_with_assignees(
+        self, mocker
+    ):
+        mocker.patch("issues.providers.GitlabProvider._get_client")
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = GitlabProvider(user)
+        mock_issue = mocker.MagicMock()
+        mock_issue.iid = 1
+        mock_issue.title = "GitLab Issue With Assignees"
+        mock_issue.description = "Desc"
+        mock_issue.state = "opened"
+        mock_issue.created_at = "2023-01-01"
+        mock_issue.updated_at = "2023-01-02"
+        mock_issue.closed_at = None
+        mock_issue.labels = ["label_gl"]
+        mock_issue.assignees = [{"username": "gl_user1"}, {"username": "gl_user2"}]
+        mock_issue.author = {"username": "gl_author"}
+        mock_issue.web_url = "http://gitlab.com/issue/1"
+        mock_issue.notes.list.return_value = [mocker.MagicMock()]
+
+        provider.repo = mocker.MagicMock()
+        provider.repo.issues.get.return_value = mock_issue
+
+        result = provider._get_issue_by_number_impl(1)
+
+        assert result["issue"]["assignees"] == ["gl_user1", "gl_user2"]
+
     # # _set_labels_to_issue_impl
     def test_issues_providers_gitlabprovider_set_labels_to_issue_impl(self, mocker):
         mocker.patch("issues.providers.GitlabProvider._get_client")
@@ -638,7 +1311,6 @@ class TestIssuesProvidersGitlabProvider:
         labels_to_set = ["priority::high"]
         result = provider._set_labels_to_issue_impl(1, labels_to_set)
 
-        provider.repo.issues.get.assert_called_once_with(1)
         mock_issue.labels = labels_to_set
         mock_issue.save.assert_called_once()
         assert result["current_labels"] == labels_to_set

@@ -34,6 +34,8 @@ class TestIssuesIssuesIssueProvider:
 
     # # __getattr__
     def test_issues_issues_issueprovider_getattr(self, mocker):
+        mocker.patch("issues.providers.Auth.Token")
+        mocker.patch("issues.providers.Github")
         user = mocker.MagicMock()
         provider = IssueProvider(user, name="github")
         assert hasattr(provider, "create_issue")

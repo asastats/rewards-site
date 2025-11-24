@@ -13,7 +13,7 @@ from github import Auth, Github
 from gitlab import Gitlab
 
 from utils.constants.core import GITHUB_ISSUES_START_DATE
-from utils.constants.ui import MISSING_TOKEN_TEXT
+from utils.constants.ui import MISSING_API_TOKEN_TEXT
 from utils.helpers import get_env_variable
 
 logger = logging.getLogger(__name__)
@@ -38,8 +38,8 @@ class BitbucketApp:
         :return: The JWT token.
         :rtype: str
         """
-        client_key = os.getenv("BITBUCKET_CLIENT_KEY")
-        shared_secret = os.getenv("BITBUCKET_SHARED_SECRET")
+        client_key = get_env_variable("BITBUCKET_CLIENT_KEY", "")
+        shared_secret = get_env_variable("BITBUCKET_SHARED_SECRET", "")
 
         if not (client_key and shared_secret):
             return None
@@ -212,7 +212,7 @@ class BaseIssueProvider(ABC):
         :type issue_tracker_api_token: str
         :return: provider client instance
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def _get_repository(self):
@@ -220,7 +220,7 @@ class BaseIssueProvider(ABC):
 
         :return: repository/project instance
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def _close_issue_with_labels_impl(self, issue_number, labels_to_set, comment):
@@ -235,7 +235,7 @@ class BaseIssueProvider(ABC):
         :return: operation result
         :rtype: dict
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def _create_issue_impl(self, title, body, labels):
@@ -250,7 +250,7 @@ class BaseIssueProvider(ABC):
         :return: operation result
         :rtype: dict
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def _fetch_issues_impl(self, state, since):
@@ -263,7 +263,7 @@ class BaseIssueProvider(ABC):
         :return: collection of issue instances
         :rtype: list
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def _get_issue_by_number_impl(self, issue_number):
@@ -274,7 +274,7 @@ class BaseIssueProvider(ABC):
         :return: formatted issue data
         :rtype: dict
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def _set_labels_to_issue_impl(self, issue_number, labels_to_set):
@@ -287,7 +287,7 @@ class BaseIssueProvider(ABC):
         :return: operation result
         :rtype: dict
         """
-        raise NotImplementedError
+        pass
 
     def close_issue_with_labels(self, issue_number, labels_to_set=None, comment=None):
         """Close issue with labels.
@@ -307,7 +307,7 @@ class BaseIssueProvider(ABC):
         """
         try:
             if not self.client:
-                return {"success": False, "error": MISSING_TOKEN_TEXT}
+                return {"success": False, "error": MISSING_API_TOKEN_TEXT}
 
             result = self._close_issue_with_labels_impl(
                 issue_number, labels_to_set, comment
@@ -335,7 +335,7 @@ class BaseIssueProvider(ABC):
         """
         try:
             if not self.client:
-                return {"success": False, "error": MISSING_TOKEN_TEXT}
+                return {"success": False, "error": MISSING_API_TOKEN_TEXT}
 
             result = self._create_issue_impl(title, body, labels)
             return {"success": True, **result}
@@ -379,7 +379,7 @@ class BaseIssueProvider(ABC):
         """
         try:
             if not self.client:
-                return {"success": False, "error": MISSING_TOKEN_TEXT}
+                return {"success": False, "error": MISSING_API_TOKEN_TEXT}
 
             result = self._get_issue_by_number_impl(issue_number)
             return {"success": True, **result}
@@ -403,7 +403,7 @@ class BaseIssueProvider(ABC):
         """
         try:
             if not self.client:
-                return {"success": False, "error": MISSING_TOKEN_TEXT}
+                return {"success": False, "error": MISSING_API_TOKEN_TEXT}
 
             result = self._set_labels_to_issue_impl(issue_number, labels_to_set)
             return {"success": True, **result}
@@ -765,11 +765,11 @@ class GitlabProvider(BaseIssueProvider):
         :return: GitLab client instance.
         :rtype: :class:`gitlab.Gitlab`
         """
-        url = os.getenv("GITLAB_URL", "https://gitlab.com")
+        url = get_env_variable("GITLAB_URL", "https://gitlab.com")
         if issue_tracker_api_token:
             return Gitlab(url=url, private_token=issue_tracker_api_token)
 
-        pat = os.getenv("GITLAB_PRIVATE_TOKEN")
+        pat = get_env_variable("GITLAB_PRIVATE_TOKEN", "")
 
         if pat:
             return Gitlab(url=url, private_token=pat)
@@ -789,7 +789,7 @@ class GitlabProvider(BaseIssueProvider):
         :return: GitLab project instance.
         :rtype: :class:`gitlab.v4.objects.Project`
         """
-        project_id = os.getenv("GITLAB_PROJECT_ID")
+        project_id = get_env_variable("GITLAB_PROJECT_ID", "")
         if not project_id:
             return None
         return self.client.projects.get(project_id)

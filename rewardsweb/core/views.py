@@ -57,7 +57,7 @@ from utils.constants.core import (
     ISSUE_CREATION_LABEL_CHOICES,
     ISSUE_PRIORITY_CHOICES,
 )
-from utils.constants.ui import MISSING_TOKEN_TEXT
+from utils.constants.ui import MISSING_API_TOKEN_TEXT
 
 logger = logging.getLogger(__name__)
 
@@ -164,12 +164,12 @@ class ContributionEditView(UpdateView):
                     issue_number
                 )
                 if not issue_data.get("success"):
-                    if issue_data.get("error") == MISSING_TOKEN_TEXT:
+                    if issue_data.get("error") == MISSING_API_TOKEN_TEXT:
                         form.add_error(
                             "issue_number", "That GitHub issue doesn't exist!"
                         )
                     else:
-                        form.add_error("issue_number", MISSING_TOKEN_TEXT)
+                        form.add_error("issue_number", MISSING_API_TOKEN_TEXT)
                     return self.form_invalid(form)
 
                 # Create new issue with selected status

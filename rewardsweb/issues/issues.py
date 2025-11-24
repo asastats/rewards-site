@@ -48,16 +48,10 @@ class IssueProvider:
 
         :var provider_class: provider class from registry
         :type provider_class: class
-        :var provider_instance: instance of the issue provider
-        :type provider_instance: :class:`BaseIssueProvider`
-        :return: provider instance
+        :return: instance of the issue provider
         :rtype: :class:`BaseIssueProvider`
         """
         provider_class = ISSUE_PROVIDER_REGISTRY.get(self.name)
-        if not provider_class:
-            logger.warning(f"Provider '{self.name}' not found, using GitHub")
-            provider_class = GithubProvider
-
         return provider_class(
             self.user, issue_tracker_api_token=kwargs.get("issue_tracker_api_token")
         )

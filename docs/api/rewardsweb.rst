@@ -223,6 +223,42 @@
   :show-inheritance:
 
 
+:mod:`issues` -- Package with various issue tracker providers implementation
+****************************************************************************
+
+.. automodule:: issues
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`issues.issues` -- Main issue tracker class and public functions
+---------------------------------------------------------------------
+
+.. automodule:: issues.issues
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`issues.providers` -- Module with implementation of various issue tracker providers
+----------------------------------------------------------------------------------------
+
+.. automodule:: issues.providers
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`issues.tests` -- Unit-tests package for the issue trackers package
+------------------------------------------------------------------------
+
+.. automodule:: issues.tests
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
 :mod:`manage` -- Django main module
 ***********************************
 
@@ -526,15 +562,6 @@
 ----------------------------------------------------------
 
 .. automodule:: utils.helpers
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-
-:mod:`utils.issues` -- Website's utility functions for manipulating GitHub issues
----------------------------------------------------------------------------------
-
-.. automodule:: utils.issues
   :members:
   :undoc-members:
   :show-inheritance:

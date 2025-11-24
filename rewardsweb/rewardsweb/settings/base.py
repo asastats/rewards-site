@@ -230,4 +230,4 @@ ISSUE_TRACKER_PROVIDER = "github"
 # GitLab: project owner, project name
 # GitHub: workspace name, repository slug
 ISSUE_TRACKER_OWNER = "asastats"
-ISSUE_TRACKER_NAME = "channel"  # "rewards-site"
+ISSUE_TRACKER_NAME = "channel"

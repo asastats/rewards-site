@@ -31,7 +31,7 @@ from core.views import (
     CycleListView,
 )
 from utils.constants.core import DISCORD_EMOJIS
-from utils.constants.ui import MISSING_TOKEN_TEXT
+from utils.constants.ui import MISSING_API_TOKEN_TEXT
 
 user_model = get_user_model()
 
@@ -203,13 +203,13 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_invalid_with_nonexistent_github_issue(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub issue doesn't exist (success=False, error=MISSING_TOKEN_TEXT)."""
+        """Test when GitHub issue doesn't exist (success=False, error=MISSING_API_TOKEN_TEXT)."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number",
-            return_value={"success": False, "error": MISSING_TOKEN_TEXT},
+            return_value={"success": False, "error": MISSING_API_TOKEN_TEXT},
         )
         request = rf.post(
             f"/contribution/{contribution.id}/edit/",
@@ -239,7 +239,7 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_invalid_with_github_api_error(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub API returns a different error (not MISSING_TOKEN_TEXT)."""
+        """Test when GitHub API returns a different error (not MISSING_API_TOKEN_TEXT)."""
 
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
@@ -270,20 +270,20 @@ class TestDbContributionEditView:
         assert "form" in response.context_data
         form = response.context_data["form"]
         assert "issue_number" in form.errors
-        assert MISSING_TOKEN_TEXT in form.errors["issue_number"]
+        assert MISSING_API_TOKEN_TEXT in form.errors["issue_number"]
 
         mock_issue_by_number.assert_called_once_with(999)
 
     def test_contributioneditview_form_invalid_with_github_api_missing_token_error(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub API returns MISSING_TOKEN_TEXT error specifically."""
+        """Test when GitHub API returns MISSING_API_TOKEN_TEXT error specifically."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number",
-            return_value={"success": False, "error": MISSING_TOKEN_TEXT},
+            return_value={"success": False, "error": MISSING_API_TOKEN_TEXT},
         )
 
         request = rf.post(

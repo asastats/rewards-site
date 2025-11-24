@@ -3,6 +3,7 @@
 from datetime import datetime
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.db.models import QuerySet
@@ -270,8 +271,12 @@ class TestDbIssueDetailView:
         self, client, superuser, issue, mocker
     ):
         """Test that GitHub data is added to context for superusers."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
 
         # Create datetime objects for testing
         created_at = datetime(2023, 1, 1, 0, 0, 0)
@@ -302,14 +307,18 @@ class TestDbIssueDetailView:
         assert response.context["issue_title"] == "Test Issue"
         assert response.context["issue_created_at"] == created_at
         assert response.context["issue_updated_at"] == updated_at
-        mock_get_issue.assert_called_once_with(superuser, issue.number)
+        mock_get_issue.assert_called_once_with(issue.number)
 
     def test_issuedetailview_no_github_data_for_regular_user(
         self, client, regular_user, issue, mocker
     ):
         """Test that GitHub data is NOT added to context for regular users."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
 
         client.force_login(regular_user)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -327,8 +336,12 @@ class TestDbIssueDetailView:
         self, client, superuser, issue, mocker
     ):
         """Test that GitHub errors are handled for superusers."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {"success": False, "error": "Authentication failed"}
         mock_get_issue.return_value = mock_github_data
 
@@ -362,8 +375,12 @@ class TestDbIssueDetailView:
         self, client, superuser, issue, mocker
     ):
         """Test that GitHub API is called with correct user and issue number."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -386,14 +403,18 @@ class TestDbIssueDetailView:
 
         assert response.status_code == 200
         # Verify the function was called with correct arguments
-        mock_get_issue.assert_called_once_with(superuser, issue.number)
+        mock_get_issue.assert_called_once_with(issue.number)
 
     def test_issuedetailview_context_data_includes_all_github_fields(
         self, client, superuser, issue, mocker
     ):
         """Test that all GitHub fields are included in context when successful."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -440,8 +461,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that labels form is in context for superusers when GitHub issue is open."""
-        # Mock GitHub issue as open
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -470,8 +495,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that labels form is NOT in context for superusers when GitHub issue is closed."""
-        # Mock GitHub issue as closed
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -499,8 +528,12 @@ class TestIssueDetailViewWithForm:
         self, client, regular_user, issue, mocker
     ):
         """Test that labels form is NOT in context for regular users even if issue is open."""
-        # Mock GitHub issue as open
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -528,8 +561,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that labels form is NOT in context when GitHub data fetch fails."""
-        # Mock GitHub issue fetch failure
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {"success": False, "error": "GitHub API error"}
         mock_get_issue.return_value = mock_github_data
 
@@ -545,8 +582,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that form is prepopulated with existing GitHub labels."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
 
         # Mock GitHub issue with existing labels including priority
         # Use only labels that exist in ISSUE_CREATION_LABEL_CHOICES
@@ -587,8 +628,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that form uses default priority when no priority label exists."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
 
         # Mock GitHub issue with labels but no priority
         mock_github_data = {
@@ -622,8 +667,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that unknown labels are filtered out during prepopulation."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
 
         # Mock GitHub issue with some unknown labels
         mock_github_data = {
@@ -657,8 +706,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that priority detection works with various label formats."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
 
         # Mock GitHub issue with different priority label formats
         mock_github_data = {
@@ -695,8 +748,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that POST request successfully sets labels on GitHub issue."""
-        # Mock the set_labels_to_issue function
-        mock_add_labels = mocker.patch("core.views.set_labels_to_issue")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_add_labels = mocker.patch(
+            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+        )
         mock_add_labels.return_value = {
             "success": True,
             "message": (
@@ -723,8 +780,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that GitHub errors are handled when setting labels."""
-        # Mock the set_labels_to_issue function to return error
-        mock_add_labels = mocker.patch("core.views.set_labels_to_issue")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_add_labels = mocker.patch(
+            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+        )
         mock_add_labels.return_value = {
             "success": False,
             "error": "GitHub API rate limit exceeded",
@@ -763,8 +824,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that context variables for current priority and labels are set."""
-        # Mock the issue_by_number function
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
 
         mock_github_data = {
             "success": True,
@@ -797,8 +862,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that form appears in template for superusers."""
-        # Mock GitHub data
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -836,8 +905,12 @@ class TestIssueDetailViewSubmissionHandlers:
         self, client, superuser, issue, mocker
     ):
         """Test successful labels form submission."""
-        # Mock the set_labels_to_issue function from utils.issues
-        mock_add_labels = mocker.patch("core.views.set_labels_to_issue")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_add_labels = mocker.patch(
+            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+        )
         mock_add_labels.return_value = {
             "success": True,
             "message": f"Added labels ['bug', 'feature', 'high priority'] to issue #{issue.number}",
@@ -862,7 +935,7 @@ class TestIssueDetailViewSubmissionHandlers:
 
         # Verify the function was called with correct arguments
         mock_add_labels.assert_called_once_with(
-            superuser, issue.number, ["bug", "feature", "high priority"]
+            issue.number, ["bug", "feature", "high priority"]
         )
 
         # Check success message
@@ -876,8 +949,12 @@ class TestIssueDetailViewSubmissionHandlers:
         self, client, superuser, issue, mocker
     ):
         """Test labels form submission when GitHub operation fails."""
-        # Mock the set_labels_to_issue function to return failure
-        mock_add_labels = mocker.patch("core.views.set_labels_to_issue")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_add_labels = mocker.patch(
+            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+        )
         mock_add_labels.return_value = {
             "success": False,
             "error": "GitHub API rate limit exceeded",
@@ -964,8 +1041,15 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test successful close as addressed submission."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
         mocked_process = mocker.patch(
             "core.views.process_allocations_for_contributions", return_value=(False, [])
@@ -1010,7 +1094,6 @@ class TestIssueDetailViewSubmissionHandlers:
         # Check that close_issue_with_labels was called with correct arguments
         mock_close_issue.assert_called_once()
         call_args = mock_close_issue.call_args[1]
-        assert call_args["user"] == superuser
         assert call_args["issue_number"] == issue.number
         assert call_args["comment"] == "This issue has been addressed successfully."
         assert "addressed" in call_args["labels_to_set"]
@@ -1045,8 +1128,15 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test successful close as addressed submission without comment."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mock_add_reaction = mocker.patch("core.views.add_reaction_to_message")
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
         mocked_process = mocker.patch(
@@ -1117,9 +1207,15 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test successful close as wontfix submission."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
-
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1159,7 +1255,6 @@ class TestIssueDetailViewSubmissionHandlers:
         # Check that close_issue_with_labels was called with correct arguments
         mock_close_issue.assert_called_once()
         call_args = mock_close_issue.call_args[1]
-        assert call_args["user"] == superuser
         assert call_args["issue_number"] == issue.number
         assert call_args["comment"] == "This issue will not be fixed."
         assert "wontfix" in call_args["labels_to_set"]
@@ -1200,7 +1295,13 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test close submission when GitHub issue fetch fails."""
         # Mock GitHub issue fetch failure
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+
         mock_github_data = {"success": False, "error": "Authentication failed"}
         mock_get_issue.return_value = mock_github_data
 
@@ -1231,7 +1332,12 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test close submission when GitHub issue is already closed."""
         # Mock GitHub issue as closed
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1272,9 +1378,15 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test close submission when GitHub close operation fails."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
-
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1325,7 +1437,12 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test close submission when an unexpected exception occurs."""
         # Mock GitHub function to raise an exception
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_get_issue.side_effect = Exception("Unexpected error")
 
         client.force_login(superuser)
@@ -1353,9 +1470,15 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test that labels are properly processed (remove work in progress, add correct label)."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
-
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1409,9 +1532,15 @@ class TestIssueDetailViewSubmissionHandlers:
     ):
         """Test that existing addressed/wontfix label is not duplicated."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
-
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1461,7 +1590,12 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test that close buttons are not shown for regular users."""
         # Mock GitHub issue as open
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1492,7 +1626,12 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test that close buttons are not shown for closed GitHub issues."""
         # Mock GitHub issue as closed
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1523,7 +1662,12 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test that close buttons are shown for open issues and superusers."""
         # Mock GitHub issue as open
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mocker.patch(
             "core.views.process_allocations_for_contributions", return_value=(False, [])
         )
@@ -1557,8 +1701,15 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test successful close as addressed action."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mock_process = mocker.patch(
             "core.views.process_allocations_for_contributions", return_value=(False, [])
         )
@@ -1601,7 +1752,6 @@ class TestIssueDetailViewCloseFunctionality:
         # Check that close_issue_with_labels was called with correct arguments
         mock_close_issue.assert_called_once()
         call_args = mock_close_issue.call_args[1]
-        assert call_args["user"] == superuser
         assert call_args["issue_number"] == issue.number
         assert call_args["comment"] == "Fixed the issue"
         assert "addressed" in call_args["labels_to_set"]
@@ -1616,8 +1766,15 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test successful close as addressed action."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
         mock_process = mocker.patch(
             "core.views.process_allocations_for_contributions",
             return_value=("txid", ["addr"]),
@@ -1661,7 +1818,6 @@ class TestIssueDetailViewCloseFunctionality:
         # Check that close_issue_with_labels was called with correct arguments
         mock_close_issue.assert_called_once()
         call_args = mock_close_issue.call_args[1]
-        assert call_args["user"] == superuser
         assert call_args["issue_number"] == issue.number
         assert call_args["comment"] == "Fixed the issue"
         assert "addressed" in call_args["labels_to_set"]
@@ -1676,8 +1832,15 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test successful close as wontfix action."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
 
         mock_github_data = {
             "success": True,
@@ -1718,7 +1881,6 @@ class TestIssueDetailViewCloseFunctionality:
         # Check that close_issue_with_labels was called with correct arguments
         mock_close_issue.assert_called_once()
         call_args = mock_close_issue.call_args[1]
-        assert call_args["user"] == superuser
         assert call_args["issue_number"] == issue.number
         assert call_args["comment"] == "Will not fix"
         assert "wontfix" in call_args["labels_to_set"]
@@ -1729,8 +1891,15 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test successful close as wontfix action."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
 
         mock_github_data = {
             "success": True,
@@ -1771,7 +1940,6 @@ class TestIssueDetailViewCloseFunctionality:
         # Check that close_issue_with_labels was called with correct arguments
         mock_close_issue.assert_called_once()
         call_args = mock_close_issue.call_args[1]
-        assert call_args["user"] == superuser
         assert call_args["issue_number"] == issue.number
         assert call_args["comment"] == "Will not fix"
         assert "wontfix" in call_args["labels_to_set"]
@@ -1782,8 +1950,15 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test that local status is reverted when GitHub operation fails."""
         # Mock GitHub functions
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
-        mock_close_issue = mocker.patch("core.views.close_issue_with_labels")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
+        mock_close_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+        )
 
         mock_github_data = {
             "success": True,
@@ -1825,7 +2000,12 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test closing an issue that is already closed on GitHub."""
         # Mock GitHub issue as closed
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1885,7 +2065,12 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test that labels form is not shown for closed GitHub issues."""
         # Mock GitHub issue as closed
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -1914,7 +2099,12 @@ class TestIssueDetailViewCloseFunctionality:
     ):
         """Test that labels form is shown for open GitHub issues."""
         # Mock GitHub issue as open
-        mock_get_issue = mocker.patch("core.views.issue_by_number")
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_get_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.issue_by_number"
+        )
         mock_github_data = {
             "success": True,
             "issue": {
@@ -2002,7 +2192,6 @@ class TestDbCreateIssueView:
         view.setup(request, contribution_id=contribution.id)
         view.contribution_id = contribution.id
 
-        # Mock the issue_data_for_contribution function
         mock_issue_data = mocker.patch("core.views.issue_data_for_contribution")
         mock_issue_data.return_value = {
             "priority": "high priority",
@@ -2065,8 +2254,13 @@ class TestDbCreateIssueView:
         view.contribution_id = contribution.id
 
         # Mock external dependencies
-        mock_create_github_issue = mocker.patch("core.views.create_github_issue")
-        mock_create_github_issue.return_value = {"success": True, "issue_number": 123}
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_create_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.create_issue"
+        )
+        mock_create_issue.return_value = {"success": True, "issue_number": 123}
 
         mock_confirm_contribution = mocker.patch(
             "core.views.Issue.objects.confirm_contribution_with_issue"
@@ -2086,8 +2280,7 @@ class TestDbCreateIssueView:
         response = view.form_valid(mock_form)
 
         # Verify GitHub issue creation was called with correct data
-        mock_create_github_issue.assert_called_once_with(
-            superuser,
+        mock_create_issue.assert_called_once_with(
             "Test issue title",
             "Test issue body",
             labels=["bug", "feature", "high priority"],
@@ -2116,8 +2309,13 @@ class TestDbCreateIssueView:
         view.contribution_id = contribution.id
 
         # Mock GitHub issue creation to fail
-        mock_create_github_issue = mocker.patch("core.views.create_github_issue")
-        mock_create_github_issue.return_value = {
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mock_create_issue = mocker.patch(
+            "issues.providers.BaseIssueProvider.create_issue"
+        )
+        mock_create_issue.return_value = {
             "success": False,
             "error": "GitHub API error",
         }

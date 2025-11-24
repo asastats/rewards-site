@@ -1,6 +1,7 @@
 """Testing module for :py:mod:`core.views` views related to contributions."""
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.contrib.messages.storage.fallback import FallbackStorage
@@ -30,6 +31,7 @@ from core.views import (
     CycleListView,
 )
 from utils.constants.core import DISCORD_EMOJIS
+from utils.constants.ui import MISSING_API_TOKEN_TEXT
 
 user_model = get_user_model()
 
@@ -160,9 +162,11 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_valid_with_new_issue(
         self, rf, superuser, contribution, mocker
     ):
-        # Mock the GitHub check to return successful issue data
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "core.views.issue_by_number",
+            "issues.providers.BaseIssueProvider.issue_by_number",
             return_value={"success": True, "data": {"number": 123}},
         )
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
@@ -188,7 +192,7 @@ class TestDbContributionEditView:
         assert response.status_code == 302
         assert contribution.issue is not None
         assert contribution.issue.number == 123
-        mock_issue_by_number.assert_called_once_with(superuser, 123)
+        mock_issue_by_number.assert_called_once_with(123)
 
         calls = [
             mocker.call("issue_created", str(contribution.issue)),
@@ -199,15 +203,14 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_invalid_with_nonexistent_github_issue(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub issue doesn't exist (success=False, error=MISSING_TOKEN_TEXT)."""
-        from core.views import MISSING_TOKEN_TEXT
-
-        # Mock the GitHub check to return failure with "issue doesn't exist" error
+        """Test when GitHub issue doesn't exist (success=False, error=MISSING_API_TOKEN_TEXT)."""
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "core.views.issue_by_number",
-            return_value={"success": False, "error": MISSING_TOKEN_TEXT},
+            "issues.providers.BaseIssueProvider.issue_by_number",
+            return_value={"success": False, "error": MISSING_API_TOKEN_TEXT},
         )
-
         request = rf.post(
             f"/contribution/{contribution.id}/edit/",
             {
@@ -231,17 +234,18 @@ class TestDbContributionEditView:
         assert "issue_number" in form.errors
         assert "That GitHub issue doesn't exist!" in form.errors["issue_number"]
 
-        mock_issue_by_number.assert_called_once_with(superuser, 999)
+        mock_issue_by_number.assert_called_once_with(999)
 
     def test_contributioneditview_form_invalid_with_github_api_error(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub API returns a different error (not MISSING_TOKEN_TEXT)."""
-        from core.views import MISSING_TOKEN_TEXT
+        """Test when GitHub API returns a different error (not MISSING_API_TOKEN_TEXT)."""
 
-        # Mock the GitHub check to return failure with a different error
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "core.views.issue_by_number",
+            "issues.providers.BaseIssueProvider.issue_by_number",
             return_value={"success": False, "error": "API rate limit exceeded"},
         )
 
@@ -266,20 +270,20 @@ class TestDbContributionEditView:
         assert "form" in response.context_data
         form = response.context_data["form"]
         assert "issue_number" in form.errors
-        assert MISSING_TOKEN_TEXT in form.errors["issue_number"]
+        assert MISSING_API_TOKEN_TEXT in form.errors["issue_number"]
 
-        mock_issue_by_number.assert_called_once_with(superuser, 999)
+        mock_issue_by_number.assert_called_once_with(999)
 
     def test_contributioneditview_form_invalid_with_github_api_missing_token_error(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub API returns MISSING_TOKEN_TEXT error specifically."""
-        from core.views import MISSING_TOKEN_TEXT
-
-        # Mock the GitHub check to return failure with MISSING_TOKEN_TEXT
+        """Test when GitHub API returns MISSING_API_TOKEN_TEXT error specifically."""
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "core.views.issue_by_number",
-            return_value={"success": False, "error": MISSING_TOKEN_TEXT},
+            "issues.providers.BaseIssueProvider.issue_by_number",
+            return_value={"success": False, "error": MISSING_API_TOKEN_TEXT},
         )
 
         request = rf.post(
@@ -305,7 +309,7 @@ class TestDbContributionEditView:
         assert "issue_number" in form.errors
         assert "That GitHub issue doesn't exist!" in form.errors["issue_number"]
 
-        mock_issue_by_number.assert_called_once_with(superuser, 999)
+        mock_issue_by_number.assert_called_once_with(999)
 
     def test_contributioneditview_form_valid_without_issue_number(
         self, rf, superuser, contribution_with_issue
@@ -365,9 +369,11 @@ class TestDbContributionEditView:
         self, rf, superuser, contribution, mocker
     ):
         """Test that new issue is created when GitHub API returns success=True."""
-        # Mock the GitHub check to return successful issue data
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "core.views.issue_by_number",
+            "issues.providers.BaseIssueProvider.issue_by_number",
             return_value={"success": True, "data": {"number": 456}},
         )
 
@@ -397,7 +403,7 @@ class TestDbContributionEditView:
         assert contribution.issue.status == IssueStatus.CREATED
 
         # Verify the GitHub API was called
-        mock_issue_by_number.assert_called_once_with(superuser, 456)
+        mock_issue_by_number.assert_called_once_with(456)
 
     def test_contributioneditview_form_valid_with_existing_issue_different_number(
         self, rf, superuser, contribution_with_issue
@@ -434,9 +440,11 @@ class TestDbContributionEditView:
         self, rf, superuser, contribution, mocker
     ):
         """Test that new issue is created with custom status."""
-        # Mock the GitHub check to return successful issue data
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "core.views.issue_by_number",
+            "issues.providers.BaseIssueProvider.issue_by_number",
             return_value={"success": True, "data": {"number": 456}},
         )
 
@@ -467,7 +475,7 @@ class TestDbContributionEditView:
         assert contribution.issue.status == IssueStatus.ADDRESSED  # Custom status
 
         # Verify the GitHub API was called
-        mock_issue_by_number.assert_called_once_with(superuser, 456)
+        mock_issue_by_number.assert_called_once_with(456)
 
     def test_contributioneditview_form_valid_updates_existing_issue_status(
         self, rf, superuser, contribution_with_issue

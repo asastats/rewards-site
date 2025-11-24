@@ -363,11 +363,11 @@ class UpdateUserForm(ModelForm):
 class ProfileForm(ModelForm):
     """Form class for editing user profile's data.
 
-    :var ProfileForm.github_token: user's personal GitHub access token
-    :type ProfileForm.github_token: :class:`django.forms.CharField`
+    :var ProfileForm.issue_tracker_api_token: user's personal GitHub access token
+    :type ProfileForm.issue_tracker_api_token: :class:`django.forms.CharField`
     """
 
-    github_token = CharField(
+    issue_tracker_api_token = CharField(
         required=False,
         widget=TextInput(
             attrs={
@@ -380,7 +380,7 @@ class ProfileForm(ModelForm):
 
     class Meta:
         model = Profile
-        fields = ["github_token"]
+        fields = ["issue_tracker_api_token"]
         exclude = ["user"]
 
 

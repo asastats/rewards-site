@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
         fixtures_dir = settings.BASE_DIR.parent / "fixtures"
 
-        github_token = options.get("token")
+        issue_tracker_api_token = options.get("token")
         input_file = (
             Path(options.get("input"))
             if options.get("input")
@@ -52,7 +52,9 @@ class Command(BaseCommand):
         response = import_from_csv(output_file, legacy_file)
         if not response:
             self.stdout.write("Records successfully imported!")
-            response = map_github_issues(github_token=github_token)
+            response = map_github_issues(
+                issue_tracker_api_token=issue_tracker_api_token
+            )
             if not response:
                 self.stdout.write("Issues successfully mapped!")
 

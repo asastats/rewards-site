@@ -185,7 +185,7 @@ class EditProfilePageTest(TestCase):
     def test_profile_page_displays_profileformset_for_edit_profile_data(self):
         response = self.client.get(reverse("profile"))
         self.assertIsInstance(response.context["profile_form"], ProfileFormSet)
-        self.assertContains(response, "profile-0-github_token")
+        self.assertContains(response, "profile-0-issue_tracker_api_token")
 
     def test_profile_page_post_ends_in_profile_page(self):
         response = self.client.post(

@@ -24,6 +24,7 @@ from core.models import (
     RewardType,
     SocialPlatform,
 )
+from issues.issues import IssueProvider
 from utils.constants.core import (
     GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS,
     GITHUB_ISSUES_START_DATE,
@@ -31,7 +32,6 @@ from utils.constants.core import (
     REWARDS_COLLECTION,
 )
 from utils.helpers import read_pickle
-from utils.issues import fetch_issues
 
 URL_EXCEPTIONS = ["discord.com/invite"]
 REWARD_LABELS = [
@@ -132,11 +132,11 @@ def _extract_url_text(body, platform_id):
     return None
 
 
-def _fetch_and_categorize_issues(github_token, refetch=False):
+def _fetch_and_categorize_issues(issue_tracker_api_token, refetch=False):
     """Fetch all GitHub issues and return them categorized.
 
-    :param github_token: GitHub API token
-    :type github_token: str
+    :param issue_tracker_api_token: GitHub API token
+    :type issue_tracker_api_token: str
     :param refetch: should recorded issues be refetched or not
     :type refetch: Boolean
     :var github_issues: collection of categorized GitHub issue instances
@@ -150,13 +150,14 @@ def _fetch_and_categorize_issues(github_token, refetch=False):
     """
     github_issues = _load_saved_issues() if not refetch else defaultdict(list)
 
-    if not github_token:
+    if not issue_tracker_api_token:
         return github_issues
 
     issue = None
     for counter, issue in enumerate(
-        fetch_issues(
-            github_token,
+        IssueProvider(
+            None, issue_tracker_api_token=issue_tracker_api_token
+        ).fetch_issues(
             state="all",
             since=github_issues.get("timestamp", GITHUB_ISSUES_START_DATE),
         )
@@ -344,8 +345,8 @@ def _is_url_github_issue(url):
     :type match: :class:`re.Match` or None
     """
     pattern = (
-        rf"^.*github\.com/{settings.GITHUB_REPO_OWNER}/"
-        rf"{settings.GITHUB_REPO_NAME}/issues/(\d+).*"
+        rf"^.*github\.com/{settings.ISSUE_TRACKER_OWNER}/"
+        rf"{settings.ISSUE_TRACKER_NAME}/issues/(\d+).*"
     )
     match = re.match(pattern, url)
     if not match:
@@ -1009,11 +1010,11 @@ def _map_unprocessed_closed_archived_issues(github_issues):
     return True
 
 
-def map_github_issues(github_token=""):
+def map_github_issues(issue_tracker_api_token=""):
     """Fetch existing GitHub issues and create database records from them.
 
-    :param github_token: GitHub API token
-    :type github_token: str
+    :param issue_tracker_api_token: GitHub API token
+    :type issue_tracker_api_token: str
     :var github_issues: collection of GitHub issue instances
     :type github_issues: list
     :var closed_size: number of issues created from closed GitHub issues
@@ -1022,7 +1023,7 @@ def map_github_issues(github_token=""):
     :type size: int
     :return: Boolean
     """
-    github_issues = _fetch_and_categorize_issues(github_token)
+    github_issues = _fetch_and_categorize_issues(issue_tracker_api_token)
 
     print("Fetched closed issues size: ", len(github_issues.get("closed", [])))
     unprocessed_github_issues = _map_closed_archived_issues(

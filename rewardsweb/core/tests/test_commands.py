@@ -84,7 +84,7 @@ class TestExcel2DbCommand:
             fixtures_dir / "contributions.csv",
             fixtures_dir / "legacy_contributions.csv",
         )
-        mocked_map.assert_called_once_with(github_token="")
+        mocked_map.assert_called_once_with(issue_tracker_api_token="")
 
     def test_excel2db_command_output_for_default_values_on_import_response(
         self, mocker
@@ -156,7 +156,7 @@ class TestExcel2DbCommand:
             fixtures_dir / "contributions.csv",
             fixtures_dir / "legacy_contributions.csv",
         )
-        mocked_map.assert_called_once_with(github_token="")
+        mocked_map.assert_called_once_with(issue_tracker_api_token="")
 
     def test_excel2db_command_output_for_provided_arguments(self, mocker):
         mocked_convert = mocker.patch(
@@ -195,7 +195,7 @@ class TestExcel2DbCommand:
             Path(input_file), Path(output_file), Path(legacy_file)
         )
         mocked_import.assert_called_once_with(Path(output_file), Path(legacy_file))
-        mocked_map.assert_called_once_with(github_token=token)
+        mocked_map.assert_called_once_with(issue_tracker_api_token=token)
 
 
 class TestMigrateCommand:

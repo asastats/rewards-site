@@ -22,8 +22,14 @@ class TestCoreSignals:
     def test_core_signals_user_saving_saves_its_profile(self):
         user = user_model.objects.create()
         profile_id = user.profile.id
-        github_token = "github_token"
-        user.profile.github_token = github_token
-        assert Profile.objects.get(pk=profile_id).github_token != github_token
+        issue_tracker_api_token = "issue_tracker_api_token"
+        user.profile.issue_tracker_api_token = issue_tracker_api_token
+        assert (
+            Profile.objects.get(pk=profile_id).issue_tracker_api_token
+            != issue_tracker_api_token
+        )
         user.save()
-        assert Profile.objects.get(pk=profile_id).github_token == github_token
+        assert (
+            Profile.objects.get(pk=profile_id).issue_tracker_api_token
+            == issue_tracker_api_token
+        )

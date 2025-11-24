@@ -11,6 +11,7 @@ from django.conf import settings
 
 import utils.mappers
 from core.models import Reward, RewardType, SocialPlatform
+from utils.constants.core import GITHUB_ISSUES_START_DATE
 from utils.mappers import (
     CustomIssue,
     _build_reward_mapping,
@@ -284,9 +285,12 @@ class TestUtilsMappersHelpers:
             "open": ["issue2"],
             "timestamp": "2024-01-01",
         }
-
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
-        mocker.patch("utils.mappers.fetch_issues", return_value=[])
+
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch("issues.providers.BaseIssueProvider.fetch_issues", return_value=[])
 
         result = _fetch_and_categorize_issues("valid_token", refetch=False)
 
@@ -313,14 +317,19 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_fetch_issues = mocker.patch(
-            "utils.mappers.fetch_issues", return_value=new_issues
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=new_issues
         )
         mocker.patch("utils.mappers._save_issues")
 
         result = _fetch_and_categorize_issues("valid_token", refetch=True)
 
-        mock_fetch_issues.assert_called_once()
+        mock_fetch_issues.assert_called_once_with(
+            state="all", since=GITHUB_ISSUES_START_DATE
+        )
         assert len(result["closed"]) == 1
         assert len(result["open"]) == 1
         assert result["closed"][0].issue.number == 101
@@ -342,7 +351,12 @@ class TestUtilsMappersHelpers:
             issues.append(issue)
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        mocker.patch("utils.mappers.fetch_issues", return_value=issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch(
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+        )
         mock_save_issues = mocker.patch("utils.mappers._save_issues")
 
         _fetch_and_categorize_issues("valid_token", refetch=True)
@@ -367,8 +381,11 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_fetch_issues = mocker.patch(
-            "utils.mappers.fetch_issues", return_value=new_issues
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=new_issues
         )
         mocker.patch("utils.mappers._save_issues")
 
@@ -376,7 +393,7 @@ class TestUtilsMappersHelpers:
 
         # Should use timestamp from saved issues as since parameter
         mock_fetch_issues.assert_called_once_with(
-            "valid_token", state="all", since=datetime(2024, 1, 1)
+            state="all", since=datetime(2024, 1, 1)
         )
 
     def test_utils_mappers_fetch_and_categorize_issues_uses_default_since(self, mocker):
@@ -393,8 +410,11 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_fetch_issues = mocker.patch(
-            "utils.mappers.fetch_issues", return_value=new_issues
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=new_issues
         )
         mocker.patch("utils.mappers._save_issues")
 
@@ -404,13 +424,16 @@ class TestUtilsMappersHelpers:
         from utils.constants.core import GITHUB_ISSUES_START_DATE
 
         mock_fetch_issues.assert_called_once_with(
-            "valid_token", state="all", since=GITHUB_ISSUES_START_DATE
+            state="all", since=GITHUB_ISSUES_START_DATE
         )
 
     def test_utils_mappers_fetch_and_categorize_issues_empty_fetch(self, mocker):
         """Test _fetch_and_categorize_issues handles empty fetch results."""
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        mocker.patch("utils.mappers.fetch_issues", return_value=[])
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch("issues.providers.BaseIssueProvider.fetch_issues", return_value=[])
         mock_save_issues = mocker.patch("utils.mappers._save_issues")
 
         result = _fetch_and_categorize_issues("valid_token", refetch=True)
@@ -437,7 +460,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        mocker.patch("utils.mappers.fetch_issues", return_value=issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch(
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+        )
         mock_save_issues = mocker.patch("utils.mappers._save_issues")
 
         result = _fetch_and_categorize_issues("valid_token", refetch=True)
@@ -461,7 +489,12 @@ class TestUtilsMappersHelpers:
             issues.append(issue)
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        mocker.patch("utils.mappers.fetch_issues", return_value=issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch(
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+        )
         mocker.patch("utils.mappers._save_issues")
         mock_print = mocker.patch("builtins.print")
 
@@ -501,7 +534,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        mocker.patch("utils.mappers.fetch_issues", return_value=issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch(
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+        )
         mocker.patch("utils.mappers._save_issues")
         mock_print = mocker.patch("builtins.print")
 
@@ -540,7 +578,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        mocker.patch("utils.mappers.fetch_issues", return_value=issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch(
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+        )
         mocker.patch("utils.mappers._save_issues")
 
         result = _fetch_and_categorize_issues("valid_token", refetch=True)
@@ -568,8 +611,12 @@ class TestUtilsMappersHelpers:
         # Mock _load_saved_issues to return a dict without 'open' key
         saved_issues = {"closed": [], "timestamp": datetime(2024, 1, 1)}
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
-
-        mocker.patch("utils.mappers.fetch_issues", return_value=issues)
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        mocker.patch(
+            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+        )
         mocker.patch("utils.mappers._save_issues")
         mock_print = mocker.patch("builtins.print")
 
@@ -1767,8 +1814,8 @@ class TestUtilsMappersHelpers:
     def test_utils_mappers_is_url_github_issue_valid_url(self):
         """Test valid GitHub issue URL returns issue number."""
         valid_url = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/"
-            f"{settings.GITHUB_REPO_NAME}/issues/123"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/123"
         )
 
         result = _is_url_github_issue(valid_url)
@@ -1786,7 +1833,7 @@ class TestUtilsMappersHelpers:
     def test_utils_mappers_is_url_github_issue_invalid_owner(self):
         """Test invalid repo owner returns False."""
         invalid_url = (
-            f"https://github.com/wrong_owner/{settings.GITHUB_REPO_NAME}/issues/123"
+            f"https://github.com/wrong_owner/{settings.ISSUE_TRACKER_NAME}/issues/123"
         )
 
         result = _is_url_github_issue(invalid_url)
@@ -1796,7 +1843,7 @@ class TestUtilsMappersHelpers:
     def test_utils_mappers_is_url_github_issue_invalid_repo(self):
         """Test invalid repo name returns False."""
         invalid_url = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/wrong_repo/issues/123"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/wrong_repo/issues/123"
         )
 
         result = _is_url_github_issue(invalid_url)
@@ -1806,8 +1853,8 @@ class TestUtilsMappersHelpers:
     def test_utils_mappers_is_url_github_issue_invalid_path(self):
         """Test invalid path returns False."""
         invalid_url = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/"
-            f"{settings.GITHUB_REPO_NAME}/pulls/123"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/pulls/123"
         )
 
         result = _is_url_github_issue(invalid_url)
@@ -1817,8 +1864,8 @@ class TestUtilsMappersHelpers:
     def test_utils_mappers_is_url_github_issue_non_numeric_issue(self):
         """Test non-numeric issue number returns False."""
         invalid_url = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/"
-            f"{settings.GITHUB_REPO_NAME}/issues/abc"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/abc"
         )
 
         result = _is_url_github_issue(invalid_url)

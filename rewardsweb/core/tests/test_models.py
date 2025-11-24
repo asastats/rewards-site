@@ -616,7 +616,7 @@ class TestCoreProfileModel:
         [
             ("user", models.OneToOneField),
             ("contributor", models.OneToOneField),
-            ("github_token", models.CharField),
+            ("issue_tracker_api_token", models.CharField),
         ],
     )
     def test_core_profile_model_fields(self, name, typ):
@@ -653,9 +653,9 @@ class TestCoreProfileModel:
         assert Profile.objects.get(pk=user.profile.id).contributor is None
 
     @pytest.mark.django_db
-    def test_core_profile_model_cannot_save_too_long_github_token(self):
+    def test_core_profile_model_cannot_save_too_long_issue_tracker_api_token(self):
         user = user_model.objects.create(username="username2")
-        profile = Profile(user=user, github_token="a" * 200)
+        profile = Profile(user=user, issue_tracker_api_token="a" * 200)
         with pytest.raises(DataError):
             profile.save()
             profile.full_clean()

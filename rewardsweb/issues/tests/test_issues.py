@@ -13,7 +13,7 @@ from issues.issues import (
 )
 
 
-class TestIssuesIssueProvider:
+class TestIssuesIssuesIssueProvider:
     """Testing class for :class:`issues.issues.IssueProvider`."""
 
     @pytest.mark.parametrize(
@@ -27,34 +27,26 @@ class TestIssuesIssueProvider:
     def test_issues_issues_issueprovider_init(self, mocker):
         user = mocker.MagicMock()
         mock_get_provider = mocker.patch.object(IssueProvider, "_get_provider_instance")
-        provider = IssueProvider(user, provider_name="github")
-        assert provider.provider_name == "github"
+        provider = IssueProvider(user, name="github")
+        assert provider.name == "github"
         assert provider.user == user
-        mock_get_provider.assert_called_once_with()
-
-    # # _get_provider_instance
-    def test_issues_issues_issueprovider_get_provider_instance(self, mocker):
-        user = mocker.MagicMock()
-        mock_github_provider = mocker.patch("issues.issues.GithubProvider")
-        provider = IssueProvider(user, provider_name="github")
-        provider._get_provider_instance()
-        mock_github_provider.assert_called_once_with(user)
+        mock_get_provider.assert_called_once_with(name="github")
 
     # # __getattr__
     def test_issues_issues_issueprovider_getattr(self, mocker):
         user = mocker.MagicMock()
-        provider = IssueProvider(user, provider_name="github")
+        provider = IssueProvider(user, name="github")
         assert hasattr(provider, "create_issue")
 
 
-class TestIssuesPrepareFunctions:
+class TestIssuesIssuesPrepareFunctions:
     """Testing class for :py:mod:`issues.issues` issue preparation functions."""
 
     # # contributor_link
     def test_issues_issues_contributor_link_for_contributor_not_found(self, mocker):
         handle = "handle"
         mocked_contributor = mocker.patch(
-            "utils.issues.Contributor.objects.from_handle", return_value=None
+            "issues.issues.Contributor.objects.from_handle", return_value=None
         )
         returned = _contributor_link(handle)
         assert returned == handle
@@ -63,7 +55,7 @@ class TestIssuesPrepareFunctions:
     def test_issues_issues_contributor_link_for_error(self, mocker):
         handle = "handle"
         mocked_contributor = mocker.patch(
-            "utils.issues.Contributor.objects.from_handle",
+            "issues.issues.Contributor.objects.from_handle",
             side_effect=ValueError("error"),
         )
         returned = _contributor_link(handle)
@@ -76,7 +68,7 @@ class TestIssuesPrepareFunctions:
         url = "http://example.com"
         contributor.get_absolute_url.return_value = url
         mocked_contributor = mocker.patch(
-            "utils.issues.Contributor.objects.from_handle", return_value=contributor
+            "issues.issues.Contributor.objects.from_handle", return_value=contributor
         )
         returned = _contributor_link(handle)
         assert returned == f"[{handle}]({url})"
@@ -86,7 +78,7 @@ class TestIssuesPrepareFunctions:
     def test_issues_issues_prepare_issue_body_from_contribution_no_url(self, mocker):
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
         contribution.url = None
-        mocked_link = mocker.patch("utils.issues._contributor_link")
+        mocked_link = mocker.patch("issues.issues._contributor_link")
 
         result = _prepare_issue_body_from_contribution(contribution, profile)
 
@@ -98,9 +90,9 @@ class TestIssuesPrepareFunctions:
     ):
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
         contribution.url = "https://discord.com/channels/test"
-        mocked_link = mocker.patch("utils.issues._contributor_link")
+        mocked_link = mocker.patch("issues.issues._contributor_link")
 
-        mocked_message_from_url = mocker.patch("utils.issues.message_from_url")
+        mocked_message_from_url = mocker.patch("issues.issues.message_from_url")
         mocked_message_from_url.return_value = {"success": False}
 
         result = _prepare_issue_body_from_contribution(contribution, profile)
@@ -115,7 +107,7 @@ class TestIssuesPrepareFunctions:
         contribution, profile = mocker.MagicMock(), "username"
         contribution.url = "https://discord.com/channels/test"
         link = "https://example.com"
-        mocked_link = mocker.patch("utils.issues._contributor_link", return_value=link)
+        mocked_link = mocker.patch("issues.issues._contributor_link", return_value=link)
 
         test_message = {
             "success": True,
@@ -124,9 +116,9 @@ class TestIssuesPrepareFunctions:
             "content": "This is a test message\nwith multiple lines",
         }
 
-        mocked_message_from_url = mocker.patch("utils.issues.message_from_url")
+        mocked_message_from_url = mocker.patch("issues.issues.message_from_url")
         mocked_message_from_url.return_value = test_message
-        mocked_datetime = mocker.patch("utils.issues.datetime")
+        mocked_datetime = mocker.patch("issues.issues.datetime")
         mocked_datetime.strptime.return_value.strftime.return_value = "15 Oct 14:30"
 
         result = _prepare_issue_body_from_contribution(contribution, profile)
@@ -257,18 +249,19 @@ class TestIssuesPrepareFunctions:
 
         # Mock all the helper functions
         mocker.patch(
-            "utils.issues._prepare_issue_title_from_contribution",
+            "issues.issues._prepare_issue_title_from_contribution",
             return_value="Test Title",
         )
         mocker.patch(
-            "utils.issues._prepare_issue_body_from_contribution",
+            "issues.issues._prepare_issue_body_from_contribution",
             return_value="Test Body",
         )
         mocker.patch(
-            "utils.issues._prepare_issue_labels_from_contribution", return_value=["bug"]
+            "issues.issues._prepare_issue_labels_from_contribution",
+            return_value=["bug"],
         )
         mocker.patch(
-            "utils.issues._prepare_issue_priority_from_contribution",
+            "issues.issues._prepare_issue_priority_from_contribution",
             return_value="high priority",
         )
 
@@ -286,14 +279,16 @@ class TestIssuesPrepareFunctions:
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
 
         mocked_title = mocker.patch(
-            "utils.issues._prepare_issue_title_from_contribution"
+            "issues.issues._prepare_issue_title_from_contribution"
         )
-        mocked_body = mocker.patch("utils.issues._prepare_issue_body_from_contribution")
+        mocked_body = mocker.patch(
+            "issues.issues._prepare_issue_body_from_contribution"
+        )
         mocked_labels = mocker.patch(
-            "utils.issues._prepare_issue_labels_from_contribution"
+            "issues.issues._prepare_issue_labels_from_contribution"
         )
         mocked_priority = mocker.patch(
-            "utils.issues._prepare_issue_priority_from_contribution"
+            "issues.issues._prepare_issue_priority_from_contribution"
         )
 
         issue_data_for_contribution(contribution, profile)

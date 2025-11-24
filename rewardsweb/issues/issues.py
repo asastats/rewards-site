@@ -33,17 +33,17 @@ class IssueProvider:
     user = None
     _provider_instance = None
 
-    def __init__(self, user, name=None):
+    def __init__(self, user, **kwargs):
         """Initialize issue provider with configured provider.
 
         :param user: Django user instance
         :type user: class:`django.contrib.auth.models.User`
         """
-        self.name = name or getattr(settings, "ISSUE_PROVIDER", "github")
+        self.name = settings.ISSUE_TRACKER_PROVIDER
         self.user = user
-        self._provider_instance = self._get_provider_instance()
+        self._provider_instance = self._get_provider_instance(**kwargs)
 
-    def _get_provider_instance(self):
+    def _get_provider_instance(self, **kwargs):
         """Get the provider instance from registry, fallback to GitHub.
 
         :var provider_class: provider class from registry
@@ -58,7 +58,9 @@ class IssueProvider:
             logger.warning(f"Provider '{self.name}' not found, using GitHub")
             provider_class = GithubProvider
 
-        return provider_class(self.user)
+        return provider_class(
+            self.user, issue_tracker_api_token=kwargs.get("issue_tracker_api_token")
+        )
 
     def __getattr__(self, name):
         """Delegate all method calls to the provider instance.

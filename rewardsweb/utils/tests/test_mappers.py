@@ -1678,8 +1678,8 @@ class TestUtilsMappersMapClosedArchivedIssues:
 
         # Mock contribution with GitHub issue URL
         github_issue_url = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/"
-            f"{settings.GITHUB_REPO_NAME}/issues/456"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/456"
         )
         mock_contrib = mocker.MagicMock()
         mock_contrib.id = 1
@@ -1810,8 +1810,8 @@ class TestUtilsMappersMapClosedArchivedIssues:
 
         # Mock contribution with GitHub issue URL
         github_issue_url = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/"
-            f"{settings.GITHUB_REPO_NAME}/issues/456"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/456"
         )
         mock_contrib = mocker.MagicMock()
         mock_contrib.id = 1
@@ -1925,8 +1925,8 @@ class TestUtilsMappersMapClosedArchivedIssues:
         mock_contrib2 = mocker.MagicMock()
         mock_contrib2.id = 2
         github_issue_url = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/"
-            f"{settings.GITHUB_REPO_NAME}/issues/202"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/202"
         )
         mock_contrib2.url = github_issue_url
 
@@ -3255,9 +3255,9 @@ class TestUtilsMappersPublicFunctions:
         )
         mock_addressed = mocker.patch("utils.mappers._map_closed_addressed_issues")
         mock_open_issues = mocker.patch("utils.mappers._map_open_issues")
-        result = map_github_issues(github_token="github_token")
+        result = map_github_issues(issue_tracker_api_token="issue_tracker_api_token")
 
-        mock_categorize.assert_called_once_with("github_token")
+        mock_categorize.assert_called_once_with("issue_tracker_api_token")
         mock_archived.assert_called_once_with(closed_issues)
         mock_unprocesed.assert_called_once_with(mock_archived.return_value)
         mock_addressed.assert_called_once_with(closed_issues)
@@ -3276,9 +3276,9 @@ class TestUtilsMappersPublicFunctions:
         )
         mock_addressed = mocker.patch("utils.mappers._map_closed_addressed_issues")
         mock_open_issues = mocker.patch("utils.mappers._map_open_issues")
-        result = map_github_issues(github_token="github_token")
+        result = map_github_issues(issue_tracker_api_token="issue_tracker_api_token")
 
-        mock_categorize.assert_called_once_with("github_token")
+        mock_categorize.assert_called_once_with("issue_tracker_api_token")
         mock_archived.assert_called_once_with([])
         mock_unprocesed.assert_called_once_with(mock_archived.return_value)
         mock_addressed.assert_called_once_with([])

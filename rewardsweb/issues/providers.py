@@ -1,21 +1,88 @@
 """Module containing functions for providers' issues management."""
 
 import logging
+import os
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-import gitlab
 import jwt
 import requests
-from atlassian.bitbucket import Bitbucket
+from atlassian.bitbucket.cloud import Cloud
 from django.conf import settings
 from github import Auth, Github
+from gitlab import Gitlab
 
 from utils.constants.core import GITHUB_ISSUES_START_DATE
 from utils.constants.ui import MISSING_TOKEN_TEXT
 from utils.helpers import get_env_variable
 
 logger = logging.getLogger(__name__)
+
+
+class BitbucketApp:
+    """Helper class for instantiating a Bitbucket client using a Bitbucket app."""
+
+    def jwt_token(self):
+        """Generate JWT token for a Bitbucket app.
+
+        :var client_key: The clientKey from the app's descriptor.
+        :type client_key: str
+        :var shared_secret: The sharedSecret from the app's installation.
+        :type shared_secret: str
+        :var now: The current UTC time.
+        :type now: :class:`datetime.datetime`
+        :var expiration: The expiration time for the token (3 minutes).
+        :type expiration: :class:`datetime.datetime`
+        :var payload: The JWT payload.
+        :type payload: dict
+        :return: The JWT token.
+        :rtype: str
+        """
+        client_key = os.getenv("BITBUCKET_CLIENT_KEY")
+        shared_secret = os.getenv("BITBUCKET_SHARED_SECRET")
+
+        if not (client_key and shared_secret):
+            return None
+
+        now = datetime.now(timezone.utc)
+        expiration = now + timedelta(minutes=3)
+        payload = {
+            "iat": now,
+            "exp": expiration,
+            "iss": client_key,
+        }
+        return jwt.encode(payload, shared_secret, algorithm="HS256")
+
+    def access_token(self):
+        """Retrieve an access token for a Bitbucket app installation.
+
+        :var jwt_token: The JWT token for the app.
+        :type jwt_token: str
+        :var url: The URL for the token exchange request.
+        :type url: str
+        :var headers: The headers for the request.
+        :type headers: dict
+        :var data: The data for the POST request.
+        :type data: dict
+        :var response: The response from the request.
+        :type response: :class:`requests.Response`
+        :return: The installation access token.
+        :rtype: str
+        """
+        jwt_token = self.jwt_token()
+        if not jwt_token:
+            return None
+
+        url = "https://bitbucket.org/site/oauth2/access_token"
+        headers = {"Authorization": f"JWT {jwt_token}"}
+        data = {"grant_type": "urn:bitbucket:oauth2:jwt"}
+
+        response = requests.post(url, headers=headers, data=data)
+
+        if response.status_code == 200:
+            return response.json().get("access_token")
+
+        return None
 
 
 class GitHubApp:
@@ -125,20 +192,24 @@ class BaseIssueProvider(ABC):
     client = None
     repo = None
 
-    def __init__(self, user):
+    def __init__(self, user, issue_tracker_api_token=None):
         """Initialize base provider.
 
         :param user: Django user instance
         :type user: class:`django.contrib.auth.models.User`
+        :param issue_tracker_api_token: if provided, token used for client instantiation
+        :type issue_tracker_api_token: str
         """
         self.user = user
-        self.client = self._get_client()
+        self.client = self._get_client(issue_tracker_api_token=issue_tracker_api_token)
         self.repo = self._get_repository()
 
     @abstractmethod
-    def _get_client(self):
+    def _get_client(self, issue_tracker_api_token=None):
         """Get authenticated client - must be implemented by subclasses.
 
+        :param issue_tracker_api_token: if provided, token used for client instantiation
+        :type issue_tracker_api_token: str
         :return: provider client instance
         """
         raise NotImplementedError
@@ -273,7 +344,7 @@ class BaseIssueProvider(ABC):
             return {"success": False, "error": str(e)}
 
     def fetch_issues(self, state="all", since=GITHUB_ISSUES_START_DATE):
-        """Fetch issues.
+        """Fetch issues from provider.
 
         :param state: issue state filter
         :type state: str
@@ -346,37 +417,43 @@ class BitbucketProvider(BaseIssueProvider):
 
     name = "bitbucket"
 
-    def _get_client(self):
+    def _get_client(self, issue_tracker_api_token=None):
         """Get Bitbucket client.
 
-        :var bb_client: Bitbucket client instance
-        :type bb_client: :class:`atlassian.bitbucket.Bitbucket`
+        :param issue_tracker_api_token: if provided, token used for client instantiation
+        :type issue_tracker_api_token: str
+        :var client: Bitbucket app client instance
+        :type client: :class:`atlassian.bitbucket.cloud.Cloud`
+        :var token: Bitbucket authentication token instance
+        :type token: str
         :return: Bitbucket client instance
-        :rtype: :class:`atlassian.bitbucket.Bitbucket`
+        :rtype: :class:`atlassian.bitbucket.cloud.Cloud`
         """
-        if not (
-            self.user.profile.bitbucket_username and self.user.profile.bitbucket_token
-        ):
-            return False
+        if issue_tracker_api_token:
+            return Cloud(token=issue_tracker_api_token)
 
-        return Bitbucket(
-            username=self.user.profile.bitbucket_username,
-            password=self.user.profile.bitbucket_token,
-        )
+        token = BitbucketApp().access_token()
+        if token:
+            return Cloud(token=token)
+
+        if not self.user or not self.user.profile.issue_tracker_api_token:
+            return None
+
+        return Cloud(token=self.user.profile.issue_tracker_api_token)
 
     def _get_repository(self):
-        """Get Bitbucket workspace and repo slug.
+        """Get Bitbucket repository.
 
-        :var workspace: Bitbucket workspace name
-        :type workspace: str
-        :var repo_slug: Bitbucket repository slug
-        :type repo_slug: str
-        :return: tuple of workspace and repo slug
-        :rtype: tuple
+        :return: Bitbucket repository instance
+        :rtype: object
         """
-        workspace = getattr(settings, "BITBUCKET_WORKSPACE", "")
-        repo_slug = getattr(settings, "BITBUCKET_REPO_SLUG", "")
-        return workspace, repo_slug
+        return (
+            self.client.repositories.get(
+                settings.ISSUE_TRACKER_OWNER, settings.ISSUE_TRACKER_NAME
+            )
+            if self.client
+            else None
+        )
 
     def _close_issue_with_labels_impl(self, issue_number, labels_to_set, comment):
         """Close Bitbucket issue.
@@ -437,11 +514,14 @@ class BitbucketProvider(BaseIssueProvider):
         }
 
     def _fetch_issues_impl(self, state, since):
-        """Fetch Bitbucket issues.
+        """Fetch Bitbucket issues from provider.
+
+        Parameter `since` is not directly supported by Bitbucket API in the same way
+        as GitHub/GitLab. Issues will be fetched without a 'since' filter.
 
         :param state: issue state filter (e.g., 'open', 'resolved')
         :type state: str
-        :param since: This parameter is not directly supported by Bitbucket API in the same way as GitHub/GitLab. Issues will be fetched without a 'since' filter.
+        :param since:  fetch only issues that have been updated after this date
         :type since: :class:`datetime.datetime`
         :return: collection of Bitbucket issue instances
         :rtype: list
@@ -512,9 +592,11 @@ class GithubProvider(BaseIssueProvider):
 
     name = "github"
 
-    def _get_client(self):
+    def _get_client(self, issue_tracker_api_token=None):
         """Get GitHub client.
 
+        :param issue_tracker_api_token: if provided, token used for client instantiation
+        :type issue_tracker_api_token: str
         :var client: GitHub bot client instance
         :type client: :class:`github.Github`
         :var auth: GitHub authentication token instance
@@ -522,14 +604,18 @@ class GithubProvider(BaseIssueProvider):
         :return: GitHub client instance
         :rtype: :class:`github.Github`
         """
+        if issue_tracker_api_token:
+            auth = Auth.Token(issue_tracker_api_token)
+            return Github(auth=auth)
+
         client = GitHubApp().client()
         if client:
             return client
 
-        if not self.user.profile.github_token:
+        if not self.user.profile.issue_tracker_api_token:
             return False
 
-        auth = Auth.Token(self.user.profile.github_token)
+        auth = Auth.Token(self.user.profile.issue_tracker_api_token)
         return Github(auth=auth)
 
     def _get_repository(self):
@@ -538,8 +624,12 @@ class GithubProvider(BaseIssueProvider):
         :return: GitHub repository instance
         :rtype: :class:`github.Repository.Repository`
         """
-        return self.client.get_repo(
-            f"{settings.GITHUB_REPO_OWNER}/{settings.GITHUB_REPO_NAME}"
+        return (
+            self.client.get_repo(
+                f"{settings.ISSUE_TRACKER_OWNER}/{settings.ISSUE_TRACKER_NAME}"
+            )
+            if self.client
+            else None
         )
 
     def _close_issue_with_labels_impl(self, issue_number, labels_to_set, comment):
@@ -663,21 +753,46 @@ class GitlabProvider(BaseIssueProvider):
 
     name = "gitlab"
 
-    def _get_client(self):
+    def _get_client(self, issue_tracker_api_token=None):
         """Get GitLab client.
 
-        :var gl_client: GitLab client instance
-        :type gl_client: :class:`gitlab.Gitlab`
-        :return: GitLab client instance
+        :param issue_tracker_api_token: if provided, token used for client instantiation
+        :type issue_tracker_api_token: str
+        :var pat: GitLab Personal Access Token.
+        :type pat: str
+        :var url: GitLab instance URL.
+        :type url: str
+        :return: GitLab client instance.
         :rtype: :class:`gitlab.Gitlab`
         """
-        if not self.user.profile.gitlab_token:
-            return False
+        url = os.getenv("GITLAB_URL", "https://gitlab.com")
+        if issue_tracker_api_token:
+            return Gitlab(url=url, private_token=issue_tracker_api_token)
 
-        return gitlab.Gitlab(
-            url=getattr(settings, "GITLAB_URL", "https://gitlab.com"),
-            private_token=self.user.profile.gitlab_token,
-        )
+        pat = os.getenv("GITLAB_PRIVATE_TOKEN")
+
+        if pat:
+            return Gitlab(url=url, private_token=pat)
+
+        if not self.user or not self.user.profile.issue_tracker_api_token:
+            return None
+
+        return Gitlab(url=url, private_token=self.user.profile.issue_tracker_api_token)
+
+    def _get_project(self):
+        """Get GitLab project.
+
+        TODO: implement usage of this
+
+        :var project_id: The ID or path of the GitLab project.
+        :type project_id: str
+        :return: GitLab project instance.
+        :rtype: :class:`gitlab.v4.objects.Project`
+        """
+        project_id = os.getenv("GITLAB_PROJECT_ID")
+        if not project_id:
+            return None
+        return self.client.projects.get(project_id)
 
     def _get_repository(self):
         """Get GitLab project.
@@ -687,8 +802,12 @@ class GitlabProvider(BaseIssueProvider):
         :return: GitLab project instance
         :rtype: :class:`gitlab.v4.objects.Project`
         """
-        return self.client.projects.get(
-            f"{settings.GITLAB_PROJECT_OWNER}/{settings.GITLAB_PROJECT_NAME}"
+        return (
+            self.client.projects.get(
+                f"{settings.ISSUE_TRACKER_OWNER}/{settings.ISSUE_TRACKER_NAME}"
+            )
+            if self.client
+            else None
         )
 
     def _close_issue_with_labels_impl(self, issue_number, labels_to_set, comment):

@@ -223,5 +223,11 @@ REST_FRAMEWORK = {
     ],
 }
 
-GITHUB_REPO_OWNER = "asastats"
-GITHUB_REPO_NAME = "channel"  # "rewards-site"
+# issues
+ISSUE_TRACKER_PROVIDER = "github"
+# The following constants corresponds to:
+# GitHub: repository owner, repository name
+# GitLab: project owner, project name
+# GitHub: workspace name, repository slug
+ISSUE_TRACKER_OWNER = "asastats"
+ISSUE_TRACKER_NAME = "channel"  # "rewards-site"

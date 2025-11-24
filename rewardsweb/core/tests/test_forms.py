@@ -409,15 +409,15 @@ class TestProfileForm:
     def test_profileform_issubclass_of_modelform(self):
         assert issubclass(ProfileForm, ModelForm)
 
-    def test_profileform_github_token_field(self):
+    def test_profileform_issue_tracker_api_token_field(self):
         form = ProfileForm()
-        assert "github_token" in form.base_fields
-        assert not form.base_fields["github_token"].required
-        assert isinstance(form.base_fields["github_token"], CharField)
-        assert isinstance(form.base_fields["github_token"].widget, TextInput)
-        assert "class" in form.base_fields["github_token"].widget.attrs
-        assert "placeholder" in form.base_fields["github_token"].widget.attrs
-        assert "GitHub" in form.base_fields["github_token"].help_text
+        assert "issue_tracker_api_token" in form.base_fields
+        assert not form.base_fields["issue_tracker_api_token"].required
+        assert isinstance(form.base_fields["issue_tracker_api_token"], CharField)
+        assert isinstance(form.base_fields["issue_tracker_api_token"].widget, TextInput)
+        assert "class" in form.base_fields["issue_tracker_api_token"].widget.attrs
+        assert "placeholder" in form.base_fields["issue_tracker_api_token"].widget.attrs
+        assert "GitHub" in form.base_fields["issue_tracker_api_token"].help_text
 
     # # Meta
     def test_profileform_meta_model_is_profile(self):
@@ -426,7 +426,7 @@ class TestProfileForm:
 
     def test_profileform_meta_fields(self):
         form = ProfileForm()
-        assert "github_token" in form._meta.fields
+        assert "issue_tracker_api_token" in form._meta.fields
 
 
 class TestProfileFormSet:
@@ -440,7 +440,7 @@ class TestProfileFormSet:
         formset = ProfileFormSet()
         assert formset.model == Profile
 
-    def test_profileformset_github_token_field(self):
+    def test_profileformset_issue_tracker_api_token_field(self):
         formset = ProfileFormSet()
         assert isinstance(formset.forms[0], ProfileForm)
         assert formset.extra == 1

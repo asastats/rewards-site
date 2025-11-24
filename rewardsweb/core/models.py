@@ -316,7 +316,7 @@ class Profile(models.Model):
     contributor = models.OneToOneField(
         Contributor, on_delete=models.SET_NULL, null=True, blank=True
     )
-    github_token = models.CharField(max_length=100, blank=True)
+    issue_tracker_api_token = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
         """Return string representation of the profile instance

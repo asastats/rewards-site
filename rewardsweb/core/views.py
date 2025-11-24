@@ -45,6 +45,7 @@ from core.models import (
     Issue,
     IssueStatus,
 )
+from issues.issues import IssueProvider, issue_data_for_contribution
 from utils.bot import (
     add_reaction_to_message,
     add_reply_to_message,
@@ -57,13 +58,6 @@ from utils.constants.core import (
     ISSUE_PRIORITY_CHOICES,
 )
 from utils.constants.ui import MISSING_TOKEN_TEXT
-from utils.issues import (
-    close_issue_with_labels,
-    create_github_issue,
-    issue_by_number,
-    issue_data_for_contribution,
-    set_labels_to_issue,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +160,9 @@ class ContributionEditView(UpdateView):
 
             except Issue.DoesNotExist:
                 # Check if GitHub issue exists
-                issue_data = issue_by_number(self.request.user, issue_number)
+                issue_data = IssueProvider(self.request.user).issue_by_number(
+                    issue_number
+                )
                 if not issue_data.get("success"):
                     if issue_data.get("error") == MISSING_TOKEN_TEXT:
                         form.add_error(
@@ -658,14 +654,14 @@ class IssueDetailView(DetailView):
 
         issue = self.get_object()
         context["issue_html_url"] = (
-            f"https://github.com/{settings.GITHUB_REPO_OWNER}/"
-            f"{settings.GITHUB_REPO_NAME}/issues/{issue.number}"
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/{issue.number}"
         )
 
         # Only fetch GitHub data and show form for superusers
         if self.request.user.is_superuser:
             # Retrieve GitHub issue data if issue number exists
-            issue_data = issue_by_number(self.request.user, issue.number)
+            issue_data = IssueProvider(self.request.user).issue_by_number(issue.number)
 
             if issue_data["success"]:
                 context["github_issue"] = issue_data["issue"]
@@ -749,7 +745,9 @@ class IssueDetailView(DetailView):
                 form.cleaned_data["priority"]
             ]
 
-            result = set_labels_to_issue(request.user, issue.number, labels_to_add)
+            result = IssueProvider(request.user).set_labels_to_issue(
+                issue.number, labels_to_add
+            )
 
             if result["success"]:
                 success_message = (
@@ -787,7 +785,7 @@ class IssueDetailView(DetailView):
 
         try:
             # Get current labels from GitHub
-            issue_data = issue_by_number(request.user, issue.number)
+            issue_data = IssueProvider(request.user).issue_by_number(issue.number)
             if not issue_data["success"]:
                 messages.error(
                     request, f"Failed to fetch GitHub issue: {issue_data.get('error')}"
@@ -814,8 +812,7 @@ class IssueDetailView(DetailView):
             success_message = f"Issue #{issue.number} closed as {action} successfully."
 
             # Call the function to close issue on GitHub
-            result = close_issue_with_labels(
-                user=request.user,
+            result = IssueProvider(request.user).close_issue_with_labels(
                 issue_number=issue.number,
                 labels_to_set=labels_to_set,
                 comment=comment,
@@ -1035,8 +1032,8 @@ class CreateIssueView(FormView):
         priority = cleaned_data.get("priority", "")
         issue_body = cleaned_data.get("issue_body", "")
         issue_title = cleaned_data.get("issue_title", "")
-        data = create_github_issue(
-            self.request.user, issue_title, issue_body, labels=labels + [priority]
+        data = IssueProvider(self.request.user).create_issue(
+            issue_title, issue_body, labels=labels + [priority]
         )
         if not data.get("success"):
             form.add_error(

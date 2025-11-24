@@ -1,6 +1,7 @@
 """Testing module for :py:mod:`core.views` views related to issues Hhtmx requests."""
 
 import pytest
+from django.conf import settings
 from django.urls import reverse
 
 
@@ -41,8 +42,11 @@ class TestIssueModalHTMX:
         """IssueDetailView._handle_labels_submission should return HTMX partial on success."""
         client.force_login(superuser)
 
+        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
+        mocker.patch(f"issues.providers.{name}Provider._get_client")
+        mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mocker.patch(
-            "core.views.set_labels_to_issue",
+            "issues.providers.BaseIssueProvider.set_labels_to_issue",
             return_value={
                 "success": True,
                 "message": "some message",

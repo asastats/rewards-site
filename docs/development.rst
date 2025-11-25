@@ -109,48 +109,6 @@ invoke the following trigger build/watch command to use it:
     --config core/static/css/tailwind.config.js --minify
 
 
-SonarQube
-^^^^^^^^^
-
-`SonarQube <https://docs.sonarsource.com/sonarqube-community-build>`_
-is an automated code review and static analysis tool designed to detect coding issues.
-You can find the installation instructions
-`here <https://docs.sonarsource.com/sonarqube-community-build/try-out-sonarqube>`.
-
-
-Starting server
-"""""""""""""""
-
-.. code-block:: bash
-
-  $ ~/opt/repos/sonarqube-25.9.0/bin/linux-x86-64/sonar.sh console
-
-
-Starting scanner
-""""""""""""""""
-
-You should add scanner executable to your PATH. `download`_ For example, by adding the following
-line to your ``~/.bashrc``:
-
-.. code-block:: bash
-
-  export PATH=$PATH:~/opt/repos/sonar-scanner-7.2/bin
-
-
-After a token `token`_ is created. start scanning by running the scanner from the root directory of the project with:
-
-.. code-block:: bash
-
-  $ sonar-scanner -Dsonar.projectKey=rewards.asastats.com -Dsonar.host.url=http://localhost:9000 -Dsonar.token=squ_08af89592eb73c1fad89a1ef6feaa528fc3b8888
-
-
-For additional information read the scanner `documentation`_.
-
-.. _documentation: https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/
-.. _token: http://localhost:9000/account/security
-.. _download: https://docs.sonarsource.com/sonarqube-server/latest/analyzing-source-code/scanners/sonarscanner/
-
-
 Smart contract
 --------------
 

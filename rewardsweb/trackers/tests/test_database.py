@@ -1,7 +1,9 @@
 """Testing module for :py:mod:`trackers.database` module."""
 
 import json
+from pathlib import Path
 
+import trackers.database
 from trackers.database import MentionDatabaseManager
 
 
@@ -26,7 +28,12 @@ class TestTrackersMentionDatabaseManager:
 
         instance = MentionDatabaseManager()
 
-        assert instance.db_path == "fixtures/social_mentions.db"
+        assert (
+            instance.db_path
+            == Path(trackers.database.__file__).parent.parent.resolve()
+            / "fixtures"
+            / "social_mentions.db"
+        )
         mock_setup_database.assert_called_once()
 
     # setup_database
@@ -45,7 +52,11 @@ class TestTrackersMentionDatabaseManager:
 
         instance.setup_database()
 
-        mock_connect.assert_called_once_with("fixtures/social_mentions.db")
+        mock_connect.assert_called_once_with(
+            Path(trackers.database.__file__).parent.parent.resolve()
+            / "fixtures"
+            / "social_mentions.db"
+        )
         assert mock_cursor.execute.call_count == 2
         mock_conn.commit.assert_called_once()
         assert instance.conn == mock_conn

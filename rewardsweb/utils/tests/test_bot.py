@@ -1,10 +1,10 @@
 """Testing module for :py:mod:`utils.bot` module."""
 
-import os
 from unittest import mock
 
 import pytest
 
+from rewardsbot.config import DISCORD_TOKEN, GUILD_IDS
 from utils.bot import (
     _parse_discord_url,
     add_reaction_to_message,
@@ -74,7 +74,7 @@ class TestUtilsBotFunctions:
         url = (
             f"https://discord.com/channels/906917846754418770/{channel_id}/{message_id}"
         )
-        headers = {"Authorization": "Bot " + os.environ["DISCORD_BOT_TOKEN"]}
+        headers = {"Authorization": "Bot " + DISCORD_TOKEN}
         api_url = (
             f"https://discord.com/api/v10/channels/{channel_id}/"
             f"messages/{message_id}/reactions/{emoji}/@me"
@@ -100,7 +100,7 @@ class TestUtilsBotFunctions:
         url = (
             f"https://discord.com/channels/906917846754418770/{channel_id}/{message_id}"
         )
-        headers = {"Authorization": "Bot " + os.environ["DISCORD_BOT_TOKEN"]}
+        headers = {"Authorization": "Bot " + DISCORD_TOKEN}
         api_url = (
             f"https://discord.com/api/v10/channels/{channel_id}/"
             f"messages/{message_id}/reactions/{emoji}/@me"
@@ -132,14 +132,14 @@ class TestUtilsBotFunctions:
     def test_utils_bot_add_reply_to_message_for_api_error(self):
         """Test add_reply_to_message handles API errors correctly."""
         guild_id, channel_id, message_id, comment = (
-            "906917846754418770",
+            GUILD_IDS.split(",")[0],
             "1028021510453084161",
             "1353382023309562020",
             "This is a test reply",
         )
         url = f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}"
         headers = {
-            "Authorization": "Bot " + os.environ["DISCORD_BOT_TOKEN"],
+            "Authorization": "Bot " + DISCORD_TOKEN,
             "Content-Type": "application/json",
         }
         api_url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
@@ -162,14 +162,14 @@ class TestUtilsBotFunctions:
     def test_utils_bot_add_reply_to_message_functionality(self):
         """Test add_reply_to_message successfully adds reply."""
         guild_id, channel_id, message_id, comment = (
-            "906917846754418770",
+            GUILD_IDS.split(",")[0],
             "1028021510453084161",
             "1353382023309562020",
             "This is a test reply",
         )
         url = f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}"
         headers = {
-            "Authorization": "Bot " + os.environ["DISCORD_BOT_TOKEN"],
+            "Authorization": "Bot " + DISCORD_TOKEN,
             "Content-Type": "application/json",
         }
         api_url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
@@ -191,7 +191,7 @@ class TestUtilsBotFunctions:
     def test_utils_bot_add_reply_to_message_with_different_status_codes(self):
         """Test add_reply_to_message handles various HTTP status codes."""
         guild_id, channel_id, message_id, comment = (
-            "906917846754418770",
+            GUILD_IDS.split(",")[0],
             "1028021510453084161",
             "1353382023309562020",
             "This is a test reply",
@@ -222,7 +222,7 @@ class TestUtilsBotFunctions:
         url = (
             f"https://discord.com/channels/906917846754418770/{channel_id}/{message_id}"
         )
-        headers = {"Authorization": "Bot " + os.environ["DISCORD_BOT_TOKEN"]}
+        headers = {"Authorization": "Bot " + DISCORD_TOKEN}
         api_url = (
             f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}"
         )
@@ -242,7 +242,7 @@ class TestUtilsBotFunctions:
         url = (
             f"https://discord.com/channels/906917846754418770/{channel_id}/{message_id}"
         )
-        headers = {"Authorization": "Bot " + os.environ["DISCORD_BOT_TOKEN"]}
+        headers = {"Authorization": "Bot " + DISCORD_TOKEN}
         api_url = (
             f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}"
         )
@@ -270,7 +270,7 @@ class TestUtilsBotFunctions:
         url = (
             f"https://discord.com/channels/906917846754418770/{channel_id}/{message_id}"
         )
-        headers = {"Authorization": "Bot " + os.environ["DISCORD_BOT_TOKEN"]}
+        headers = {"Authorization": "Bot " + DISCORD_TOKEN}
         api_url = (
             f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}"
         )

@@ -5,7 +5,7 @@ import re
 
 import requests
 
-from utils.helpers import get_env_variable
+from rewardsbot.config import DISCORD_TOKEN, GUILD_IDS
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def _parse_discord_url(url):
         return False, False
 
     guild_id, channel_id, message_id = match.groups()
-    if guild_id not in get_env_variable("DISCORD_GUILD_IDS", "").split(","):
+    if guild_id not in GUILD_IDS.split(","):
         return False, False
 
     return channel_id, message_id
@@ -48,8 +48,6 @@ def add_reaction_to_message(url, emoji):
     :type message_id: str
     :param emoji: emoji in format name:ID
     :type emoji: str
-    :var bot_token: Discord bot API access token
-    :type bot_token: str
     :var headers: headers instance carrying bot token
     :type headers: dict
     :var api_url: fully formatted API URL to add reaction to the message
@@ -62,8 +60,7 @@ def add_reaction_to_message(url, emoji):
     if not channel_id:
         return False
 
-    bot_token = get_env_variable("DISCORD_BOT_TOKEN", "")
-    headers = {"Authorization": f"Bot {bot_token}"}
+    headers = {"Authorization": f"Bot {DISCORD_TOKEN}"}
     url = (
         f"https://discord.com/api/v10/channels/{channel_id}/"
         f"messages/{message_id}/reactions/{emoji}/@me"
@@ -88,8 +85,6 @@ def add_reply_to_message(url, comment):
     :type url: str
     :param comment: reply message content
     :type comment: str
-    :var bot_token: Discord bot API access token
-    :type bot_token: str
     :var headers: headers instance carrying bot token and content type
     :type headers: dict
     :var api_url: fully formatted API URL to create message in channel
@@ -105,8 +100,7 @@ def add_reply_to_message(url, comment):
     if not channel_id:
         return False
 
-    bot_token = get_env_variable("DISCORD_BOT_TOKEN", "")
-    headers = {"Authorization": f"Bot {bot_token}", "Content-Type": "application/json"}
+    headers = {"Authorization": f"Bot {DISCORD_TOKEN}", "Content-Type": "application/json"}
     api_url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
 
     payload = {
@@ -130,8 +124,6 @@ def message_from_url(url):
     :type channel_id: str
     :param message_id: ID of the message to react to
     :type message_id: str
-    :var bot_token: Discord bot API access token
-    :type bot_token: str
     :var headers: headers instance carrying bot token
     :type headers: dict
     :var api_url: fully formatted API URL to retrieve message
@@ -146,8 +138,7 @@ def message_from_url(url):
     if not channel_id:
         return {"success": False, "error": "Invalid URL"}
 
-    bot_token = get_env_variable("DISCORD_BOT_TOKEN", "")
-    headers = {"Authorization": f"Bot {bot_token}"}
+    headers = {"Authorization": f"Bot {DISCORD_TOKEN}"}
     api_url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}"
 
     response = requests.get(api_url, headers=headers)

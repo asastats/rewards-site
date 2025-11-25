@@ -4,7 +4,7 @@
   <title>Deactivate account - ASA Stats Rewards</title>
 {% endblock %}
 
-{% block page_title %}Deactivate account{% endblock %}
+{% block page_title %}Deactivate Account{% endblock %}
 
 {% block content %}
 <div class="space-y-6 fade-in">
@@ -12,61 +12,89 @@
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
       <p class="mt-2 text-lg text-base-content/70">
-        To deactivate your account you must enter the characters from the image. If you can't recognize provided characters try another combination by refreshing the page.
+        Deactivate your account - this action cannot be undone
       </p>
     </div>
+    <div class="badge badge-error badge-lg">
+      <i class="fas fa-exclamation-triangle mr-1"></i>
+      Destructive Action
+    </div>
+  </div>
 
-    <form id="deactivate_profile" method="POST" action="." class="w-full">
-    {% csrf_token %}
-    
-      <!-- Form Fields -->
-      <div class="flex justify-center mb-6">
-        <div class="w-full max-w-md space-y-4">
-        {% for field in form %}
-        <div class="form-control">
-            {{ field }}
-            {% if field.errors %}
-            <div class="text-error text-sm mt-2 flex items-center gap-2">
-            <i class="fas fa-exclamation-circle"></i>
-            {{ field.errors|escape }}
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
-        </div>
+  <!-- Warning Alert -->
+  <div class="alert alert-error">
+    <i class="fas fa-exclamation-triangle text-xl"></i>
+    <div>
+      <h3 class="font-bold">Warning: Account Deactivation</h3>
+      <div class="text-sm">
+        This action will deactivate your account and schedule it for deletion. You will lose access to all your data and contributions.
       </div>
-
-      <!-- Warning Message -->
-      <div class="text-center mb-6">
-        <p class="text-base-content/80">
-        {% blocktrans %}After you submit this form your account will be deactivated and scheduled for deleting.{% endblocktrans %}
-        </p>
-      </div>
-
-      <!-- Submit Button -->
-      <div class="flex justify-center mb-6">
-        <button class="btn btn-error" name="action" type="submit">
-        Deactivate
-        <i class="fas fa-ban ml-2"></i>
-        </button>
-      </div>
-
-      <!-- Divider -->
-      <div class="divider max-w-2xl mx-auto"></div>
-
-      <!-- Back Button -->
-      <div class="flex justify-center">
-        <a class="btn btn-ghost" id="id_back" role="button" href="{% url 'profile' %}">
-        Back
-        <i class="fas fa-edit ml-2"></i>
-        </a>
-      </div>
-      
-    </form>
-
+    </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Deactivation Form -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-6">
+          <i class="fas fa-ban text-error"></i>
+          <h2 class="text-xl font-bold">Confirm Deactivation</h2>
+        </div>
+
+        <form id="deactivate_profile" method="POST" action=".">
+          {% csrf_token %}
+          
+          <!-- Instructions -->
+          <div class="bg-base-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start gap-3">
+              <i class="fas fa-info-circle text-info mt-1"></i>
+              <div>
+                <p class="text-base-content/80 mb-2">
+                  To deactivate your account you must enter the characters from the image. 
+                  If you can't recognize provided characters, try another combination by refreshing the page.
+                </p>
+                <p class="text-error font-semibold">
+                  After you submit this form your account will be deactivated and scheduled for deletion.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAPTCHA Field -->
+          <div class="flex justify-center mb-6">
+            <div class="w-full max-w-md space-y-4">
+              {% for field in form %}
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold text-base-content/80">{{ field.label }}</span>
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="text-error text-sm mt-2 flex items-center gap-2">
+                  <i class="fas fa-exclamation-circle"></i>
+                  {{ field.errors|escape }}
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a class="btn btn-outline flex-1" href="{% url 'profile' %}">
+              <i class="fas fa-arrow-left mr-2"></i>
+              Back to Profile
+            </a>
+            <button class="btn btn-error flex-1" name="action" type="submit">
+              <i class="fas fa-ban mr-2"></i>
+              Deactivate Account
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- Sidebar - Account Management -->
     <div class="space-y-6">
@@ -104,7 +132,7 @@
         </div>
       </div>
 
-      <!-- Quick Stats -->
+      <!-- Profile Overview -->
       <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-chart-bar text-info"></i>
@@ -128,6 +156,25 @@
           </div>
         </div>
       </div>
+
+      <!-- Contributor Info (if applicable) -->
+      {% if user.profile.contributor %}
+      <div class="stat-card bg-primary/5 border-primary/20">
+        <div class="flex items-start gap-3">
+          <i class="fas fa-code-branch text-primary text-xl mt-1"></i>
+          <div class="flex-1">
+            <h3 class="font-semibold text-primary mb-2">Contributor Profile</h3>
+            <p class="text-base-content/80 text-sm mb-2">
+              You have an active contributor profile with contributions and rewards.
+            </p>
+            <a class="link link-accent font-semibold text-sm hover:no-underline" href="{{ user.profile.contributor.get_absolute_url }}">
+              <i class="fas fa-external-link-alt mr-1"></i>
+              View Profile
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>

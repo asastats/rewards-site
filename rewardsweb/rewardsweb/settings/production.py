@@ -3,10 +3,6 @@
 from .base import *
 
 DEBUG = False
-ADMINS = [
-    ("Eduard Ravnić", "info@asastats.com"),
-    ("Ivica Paleka", "ipaleka@asastats.com"),
-]
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -47,7 +43,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
-COOKIE_ARGUMENTS = {"domain": "rewards.asastats.com"}
+COOKIE_ARGUMENTS = {"domain": PROJECT_DOMAIN}
 
 CSRF_COOKIE_SAMESITE = "Lax"  # or 'Strict'
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -74,10 +70,3 @@ LOGGING = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtppro.zoho.eu"
-EMAIL_PORT = 587
-EMAIL_HOST_USER = get_env_variable("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-DEFAULT_FROM_EMAIL = "ASA Stats Support <support@asastats.com>"

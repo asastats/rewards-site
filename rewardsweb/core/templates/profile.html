@@ -181,12 +181,11 @@
         </div>
       </div>
 
-      <!-- Quick Stats -->
+      <!-- Profile Overview -->
       <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-chart-bar text-info"></i>
           <h2 class="text-xl font-bold">Profile Overview</h2>
-          If you want to deactivate your account <a href="{% url 'deactivate_profile' %}" id="id_deactivate">click here</a>
         </div>
 
         <div class="space-y-4">
@@ -203,6 +202,33 @@
           <div class="flex justify-between items-center">
             <span class="text-base-content/70">Status</span>
             <span class="badge badge-success">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Actions Card -->
+      <div class="stat-card border-error/20 bg-error/5">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-exclamation-triangle text-error"></i>
+          <h2 class="text-xl font-bold text-error">Account Actions</h2>
+        </div>
+
+        <div class="space-y-3">
+          <a class="btn btn-error btn-outline justify-start w-full" href="{% url 'deactivate_profile' %}" id="id_deactivate">
+            <i class="fas fa-ban mr-3"></i>
+            <div class="text-left">
+              <div class="font-semibold">Deactivate Account</div>
+              <div class="text-xs text-error/70">Permanently delete your account</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="mt-4 p-3 bg-error/10 rounded-lg">
+          <div class="flex items-start gap-2">
+            <i class="fas fa-info-circle text-error mt-0.5"></i>
+            <p class="text-sm text-error/80">
+              This action cannot be undone. Your account and all associated data will be permanently deleted.
+            </p>
           </div>
         </div>
       </div>

@@ -359,11 +359,7 @@ class DeactivateProfilePageTest(TestCase):
         )
         self.user.set_password("12345o")
         self.user.save()
-        with mock.patch(
-            "core.models.address_votes_and_permission_from_permission_dapp",
-            return_value=[0, 0],
-        ):
-            self.client.login(username="deactivate_profile", password="12345o")
+        self.client.login(username="deactivate_profile", password="12345o")
 
     def post_invalid_input(self):
         return self.client.post(reverse("deactivate_profile"), data={"captcha": "1234"})

@@ -10,6 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+# =============================================================================
+# CORE DJANGO SETTINGS (Advanced - modify with caution)
+# =============================================================================
+
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -90,6 +94,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "utils.context_processors.global_constants",
             ],
         },
     },
@@ -224,11 +229,40 @@ REST_FRAMEWORK = {
     ],
 }
 
-# issues
-ISSUE_TRACKER_PROVIDER = "github"
-# The following constants corresponds to:
-# GitHub: repository owner, repository name
-# GitLab: project owner, project name
-# GitHub: workspace name, repository slug
+EMAIL_HOST = get_env_variable("EMAIL_HOST", "")
+EMAIL_PORT = get_env_variable("EMAIL_PORT", 587)
+EMAIL_HOST_USER = get_env_variable("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+DEFAULT_FROM_EMAIL = get_env_variable("EMAIL_DEFAULT_FROM", "")
+
+# =============================================================================
+# USER CONFIGURABLE SETTINGS (Safe to modify)
+# =============================================================================
+# Together with .env changes, customize your app by modifying the values below.
+# These settings control the behavior and appearance of your site.
+# =============================================================================
+
+# You may want to set the same value in deploy/group_vars/all/vars.yml
+PROJECT_DOMAIN = "rewards.asastats.com"
+
+ADMINS = [
+    ("Eduard Ravnić", "info@asastats.com"),
+    ("Ivica Paleka", "ipaleka@asastats.com"),
+]
+
+# =============================================================================
+# ISSUE TRACKER CONFIGURATION
+# +-------------+-----------------------+-----------------------+
+# | Provider    | ISSUE_TRACKER_OWNER   | ISSUE_TRACKER_NAME    |
+# +-------------+-----------------------+-----------------------+
+# | GitHub      | repository owner      | repository name       |
+# | GitLab      | project owner         | project name          |
+# | Bitbucket   | workspace name        | repository slug       |
+# +-------------+-----------------------+-----------------------+
+# =============================================================================
+
+ISSUE_TRACKER_PROVIDER = "github"  # Options: "github", "gitlab", "bitbucket"
 ISSUE_TRACKER_OWNER = "asastats"
 ISSUE_TRACKER_NAME = "channel"

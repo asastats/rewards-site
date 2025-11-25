@@ -1,6 +1,7 @@
 """Testing module for :py:mod:`trackers.base` module."""
 
 import signal
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -49,8 +50,12 @@ class TestTrackersBaseMentionTracker:
             "os.path.exists", return_value=False
         ) as mock_exists, mock.patch("os.makedirs") as mock_makedirs:
             instance.setup_logging()
-            mock_exists.assert_called_once_with("logs")
-            mock_makedirs.assert_called_once_with("logs")
+            mock_exists.assert_called_once_with(
+                Path(trackers.base.__file__).parent.parent.resolve() / "logs"
+            )
+            mock_makedirs.assert_called_once_with(
+                Path(trackers.base.__file__).parent.parent.resolve() / "logs"
+            )
         mock_basic_config.assert_called_once()
         mock_get_logger.assert_called_once_with("test_platform_tracker")
         assert instance.logger == mock_logger

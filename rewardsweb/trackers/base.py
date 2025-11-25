@@ -5,6 +5,7 @@ import os
 import signal
 import time
 from datetime import datetime
+from pathlib import Path
 
 import requests
 
@@ -51,7 +52,7 @@ class BaseMentionTracker:
         :var log_filename: filename for the log file
         :type log_filename: str
         """
-        logs_dir = "logs"
+        logs_dir = Path(__file__).parent.parent.resolve() / "logs"
         if not os.path.exists(logs_dir):
             os.makedirs(logs_dir)
 
@@ -99,6 +100,7 @@ class BaseMentionTracker:
         for _ in range(int(seconds)):
             if self.exit_signal:
                 break
+
             time.sleep(1)
 
     # # processing

@@ -2,6 +2,7 @@
 
 import json
 import sqlite3
+from pathlib import Path
 
 from trackers.config import PLATFORM_CONTEXT_FIELDS
 
@@ -15,9 +16,14 @@ class MentionDatabaseManager:
     :type MentionDatabaseManager.conn: :class:`sqlite3.Connection`
     """
 
-    def __init__(self, db_path="fixtures/social_mentions.db"):
+    def __init__(self, db_path=None):
         """Initialize database manager."""
-        self.db_path = db_path
+        self.db_path = (
+            db_path
+            or Path(__file__).parent.parent.resolve()
+            / "fixtures"
+            / "social_mentions.db"
+        )
         self.conn = None
         self.setup_database()
 

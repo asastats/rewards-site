@@ -2,7 +2,9 @@
 
 import pytest
 
+from issues import providers
 from issues.issues import (
+    ISSUE_TRACKER_PROVIDERS_REGISTRY,
     IssueProvider,
     _contributor_link,
     _prepare_issue_body_from_contribution,
@@ -11,6 +13,22 @@ from issues.issues import (
     _prepare_issue_title_from_contribution,
     issue_data_for_contribution,
 )
+
+
+class TestIssuesIssuesConstants:
+    """Testing class for :py:mod:`issues.issues` fconstants."""
+
+    # ISSUE_TRACKER_PROVIDERS_REGISTRY
+    @pytest.mark.parametrize(
+        "provider",
+        list(ISSUE_TRACKER_PROVIDERS_REGISTRY.keys()),
+    )
+    def test_issues_issues_issue_tracker_providers_registry_functionality(
+        self, provider
+    ):
+        assert ISSUE_TRACKER_PROVIDERS_REGISTRY[provider] == getattr(
+            providers, f"{provider.capitalize()}Provider"
+        )
 
 
 class TestIssuesIssuesIssueProvider:

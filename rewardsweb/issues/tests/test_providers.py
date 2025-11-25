@@ -100,22 +100,17 @@ class TestIssuesProvidersBitbucketApp:
 
     # # jwt_token
     def test_issues_providers_bitbucketapp_jwt_token_no_env_vars(self, mocker):
-        mocked_get_env = mocker.patch(
-            "issues.providers.get_env_variable", return_value=None
-        )
+        mocker.patch("issues.providers.bitbucket_config", return_value={})
         instance = BitbucketApp()
         assert instance.jwt_token() is None
-        mocked_get_env.assert_has_calls(
-            [
-                mocker.call("BITBUCKET_CLIENT_KEY", ""),
-                mocker.call("BITBUCKET_SHARED_SECRET", ""),
-            ]
-        )
 
     def test_issues_providers_bitbucketapp_jwt_token_success(self, mocker):
         mocker.patch(
-            "issues.providers.get_env_variable",
-            side_effect=["test_client_key", "test_shared_secret"],
+            "issues.providers.bitbucket_config",
+            return_value={
+                "client_key": "test_client_key",
+                "shared_secret": "test_shared_secret",
+            },
         )
         mock_datetime = mocker.MagicMock()
         mock_timedelta = mocker.MagicMock()
@@ -180,22 +175,14 @@ class TestIssuesProvidersGitHubApp:
 
     # # jwt_token
     def test_issues_providers_githubapp_jwt_token_no_env_vars(self, mocker):
-        mocked_get_env_variable = mocker.patch(
-            "issues.providers.get_env_variable", return_value=""
-        )
+        mocker.patch("issues.providers.github_config", return_value={})
         instance = GitHubApp()
         assert instance.jwt_token() is None
-        mocked_get_env_variable.assert_has_calls(
-            [
-                mocker.call("GITHUB_BOT_PRIVATE_KEY_FILENAME", ""),
-                mocker.call("GITHUB_BOT_CLIENT_ID", ""),
-            ]
-        )
 
     def test_issues_providers_githubapp_jwt_token_success(self, mocker):
-        mocked_get_env_variable = mocker.patch(
-            "issues.providers.get_env_variable",
-            side_effect=["test.pem", "test_id"],
+        mocker.patch(
+            "issues.providers.github_config",
+            return_value={"private_key_filename": "test.pem", "client_id": "test_id"},
         )
         mock_settings = mocker.MagicMock()
         mock_settings.BASE_DIR.parent = mocker.MagicMock()
@@ -208,16 +195,8 @@ class TestIssuesProvidersGitHubApp:
         mocker.patch("issues.providers.timedelta", mock_timedelta)
         mock_jwt = mocker.MagicMock()
         mocker.patch("issues.providers.jwt", mock_jwt)
-
         instance = GitHubApp()
         instance.jwt_token()
-
-        mocked_get_env_variable.assert_has_calls(
-            [
-                mocker.call("GITHUB_BOT_PRIVATE_KEY_FILENAME", ""),
-                mocker.call("GITHUB_BOT_CLIENT_ID", ""),
-            ]
-        )
         mock_open.assert_called_once_with(
             mock_settings.BASE_DIR.parent / "fixtures" / "test.pem", "rb"
         )
@@ -225,24 +204,28 @@ class TestIssuesProvidersGitHubApp:
 
     # # installation_token
     def test_issues_providers_githubapp_installation_token_no_id(self, mocker):
-        mocked_get_env_variable = mocker.patch(
-            "issues.providers.get_env_variable", return_value=""
+        mocker.patch(
+            "issues.providers.github_config",
+            return_value={},
         )
         instance = GitHubApp()
         assert instance.installation_token() is None
-        mocked_get_env_variable.assert_called_once_with(
-            "GITHUB_BOT_INSTALLATION_ID", ""
-        )
 
     def test_issues_providers_githubapp_installation_token_no_jwt(self, mocker):
-        mocker.patch("issues.providers.get_env_variable", return_value="test_id")
+        mocker.patch(
+            "issues.providers.github_config",
+            return_value={"installation_id": "test_installation"},
+        )
         mock_jwt_token = mocker.patch.object(GitHubApp, "jwt_token", return_value=None)
         instance = GitHubApp()
         assert instance.installation_token() is None
         mock_jwt_token.assert_called_once_with()
 
     def test_issues_providers_githubapp_installation_token_request_fails(self, mocker):
-        mocker.patch("issues.providers.get_env_variable", return_value="test_id")
+        mocker.patch(
+            "issues.providers.github_config",
+            return_value={"installation_id": "test_installation"},
+        )
         mocker.patch.object(GitHubApp, "jwt_token", return_value="test_jwt")
         mock_response = mocker.MagicMock()
         mock_response.status_code = 400
@@ -254,7 +237,10 @@ class TestIssuesProvidersGitHubApp:
         mocked_requests.assert_called_once()
 
     def test_issues_providers_githubapp_installation_token_success(self, mocker):
-        mocker.patch("issues.providers.get_env_variable", return_value="test_id")
+        mocker.patch(
+            "issues.providers.github_config",
+            return_value={"installation_id": "test_installation"},
+        )
         mocker.patch.object(GitHubApp, "jwt_token", return_value="test_jwt")
         mock_response = mocker.MagicMock()
         mock_response.status_code = 201
@@ -1021,16 +1007,16 @@ class TestIssuesProvidersGitlabProvider:
     def test_issues_providers_gitlabprovider_get_client_with_issue_tracker_api_token(
         self, mocker
     ):
-        mocked_get_env_variable = mocker.patch("issues.providers.get_env_variable")
+        mocked_config = mocker.patch("issues.providers.gitlab_config", return_value={})
         mocked_gitlab = mocker.patch("issues.providers.Gitlab")
         mocker.patch("issues.providers.GitlabProvider._get_repository")
         issue_tracker_api_token = mocker.MagicMock()
         provider = GitlabProvider(mocker.MagicMock())
         mocked_gitlab.reset_mock()
-        mocked_get_env_variable.reset_mock()
+        mocked_config.reset_mock()
         url = "https://gitlab.com"
-        mocked_get_env_variable = mocker.patch(
-            "issues.providers.get_env_variable", return_value=url
+        mocked_config = mocker.patch(
+            "issues.providers.gitlab_config", return_value={"url": url}
         )
         returned = provider._get_client(issue_tracker_api_token=issue_tracker_api_token)
         assert returned == mocked_gitlab.return_value
@@ -1038,10 +1024,32 @@ class TestIssuesProvidersGitlabProvider:
             url=url, private_token=issue_tracker_api_token
         )
 
+    def test_issues_providers_gitlabprovider_get_client_with_issue_tracker_token_and_url(
+        self, mocker
+    ):
+        url = "https://mydomain.com"
+        mocked_config = mocker.patch(
+            "issues.providers.gitlab_config", return_value={"url": url}
+        )
+        mocked_gitlab = mocker.patch("issues.providers.Gitlab")
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        issue_tracker_api_token = mocker.MagicMock()
+        provider = GitlabProvider(mocker.MagicMock())
+        mocked_gitlab.reset_mock()
+        mocked_config.reset_mock()
+        returned = provider._get_client(issue_tracker_api_token=issue_tracker_api_token)
+        assert returned == mocked_gitlab.return_value
+        mocked_gitlab.assert_called_once_with(
+            url=url, private_token=issue_tracker_api_token
+        )
+
     def test_issues_providers_gitlabprovider_get_client_with_pat(self, mocker):
-        mocked_get_env_variable = mocker.patch("issues.providers.get_env_variable")
-        mocked_gitlab = mocker.patch(
-            "issues.providers.Gitlab",
+        mocked_config = mocker.patch(
+            "issues.providers.gitlab_config",
+            return_value={
+                "url": "https://gitlab.com",
+                "private_token": "test_pat_token",
+            },
         )
         mocked_gitlab = mocker.patch("issues.providers.Gitlab")
         mocker.patch("issues.providers.GitlabProvider._get_repository")
@@ -1049,10 +1057,13 @@ class TestIssuesProvidersGitlabProvider:
         user.profile.issue_tracker_api_token = None
         provider = GitlabProvider(user)
         mocked_gitlab.reset_mock()
-        mocked_get_env_variable.reset_mock()
-        mocked_get_env_variable = mocker.patch(
-            "issues.providers.get_env_variable",
-            side_effect=["https://gitlab.com", "test_pat_token"],
+        mocked_config.reset_mock()
+        mocked_config = mocker.patch(
+            "issues.providers.gitlab_config",
+            return_value={
+                "url": "https://gitlab.com",
+                "private_token": "test_pat_token",
+            },
         )
         returned = provider._get_client()
         mocked_gitlab.assert_called_once_with(
@@ -1062,18 +1073,19 @@ class TestIssuesProvidersGitlabProvider:
 
     def test_issues_providers_gitlabprovider_get_client_no_token(self, mocker):
         mocker.patch("issues.providers.GitlabProvider._get_repository")
-        mocked_get_env_variable = mocker.patch(
-            "issues.providers.get_env_variable", return_value=None
-        )
+        mocked_config = mocker.patch("issues.providers.gitlab_config", return_value={})
         mock_user = mocker.MagicMock()
         mock_user.profile.issue_tracker_api_token = None
         provider = GitlabProvider(mock_user)
-        mocked_get_env_variable.reset_mock()
+        mocked_config.reset_mock()
         assert provider._get_client() is None
 
     def test_issues_providers_gitlabprovider_get_client_functionality(self, mocker):
         mocker.patch("issues.providers.GitlabProvider._get_repository")
-        mocked_get_env_variable = mocker.patch("issues.providers.get_env_variable")
+        mocked_config = mocker.patch(
+            "issues.providers.gitlab_config",
+            return_value={"url": "https://gitlab.com", "private_token": ""},
+        )
         mocked_gitlab = mocker.patch("issues.providers.Gitlab")
         mocker.patch.dict(os.environ, {}, clear=True)
         mock_user = mocker.MagicMock()
@@ -1081,10 +1093,10 @@ class TestIssuesProvidersGitlabProvider:
         mock_user.profile.issue_tracker_api_token = token
         provider = GitlabProvider(mock_user)
         mocked_gitlab.reset_mock()
-        mocked_get_env_variable.reset_mock()
-        mocked_get_env_variable = mocker.patch(
-            "issues.providers.get_env_variable",
-            side_effect=["https://gitlab.com", ""],
+        mocked_config.reset_mock()
+        mocked_config = mocker.patch(
+            "issues.providers.gitlab_config",
+            return_value={"url": "https://gitlab.com", "private_token": ""},
         )
         returned = provider._get_client()
         assert returned == mocked_gitlab.return_value
@@ -1114,7 +1126,12 @@ class TestIssuesProvidersGitlabProvider:
             f"{settings.ISSUE_TRACKER_OWNER}/{settings.ISSUE_TRACKER_NAME}"
         )
 
+    # # _get_project
     def test_issues_providers_gitlabprovider_get_project_no_project_id(self, mocker):
+        mocker.patch(
+            "issues.providers.gitlab_config",
+            return_value={},
+        )
         mocker.patch(
             "issues.providers.GitlabProvider._get_client",
             return_value=mocker.MagicMock(),
@@ -1122,17 +1139,16 @@ class TestIssuesProvidersGitlabProvider:
         mocker.patch(
             "issues.providers.GitlabProvider._get_repository", return_value=None
         )
-        mocker.patch(
-            "issues.providers.os.getenv",
-            side_effect=lambda key, default=None: (
-                None if key == "GITLAB_PROJECT_ID" else default
-            ),
-        )
         provider = GitlabProvider(mocker.MagicMock())
         assert provider._get_project() is None
 
     def test_issues_providers_gitlabprovider_get_project_functionality(self, mocker):
-        mocker.patch.dict(os.environ, {"GITLAB_PROJECT_ID": "test_project_id"})
+        mocker.patch(
+            "issues.providers.gitlab_config",
+            return_value={
+                "project_id": "test_project_id",
+            },
+        )
         mock_client = mocker.MagicMock()
         mocker.patch(
             "issues.providers.GitlabProvider._get_client", return_value=mock_client

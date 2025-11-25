@@ -4,8 +4,6 @@ This module contains tests for the SuggestRewardModal class and its
 interaction handling functionality.
 """
 
-from unittest import mock
-
 import discord
 import pytest
 
@@ -37,15 +35,14 @@ class TestControllersCommandHandler:
 
         return modal
 
-    # # SuggestRewardModal initialization
     @pytest.mark.asyncio
     async def test_controllers_command_handler_suggest_reward_modal_initialization(
-        self,
+        self, mocker
     ):
         """Test SuggestRewardModal initialization with target message."""
         # Create a mock message with async context
-        mock_message = mock.AsyncMock(spec=discord.Message)
-        mock_author = mock.AsyncMock()
+        mock_message = mocker.AsyncMock(spec=discord.Message)
+        mock_author = mocker.AsyncMock()
         mock_author.name = "test_user"
         mock_message.author = mock_author
 
@@ -60,7 +57,6 @@ class TestControllersCommandHandler:
         assert modal.user_input.required is True
         assert modal.comment_input.required is False
 
-    # # SuggestRewardModal.on_submit
     @pytest.mark.asyncio
     async def test_controllers_command_handler_suggest_reward_modal_on_submit_success(
         self, mocker
@@ -87,25 +83,25 @@ class TestControllersCommandHandler:
             comment_val="test comment",
         )
 
-        with mock.patch.object(
-            SuggestionService, "create_suggestion", mocker.AsyncMock()
-        ) as mock_create:
-            await modal.on_submit(mock_interaction)
+        mock_create = mocker.patch.object(
+            SuggestionService, "create_suggestion", new_callable=mocker.AsyncMock
+        )
+        await modal.on_submit(mock_interaction)
 
-            mock_interaction.response.defer.assert_called_once_with(
-                thinking=True, ephemeral=True
-            )
-            mock_create.assert_called_once_with(
-                mock_bot.api_service,
-                "F",
-                "2",
-                "contributor_name",
-                "test comment",
-                "https://discord.com/channels/123/456/789",
-            )
-            mock_interaction.followup.send.assert_called_once_with(
-                "✅ Suggestion for [F2] submitted for contributor_name.", ephemeral=True
-            )
+        mock_interaction.response.defer.assert_called_once_with(
+            thinking=True, ephemeral=True
+        )
+        mock_create.assert_called_once_with(
+            mock_bot.api_service,
+            "F",
+            "2",
+            "contributor_name",
+            "test comment",
+            "https://discord.com/channels/123/456/789",
+        )
+        mock_interaction.followup.send.assert_called_once_with(
+            "✅ Suggestion for [F2] submitted for contributor_name.", ephemeral=True
+        )
 
     @pytest.mark.asyncio
     async def test_controllers_command_handler_suggest_reward_modal_on_submit_failure(
@@ -132,33 +128,31 @@ class TestControllersCommandHandler:
             comment_val="",
         )
 
-        with mock.patch.object(
-            SuggestionService, "create_suggestion", mocker.AsyncMock()
-        ) as mock_create:
-            mock_create.side_effect = Exception("API unavailable")
+        mock_create = mocker.patch.object(
+            SuggestionService, "create_suggestion", new_callable=mocker.AsyncMock
+        )
+        mock_create.side_effect = Exception("API unavailable")
 
-            with mock.patch(
-                "rewardsbot.controllers.command_handler.logger"
-            ) as mock_logger:
-                await modal.on_submit(mock_interaction)
+        mock_logger = mocker.patch("rewardsbot.controllers.command_handler.logger")
+        await modal.on_submit(mock_interaction)
 
-                mock_interaction.response.defer.assert_called_once_with(
-                    thinking=True, ephemeral=True
-                )
-                mock_create.assert_called_once_with(
-                    mock_bot.api_service,
-                    "B",
-                    "1",
-                    "another_contributor",
-                    "",
-                    "https://discord.com/channels/123/456/789",
-                )
-                mock_interaction.followup.send.assert_called_once_with(
-                    "❌ Failed to submit suggestion: API unavailable", ephemeral=True
-                )
-                mock_logger.error.assert_called_once_with(
-                    "Suggestion submission error: API unavailable"
-                )
+        mock_interaction.response.defer.assert_called_once_with(
+            thinking=True, ephemeral=True
+        )
+        mock_create.assert_called_once_with(
+            mock_bot.api_service,
+            "B",
+            "1",
+            "another_contributor",
+            "",
+            "https://discord.com/channels/123/456/789",
+        )
+        mock_interaction.followup.send.assert_called_once_with(
+            "❌ Failed to submit suggestion: API unavailable", ephemeral=True
+        )
+        mock_logger.error.assert_called_once_with(
+            "Suggestion submission error: API unavailable"
+        )
 
     @pytest.mark.asyncio
     async def test_controllers_command_handler_suggest_reward_modal_on_submit_case_conversion(
@@ -185,22 +179,22 @@ class TestControllersCommandHandler:
             comment_val="test",
         )
 
-        with mock.patch.object(
-            SuggestionService, "create_suggestion", mocker.AsyncMock()
-        ) as mock_create:
-            await modal.on_submit(mock_interaction)
+        mock_create = mocker.patch.object(
+            SuggestionService, "create_suggestion", new_callable=mocker.AsyncMock
+        )
+        await modal.on_submit(mock_interaction)
 
-            mock_create.assert_called_once_with(
-                mock_bot.api_service,
-                "AT",
-                "3",
-                "contributor",
-                "test",
-                "https://discord.com/channels/123/456/789",
-            )
-            mock_interaction.followup.send.assert_called_once_with(
-                "✅ Suggestion for [AT3] submitted for contributor.", ephemeral=True
-            )
+        mock_create.assert_called_once_with(
+            mock_bot.api_service,
+            "AT",
+            "3",
+            "contributor",
+            "test",
+            "https://discord.com/channels/123/456/789",
+        )
+        mock_interaction.followup.send.assert_called_once_with(
+            "✅ Suggestion for [AT3] submitted for contributor.", ephemeral=True
+        )
 
     @pytest.mark.asyncio
     async def test_controllers_command_handler_suggest_reward_modal_on_submit_no_comment(
@@ -227,19 +221,19 @@ class TestControllersCommandHandler:
             comment_val="",  # Empty comment
         )
 
-        with mock.patch.object(
-            SuggestionService, "create_suggestion", mocker.AsyncMock()
-        ) as mock_create:
-            await modal.on_submit(mock_interaction)
+        mock_create = mocker.patch.object(
+            SuggestionService, "create_suggestion", new_callable=mocker.AsyncMock
+        )
+        await modal.on_submit(mock_interaction)
 
-            mock_create.assert_called_once_with(
-                mock_bot.api_service,
-                "CT",
-                "2",
-                "contributor",
-                "",
-                "https://discord.com/channels/123/456/789",
-            )
+        mock_create.assert_called_once_with(
+            mock_bot.api_service,
+            "CT",
+            "2",
+            "contributor",
+            "",
+            "https://discord.com/channels/123/456/789",
+        )
 
     @pytest.mark.asyncio
     async def test_controllers_command_handler_suggest_reward_modal_on_submit_uses_prefilled_username(
@@ -270,22 +264,22 @@ class TestControllersCommandHandler:
             comment_val="",
         )
 
-        with mock.patch.object(
-            SuggestionService, "create_suggestion", mocker.AsyncMock()
-        ) as mock_create:
-            await modal.on_submit(mock_interaction)
+        mock_create = mocker.patch.object(
+            SuggestionService, "create_suggestion", new_callable=mocker.AsyncMock
+        )
+        await modal.on_submit(mock_interaction)
 
-            mock_create.assert_called_once_with(
-                mock_bot.api_service,
-                "F",
-                "1",
-                "prefilled_user",
-                "",
-                "https://discord.com/channels/123/456/789",
-            )
-            mock_interaction.followup.send.assert_called_once_with(
-                "✅ Suggestion for [F1] submitted for prefilled_user.", ephemeral=True
-            )
+        mock_create.assert_called_once_with(
+            mock_bot.api_service,
+            "F",
+            "1",
+            "prefilled_user",
+            "",
+            "https://discord.com/channels/123/456/789",
+        )
+        mock_interaction.followup.send.assert_called_once_with(
+            "✅ Suggestion for [F1] submitted for prefilled_user.", ephemeral=True
+        )
 
     @pytest.mark.asyncio
     async def test_controllers_command_handler_suggest_reward_modal_on_submit_overrides_prefilled_username(
@@ -312,20 +306,20 @@ class TestControllersCommandHandler:
             comment_val="override test",
         )
 
-        with mock.patch.object(
-            SuggestionService, "create_suggestion", mocker.AsyncMock()
-        ) as mock_create:
-            await modal.on_submit(mock_interaction)
+        mock_create = mocker.patch.object(
+            SuggestionService, "create_suggestion", new_callable=mocker.AsyncMock
+        )
+        await modal.on_submit(mock_interaction)
 
-            mock_create.assert_called_once_with(
-                mock_bot.api_service,
-                "B",
-                "3",
-                "different_user",
-                "override test",
-                "https://discord.com/channels/123/456/789",
-            )
-            # Should use the overridden username, not the original author
-            mock_interaction.followup.send.assert_called_once_with(
-                "✅ Suggestion for [B3] submitted for different_user.", ephemeral=True
-            )
+        mock_create.assert_called_once_with(
+            mock_bot.api_service,
+            "B",
+            "3",
+            "different_user",
+            "override test",
+            "https://discord.com/channels/123/456/789",
+        )
+        # Should use the overridden username, not the original author
+        mock_interaction.followup.send.assert_called_once_with(
+            "✅ Suggestion for [B3] submitted for different_user.", ephemeral=True
+        )

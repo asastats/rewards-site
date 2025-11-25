@@ -8,8 +8,9 @@ from datetime import datetime
 
 import requests
 
+from trackers.config import REWARDS_API_BASE_URL
 from trackers.database import MentionDatabaseManager
-from utils.helpers import get_env_variable, social_platform_prefixes
+from utils.helpers import social_platform_prefixes
 
 
 class BaseMentionTracker:
@@ -217,10 +218,9 @@ class BaseMentionTracker:
         :return: response data from Rewards API
         :rtype: dict
         """
-        base_url = get_env_variable("REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api")
         try:
             response = requests.post(
-                f"{base_url}/addcontribution",
+                f"{REWARDS_API_BASE_URL}/addcontribution",
                 json=contribution_data,
                 headers={"Content-Type": "application/json"},
                 timeout=30,

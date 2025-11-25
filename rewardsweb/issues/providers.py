@@ -1,7 +1,6 @@
 """Module containing functions for providers' issues management."""
 
 import logging
-import os
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 
@@ -12,9 +11,9 @@ from django.conf import settings
 from github import Auth, Github
 from gitlab import Gitlab
 
+from issues.config import bitbucket_config, github_config, gitlab_config
 from utils.constants.core import GITHUB_ISSUES_START_DATE
 from utils.constants.ui import MISSING_API_TOKEN_TEXT
-from utils.helpers import get_env_variable
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +24,8 @@ class BitbucketApp:
     def jwt_token(self):
         """Generate JWT token for a Bitbucket app.
 
+        :var config: Bitbucket configuration data
+        :type config: dict
         :var client_key: The clientKey from the app's descriptor.
         :type client_key: str
         :var shared_secret: The sharedSecret from the app's installation.
@@ -38,8 +39,9 @@ class BitbucketApp:
         :return: The JWT token.
         :rtype: str
         """
-        client_key = get_env_variable("BITBUCKET_CLIENT_KEY", "")
-        shared_secret = get_env_variable("BITBUCKET_SHARED_SECRET", "")
+        config = bitbucket_config()
+        client_key = config.get("client_key")
+        shared_secret = config.get("shared_secret")
 
         if not (client_key and shared_secret):
             return None
@@ -91,6 +93,8 @@ class GitHubApp:
     def jwt_token(self):
         """Generate JWT token for GitHub bot.
 
+        :var config: Github configuration data
+        :type config: dict
         :var bot_private_key_filename: filename of the bot's private key
         :type bot_private_key_filename: str
         :var bot_client_id: client ID of the bot
@@ -108,10 +112,9 @@ class GitHubApp:
         :return: JWT token
         :rtype: str
         """
-        bot_private_key_filename = get_env_variable(
-            "GITHUB_BOT_PRIVATE_KEY_FILENAME", ""
-        )
-        bot_client_id = get_env_variable("GITHUB_BOT_CLIENT_ID", "")
+        config = github_config()
+        bot_private_key_filename = config.get("private_key_filename")
+        bot_client_id = config.get("client_id")
         if not (bot_private_key_filename and bot_client_id):
             return None
 
@@ -144,7 +147,7 @@ class GitHubApp:
         :return: installation access token
         :rtype: str
         """
-        installation_id = get_env_variable("GITHUB_BOT_INSTALLATION_ID", "")
+        installation_id = github_config().get("installation_id")
         if not installation_id:
             return None
 
@@ -756,6 +759,8 @@ class GitlabProvider(BaseIssueProvider):
     def _get_client(self, issue_tracker_api_token=None):
         """Get GitLab client.
 
+        :var config: GitLab configuration data
+        :type config: dict
         :param issue_tracker_api_token: if provided, token used for client instantiation
         :type issue_tracker_api_token: str
         :var pat: GitLab Personal Access Token.
@@ -765,12 +770,12 @@ class GitlabProvider(BaseIssueProvider):
         :return: GitLab client instance.
         :rtype: :class:`gitlab.Gitlab`
         """
-        url = get_env_variable("GITLAB_URL", "https://gitlab.com")
+        config = gitlab_config()
+        url = config.get("url")
         if issue_tracker_api_token:
             return Gitlab(url=url, private_token=issue_tracker_api_token)
 
-        pat = get_env_variable("GITLAB_PRIVATE_TOKEN", "")
-
+        pat = config.get("private_token")
         if pat:
             return Gitlab(url=url, private_token=pat)
 
@@ -789,9 +794,10 @@ class GitlabProvider(BaseIssueProvider):
         :return: GitLab project instance.
         :rtype: :class:`gitlab.v4.objects.Project`
         """
-        project_id = get_env_variable("GITLAB_PROJECT_ID", "")
+        project_id = gitlab_config().get("project_id")
         if not project_id:
             return None
+
         return self.client.projects.get(project_id)
 
     def _get_repository(self):

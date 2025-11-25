@@ -9,13 +9,13 @@ from core.models import Contributor
 from issues.providers import BitbucketProvider, GithubProvider, GitlabProvider
 from utils.bot import message_from_url
 
-logger = logging.getLogger(__name__)
-
-ISSUE_PROVIDER_REGISTRY = {
+ISSUE_TRACKER_PROVIDERS_REGISTRY = {
     "github": GithubProvider,
     "gitlab": GitlabProvider,
     "bitbucket": BitbucketProvider,
 }
+
+logger = logging.getLogger(__name__)
 
 
 class IssueProvider:
@@ -51,7 +51,7 @@ class IssueProvider:
         :return: instance of the issue provider
         :rtype: :class:`BaseIssueProvider`
         """
-        provider_class = ISSUE_PROVIDER_REGISTRY.get(self.name)
+        provider_class = ISSUE_TRACKER_PROVIDERS_REGISTRY.get(self.name)
         return provider_class(
             self.user, issue_tracker_api_token=kwargs.get("issue_tracker_api_token")
         )

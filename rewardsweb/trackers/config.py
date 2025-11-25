@@ -8,6 +8,9 @@ PLATFORM_CONTEXT_FIELDS = {
     "telegram": "telegram_chat",
     "discord": "discord_channel",
 }
+REWARDS_API_BASE_URL = get_env_variable(
+    "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
+)
 
 
 def discord_config():
@@ -88,23 +91,6 @@ def reddit_subreddits():
     return [sub.strip() for sub in subreddits_str.split(",") if sub.strip()]
 
 
-def twitter_config():
-    """Return Twitter configuration from environment variables.
-
-    :return: Twitter configuration dictionary
-    :rtype: dict
-    """
-    return {
-        "bearer_token": get_env_variable("TRACKER_TWITTER_BEARER_TOKEN", ""),
-        "consumer_key": get_env_variable("TRACKER_TWITTER_CONSUMER_KEY", ""),
-        "consumer_secret": get_env_variable("TRACKER_TWITTER_CONSUMER_SECRET", ""),
-        "access_token": get_env_variable("TRACKER_TWITTER_ACCESS_TOKEN", ""),
-        "access_token_secret": get_env_variable(
-            "TRACKER_TWITTER_ACCESS_TOKEN_SECRET", ""
-        ),
-    }
-
-
 def telegram_chats():
     """Return list of Telegram chats to track from environment variable.
 
@@ -130,4 +116,21 @@ def telegram_config():
             "TRACKER_TELEGRAM_SESSION_NAME", "telegram_tracker"
         ),
         "bot_username": get_env_variable("TRACKER_TELEGRAM_BOT_USERNAME", "").lower(),
+    }
+
+
+def twitter_config():
+    """Return Twitter configuration from environment variables.
+
+    :return: Twitter configuration dictionary
+    :rtype: dict
+    """
+    return {
+        "bearer_token": get_env_variable("TRACKER_TWITTER_BEARER_TOKEN", ""),
+        "consumer_key": get_env_variable("TRACKER_TWITTER_CONSUMER_KEY", ""),
+        "consumer_secret": get_env_variable("TRACKER_TWITTER_CONSUMER_SECRET", ""),
+        "access_token": get_env_variable("TRACKER_TWITTER_ACCESS_TOKEN", ""),
+        "access_token_secret": get_env_variable(
+            "TRACKER_TWITTER_ACCESS_TOKEN_SECRET", ""
+        ),
     }

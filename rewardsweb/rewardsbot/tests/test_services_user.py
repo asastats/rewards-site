@@ -4,7 +4,6 @@ This module contains tests for the UserService class and its
 user summary generation functionality.
 """
 
-from datetime import datetime
 from unittest import mock
 
 import pytest

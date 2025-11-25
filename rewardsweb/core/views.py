@@ -33,6 +33,7 @@ from core.forms import (
     ContributionEditForm,
     ContributionInvalidateForm,
     CreateIssueForm,
+    DeactivateProfileForm,
     IssueLabelsForm,
     ProfileFormSet,
     UpdateUserForm,
@@ -1181,6 +1182,29 @@ class ProfileEditView(View):
         """
         view = ProfileUpdate.as_view()
         return view(request, *args, **kwargs)
+
+
+@method_decorator(login_required(login_url="/accounts/login/"), name="dispatch")
+class DeactivateProfileView(FormView):
+    """Deactivates current user.
+
+    Current user is logged out and deacrtivated after the form is
+    submitted and successful captcha is entered. User is redirected
+    to django-allauth inactive account page afterward.
+    """
+
+    template_name = "deactivate_profile.html"
+    form_class = DeactivateProfileForm
+    success_url = "/accounts/inactive/"
+
+    def form_valid(self, form):
+        """
+        If user has correctly entered captcha value then form's
+        deactivate_profile method is called with current
+        request object as argument.
+        """
+        form.deactivate_profile(self.request)
+        return super().form_valid(form)
 
 
 class LoginView(AllauthLoginView):

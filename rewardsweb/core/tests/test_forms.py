@@ -1,12 +1,14 @@
 """Testing module for :py:mod:`core.forms` module."""
 
 import pytest
+from captcha.fields import CaptchaField
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.forms import (
     CharField,
     CheckboxSelectMultiple,
     ChoiceField,
+    DeactivateProfileForm,
     DecimalField,
     Form,
     HiddenInput,
@@ -400,6 +402,34 @@ class TestUpdateUserForm:
         form.instance = user
         form.save()
         assert user_model.objects.all()[0].first_name == "John"
+
+
+class TestDeactivateProfileForm:
+    """Testing class for :class:`DeactivateProfileForm`."""
+
+    # # DeactivateProfileForm
+    def test_deactivateprofileform_issubclass_of_form(self):
+        assert issubclass(DeactivateProfileForm, Form)
+
+    def test_deactivateprofileform_has_captcha_as_field_label(self):
+        form = DeactivateProfileForm()
+        assert form.fields.get("captcha") is not None
+        assert isinstance(form.fields["captcha"], CaptchaField)
+
+    # # deactivate_profile
+    def test_deactivateprofileform_deactivate_profile_sets_request_deactivates_user(
+        self, mocker
+    ):
+        request = mocker.MagicMock()
+        request.user.is_active = True
+        DeactivateProfileForm().deactivate_profile(request)
+        assert request.user.is_active is False
+
+    def test_deactivateprofileform_deactivate_profile_logouts_user(self, mocker):
+        mocked = mocker.patch("core.forms.logout")
+        request = mocker.MagicMock()
+        DeactivateProfileForm().deactivate_profile(request)
+        mocked.assert_called_once_with(request)
 
 
 class TestProfileForm:

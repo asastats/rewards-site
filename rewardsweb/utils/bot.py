@@ -100,7 +100,10 @@ def add_reply_to_message(url, comment):
     if not channel_id:
         return False
 
-    headers = {"Authorization": f"Bot {DISCORD_TOKEN}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bot {DISCORD_TOKEN}",
+        "Content-Type": "application/json",
+    }
     api_url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
 
     payload = {

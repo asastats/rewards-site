@@ -43,6 +43,8 @@ urlpatterns = [
     path("accounts/login/", LoginView.as_view(), name="account_login"),
     path("accounts/signup/", SignupView.as_view(), name="account_signup"),
     path("accounts/", include("allauth.urls")),
+    # captcha namespace
+    path("captcha/", include("captcha.urls")),
     # rewards app urls
     path("rewards/", include(rewards_urls)),
     # core app urls

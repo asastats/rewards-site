@@ -1,0 +1,134 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+  <title>Deactivate account - ASA Stats Rewards</title>
+{% endblock %}
+
+{% block page_title %}Deactivate account{% endblock %}
+
+{% block content %}
+<div class="space-y-6 fade-in">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+      <p class="mt-2 text-lg text-base-content/70">
+        To deactivate your account you must enter the characters from the image. If you can't recognize provided characters try another combination by refreshing the page.
+      </p>
+    </div>
+
+    <form id="deactivate_profile" method="POST" action="." class="w-full">
+    {% csrf_token %}
+    
+      <!-- Form Fields -->
+      <div class="flex justify-center mb-6">
+        <div class="w-full max-w-md space-y-4">
+        {% for field in form %}
+        <div class="form-control">
+            {{ field }}
+            {% if field.errors %}
+            <div class="text-error text-sm mt-2 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ field.errors|escape }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+      </div>
+
+      <!-- Warning Message -->
+      <div class="text-center mb-6">
+        <p class="text-base-content/80">
+        {% blocktrans %}After you submit this form your account will be deactivated and scheduled for deleting.{% endblocktrans %}
+        </p>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-center mb-6">
+        <button class="btn btn-error" name="action" type="submit">
+        Deactivate
+        <i class="fas fa-ban ml-2"></i>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider max-w-2xl mx-auto"></div>
+
+      <!-- Back Button -->
+      <div class="flex justify-center">
+        <a class="btn btn-ghost" id="id_back" role="button" href="{% url 'profile' %}">
+        Back
+        <i class="fas fa-edit ml-2"></i>
+        </a>
+      </div>
+      
+    </form>
+
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Sidebar - Account Management -->
+    <div class="space-y-6">
+      <!-- Account Management Card -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-cog text-accent"></i>
+          <h2 class="text-xl font-bold">Account Management</h2>
+        </div>
+
+        <div class="space-y-3">
+          <a class="btn btn-outline justify-start w-full" href="{% url 'account_change_password' %}" id="id_changepassword">
+            <i class="fas fa-key mr-3"></i>
+            <div class="text-left">
+              <div class="font-semibold">Change Password</div>
+              <div class="text-xs text-base-content/60">Update your account password</div>
+            </div>
+          </a>
+
+          <a class="btn btn-outline justify-start w-full" href="{% url 'account_email' %}" id="id_emails">
+            <i class="fas fa-envelope mr-3"></i>
+            <div class="text-left">
+              <div class="font-semibold">Email Addresses</div>
+              <div class="text-xs text-base-content/60">Manage your email preferences</div>
+            </div>
+          </a>
+
+          <a class="btn btn-outline justify-start w-full" href="{% url 'socialaccount_connections' %}" id="id_connections">
+            <i class="fas fa-share-alt mr-3"></i>
+            <div class="text-left">
+              <div class="font-semibold">Social Accounts</div>
+              <div class="text-xs text-base-content/60">Connect social media accounts</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-bar text-info"></i>
+          <h2 class="text-xl font-bold">Profile Overview</h2>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Member since</span>
+            <span class="font-semibold">{{ user.date_joined|date:"M j, Y" }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Last login</span>
+            <span class="font-semibold">{{ user.last_login|date:"M j, Y" }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Status</span>
+            <span class="badge badge-success">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

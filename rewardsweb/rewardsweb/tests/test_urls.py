@@ -43,6 +43,11 @@ class TestRewardsWebUrls:
         assert isinstance(url, URLResolver)
         assert "allauth.urls" in str(url.urlconf_name)
 
+    def test_rewardsweb_urls_captcha(self):
+        url = self._url_from_pattern("captcha/")
+        assert isinstance(url, URLResolver)
+        assert "captcha.urls" in str(url.urlconf_name)
+
     def test_rewardsweb_urlsrewards_app(self):
         url = self._url_from_pattern("rewards/")
         assert isinstance(url, URLResolver)
@@ -54,4 +59,4 @@ class TestRewardsWebUrls:
         assert "core.urls" in str(url.urlconf_name)
 
     def test_rewardsweb_urls_pattern_count(self):
-        assert len(urls.urlpatterns) == 10
+        assert len(urls.urlpatterns) == 11

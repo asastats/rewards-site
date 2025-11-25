@@ -1,5 +1,7 @@
 """Module containing code dealing with core app's forms."""
 
+from captcha.fields import CaptchaField
+from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import (
@@ -358,6 +360,29 @@ class UpdateUserForm(ModelForm):
     class Meta:
         model = User
         fields = ["first_name", "last_name"]
+
+
+class DeactivateProfileForm(Form):
+    """Form class for deactivating current user.
+
+    Only requirement is to correctly populate captcha field.
+    User object is taken from the request object.
+
+    :var captcha: field holding value that is going to be compared with captcha
+    :type captcha: :class:`CaptchaField`
+    """
+
+    captcha = CaptchaField()
+
+    def deactivate_profile(self, request):
+        """Logout and deactivate given request's user in database.
+
+        :param request: http request
+        :type request: :class:`HttpRequest`
+        """
+        request.user.is_active = False
+        request.user.save()
+        logout(request)
 
 
 class ProfileForm(ModelForm):

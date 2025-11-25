@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.twitter_oauth2",
     "adrf",
     "rest_framework",
+    "captcha",
 ]
 
 MIDDLEWARE = [

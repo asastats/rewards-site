@@ -1,6 +1,6 @@
 """Module containing code dealing with core app's forms."""
 
-from captcha.fields import CaptchaField
+from captcha.fields import CaptchaField, CaptchaTextInput
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -372,7 +372,14 @@ class DeactivateProfileForm(Form):
     :type captcha: :class:`CaptchaField`
     """
 
-    captcha = CaptchaField()
+    captcha = CaptchaField(
+        widget=CaptchaTextInput(
+            attrs={
+                "class": "input input-bordered w-full",
+                "placeholder": "Enter the captcha text",
+            }
+        )
+    )
 
     def deactivate_profile(self, request):
         """Logout and deactivate given request's user in database.

@@ -1,7 +1,7 @@
 """Testing module for :py:mod:`core.forms` module."""
 
 import pytest
-from captcha.fields import CaptchaField
+from captcha.fields import CaptchaField, CaptchaTextInput
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.forms import (
@@ -411,10 +411,13 @@ class TestDeactivateProfileForm:
     def test_deactivateprofileform_issubclass_of_form(self):
         assert issubclass(DeactivateProfileForm, Form)
 
-    def test_deactivateprofileform_has_captcha_as_field_label(self):
+    def test_deactivateprofileform_has_captcha_as_field(self):
         form = DeactivateProfileForm()
         assert form.fields.get("captcha") is not None
-        assert isinstance(form.fields["captcha"], CaptchaField)
+        assert isinstance(form.base_fields["captcha"], CaptchaField)
+        assert isinstance(form.base_fields["captcha"].widget, CaptchaTextInput)
+        assert "class" in form.base_fields["captcha"].widget.attrs
+        assert "placeholder" in form.base_fields["captcha"].widget.attrs
 
     # # deactivate_profile
     def test_deactivateprofileform_deactivate_profile_sets_request_deactivates_user(

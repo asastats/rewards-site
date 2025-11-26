@@ -19,7 +19,7 @@ class IndexPageAnonymousTests(SeleniumTestCase):
         url = self.get_url(reverse("index"))
         self.driver.get(url)
 
-        self.assertEqual(self.driver.title, "ASA Stats Rewards website")
+        self.assertEqual(self.driver.title, "ASA Stats Rewards Suite website")
 
         h1 = self.driver.find_element(By.TAG_NAME, "h1")
         self.assertIn("ASA Stats Rewards", h1.text)

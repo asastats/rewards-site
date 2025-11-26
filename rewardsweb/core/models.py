@@ -369,7 +369,7 @@ class Profile(models.Model):
 
 
 class SuperuserLog(models.Model):
-    """Rewards website superusers' action logs model."""
+    """Rewards Suite website superusers' action logs model."""
 
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     action = models.CharField(max_length=50)

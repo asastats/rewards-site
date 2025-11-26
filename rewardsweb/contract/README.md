@@ -1,6 +1,6 @@
-# ASA Stats Rewards Smart Contract
+# Rewards Suite smart contract
 
-This directory contains smart contract written in Puya for the Algorand blockchain that is used for allocation of rewards on the ASA Stats Rewards website.
+This directory contains smart contract written in Puya for the Algorand blockchain that is used for allocation of rewards in the Rewards Suite.
 
 ## Features
 

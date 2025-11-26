@@ -1,5 +1,6 @@
 """Module containing core app's constants."""
 
+import os
 from datetime import datetime, timezone
 
 ADDRESS_LEN = 58
@@ -50,8 +51,6 @@ ISSUE_PRIORITY_CHOICES = [
     ("blocker", "Blocker"),
 ]
 
-GITHUB_ISSUES_START_DATE = datetime(2022, 4, 15, 0, 0, 0, tzinfo=timezone.utc)
-
 GITHUB_LABELS = (
     "blocker",
     "high priority",
@@ -67,7 +66,15 @@ GITHUB_LABELS = (
     "wontfix",
 )
 
-GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS = ["ipaleka"]
+GITHUB_ISSUES_START_DATE = datetime.fromtimestamp(
+    int(os.getenv("GITHUB_ISSUES_START_DATE", 1649980800)), tz=timezone.utc
+)
+excluded_contributors = os.getenv("GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", "")
+GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS = [
+    contributor.strip()
+    for contributor in excluded_contributors.split(",")
+    if excluded_contributors.split(",")[0]
+]
 
 ALGORAND_WALLETS = [
     {"id": "pera", "name": "Pera Wallet"},
@@ -75,6 +82,6 @@ ALGORAND_WALLETS = [
     {"id": "lute", "name": "Lute Wallet"},
 ]
 
-WALLET_CONNECT_NONCE_PREFIX = "Login to ASA Stats Rewards website: "
+WALLET_CONNECT_NONCE_PREFIX = "Login to Rewards Suite website: "
 
 WALLET_CONNECT_NETWORK_OPTIONS = ["testnet", "mainnet"]

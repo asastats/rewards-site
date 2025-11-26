@@ -34,9 +34,9 @@ django.setup()
 
 # -- Project information -----------------------------------------------------
 
-project = "ASA Stats Rewards website"
-copyright = "2025, ASA Stats"
-author = "Eduard Ravnić"
+project = "Rewards Suite"
+copyright = "2025, ASA Stats DAO"
+authors = "Eduard Ravnic and Ivica Paleka"
 
 # The full version, including alpha/beta/rc tags
 from rewardsweb import __version__
@@ -170,9 +170,9 @@ html_favicon = "_static/favicon.ico"
 latex_documents = [
     (
         "index",
-        "asastats-rewards-site.tex",
-        "ASA Stats Rewards website documentation",
-        author,
+        "asastats-rewards-suite.tex",
+        "Rewards Suite documentation",
+        authors,
         "howto",
     )
 ]

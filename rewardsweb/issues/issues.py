@@ -99,7 +99,7 @@ def _prepare_issue_body_from_contribution(contribution, profile):
     :type issue_body: str
     :var message: parsed message data from contribution URL
     :type message: dict
-    :var contributor: link to contributor's page on rewards website
+    :var contributor: link to contributor's page on Rewards Suite website
     :type contributor: str
     :return: str
     """

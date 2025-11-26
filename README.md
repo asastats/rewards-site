@@ -25,10 +25,10 @@ Environment variables should not be stored in the repository, so `.env` files mu
 
 ## Goals
 
-- **Boost Community Engagement**: Encourage active participation and ongoing contributions from community members
-- **Provide Clear Contribution Visibility**: Offer comprehensive overviews of both historical and current contributions
-- **Streamline Reward Processes**: Simplify the entire workflow from suggesting to collecting rewards
-- **Ensure Process Transparency**: Maintain clear documentation and visibility into contribution and reward mechanisms
+- Stimulate community engagement
+- Provide a nice contributions overview
+- Make the process of suggesting and collecting rewards straightforward
+- Have a nice overview and documentation of contribution/reward process
 
 ## Roadmap
 

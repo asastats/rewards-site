@@ -1,34 +1,34 @@
-# ASA Stats Rewards website
+# Rewards Suite
 
 [![build-status](https://github.com/asastats/rewards-site/actions/workflows/build.yml/badge.svg)](https://github.com/asastats/rewards-site/actions/workflows/build.yml) [![build-contract](https://github.com/asastats/rewards-site/actions/workflows/build-contract.yml/badge.svg)](https://github.com/asastats/rewards-site/actions/workflows/build-contract.yml) [![docs](https://app.readthedocs.org/projects/rewards-site/badge/?version=latest)](https://rewards-site.readthedocs.io/en/latest/?badge=latest) [![codecov](https://codecov.io/gh/asastats/rewards-site/graph/badge.svg?token=DQC4SRY8J9)](https://codecov.io/gh/asastats/rewards-site) ![ansible-lint](https://github.com//asastats/rewards-site/actions/workflows/ansible-lint.yml/badge.svg) ![molecule](https://github.com/asastats/rewards-site/actions/workflows/molecule.yml/badge.svg) 
 
-A website dedicated to ASA Stats contributions. Previously written in Laravel, now powered by Django.
+This repository contains the infrastructure code for a user rewards system that incentivizes project contributions.
 
-## Usage
+## How It Works
 
-It provides a preview for all historic and latest contributions, hot tasks, contributions guide and more. Community members can use our [Discord Bot](https://github.com/asastats/rewards-site/tree/main/rewardsweb/rewardsbot) to suggest rewards for contributions which appear on this website.
+The website powered by this infrastructure displays historical and recent contributions, hot tasks, contribution guides, and more. To suggest rewards for contributions displayed on the website, community members can use the [Discord Bot](https://github.com/asastats/rewards-site/tree/main/rewardsweb/rewardsbot) or create comments on social media that will trigger the [powered tracker](https://github.com/asastats/rewards-site/tree/main/rewardsweb/trackers).
 
 > [!IMPORTANT]
-> In order for the bot to access all the channels in the ASA Stats Discord, an admin has to assign it the `Verified` role.
+> For the bot to access all channels in the dedicated Discord guilds, an admin must assign it a role with appropriate permissions (the `Verified` role in the case of ASA Stats Discord).
 
-### Environment variables
+### Environment Variables
 
-Environment variables shouldn't reside in repository, so `.env` files has to be created based on `.env-example`:
+Environment variables should not be stored in the repository, so `.env` files must be created based on `.env-example`:
 
-- Website's variables are placed in `rewardsweb/.env`.
-- Discord bot's variables are placed in `rewardsweb/rewardsbot/.env`.
-- Rewards smart contract's variables are placed in `rewardsweb/rewards/.env`.
-- Please check `deploy/.env-example` for deployment variables.
+- Website variables are placed in `rewardsweb/.env`
+- Discord bot variables are placed in `rewardsweb/rewardsbot/.env`
+- Rewards smart contract variables are placed in `rewardsweb/rewards/.env`
+- Please check `deploy/.env-example` for deployment variables
 
 > [!NOTE]
-> If ADMIN_*_MNEMONIC variable is not set in `rewardsweb/rewards/.env`, then the system will treat the logged-in superuser as the admin. You will then need to assign the admin's public address to that superuser.
+> If the `ADMIN_*_MNEMONIC` variable is not set in `rewardsweb/rewards/.env`, the system will treat the logged-in superuser as the admin. You will then need to assign the admin's public address to that superuser.
 
 ## Goals
 
-- Stimulate community engagement 
-- Provide a nice contributions overview
-- Make the process of suggesting and collecting rewards straightforward
-- Have a nice overview and documentation of contribution/reward process
+- **Boost Community Engagement**: Encourage active participation and ongoing contributions from community members
+- **Provide Clear Contribution Visibility**: Offer comprehensive overviews of both historical and current contributions
+- **Streamline Reward Processes**: Simplify the entire workflow from suggesting to collecting rewards
+- **Ensure Process Transparency**: Maintain clear documentation and visibility into contribution and reward mechanisms
 
 ## Roadmap
 
@@ -46,5 +46,7 @@ Environment variables shouldn't reside in repository, so `.env` files has to be 
 - [x] Create smart contract for rewards allocation and claiming
 - [x] Develop UI for rewards allocation and claiming
 - [x] Implement additional issue trackers besides GitHub
-- [ ] Create trackers and related parsers for messages with mentions on social media (X and reddit)
+- [ ] Create trackers and related parsers for mentions in social media messages (X and Reddit)
 - [ ] Setup a server and deploy the application
+- [ ] Enable automatic generation of transparency report snippets based on Mainnet allocations
+- [ ] Deploy the smart contract on Mainnet

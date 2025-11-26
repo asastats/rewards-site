@@ -3,7 +3,7 @@
 
 # Class: ClaimComponent
 
-Defined in: [src/ClaimComponent.ts:16](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L16)
+Defined in: [src/ClaimComponent.ts:16](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L16)
 
 Component for handling reward claim operations.
 
@@ -23,7 +23,7 @@ claimComponent.bind(document.getElementById('claim-container'))
 
 > **new ClaimComponent**(`rewardsClient`, `walletManager`): `ClaimComponent`
 
-Defined in: [src/ClaimComponent.ts:27](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L27)
+Defined in: [src/ClaimComponent.ts:27](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L27)
 
 Creates an instance of ClaimComponent.
 
@@ -51,7 +51,7 @@ The wallet manager for account and network state
 
 > `private` **element**: `HTMLElement` \| `null` = `null`
 
-Defined in: [src/ClaimComponent.ts:17](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L17)
+Defined in: [src/ClaimComponent.ts:17](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L17)
 
 ***
 
@@ -59,7 +59,7 @@ Defined in: [src/ClaimComponent.ts:17](https://github.com/ipaleka/rewards-site/b
 
 > `private` **rewardsClient**: [`RewardsClient`](../../RewardsClient/classes/RewardsClient.md)
 
-Defined in: [src/ClaimComponent.ts:18](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L18)
+Defined in: [src/ClaimComponent.ts:18](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L18)
 
 ***
 
@@ -67,7 +67,7 @@ Defined in: [src/ClaimComponent.ts:18](https://github.com/ipaleka/rewards-site/b
 
 > `private` **walletManager**: `WalletManager`
 
-Defined in: [src/ClaimComponent.ts:19](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L19)
+Defined in: [src/ClaimComponent.ts:19](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L19)
 
 ## Methods
 
@@ -75,7 +75,7 @@ Defined in: [src/ClaimComponent.ts:19](https://github.com/ipaleka/rewards-site/b
 
 > `private` **addEventListeners**(): `void`
 
-Defined in: [src/ClaimComponent.ts:92](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L92)
+Defined in: [src/ClaimComponent.ts:92](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L92)
 
 Adds event listeners for user interactions.
 
@@ -91,7 +91,7 @@ Listens for click events on the claim button.
 
 > **bind**(`element`): `void`
 
-Defined in: [src/ClaimComponent.ts:37](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L37)
+Defined in: [src/ClaimComponent.ts:37](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L37)
 
 Binds the component to a DOM element and initializes event listeners.
 
@@ -113,7 +113,7 @@ The HTML element to bind the component to
 
 > **destroy**(): `void`
 
-Defined in: [src/ClaimComponent.ts:114](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L114)
+Defined in: [src/ClaimComponent.ts:114](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L114)
 
 Cleans up the component.
 
@@ -129,7 +129,7 @@ Currently no specific cleanup needed, but provided for interface consistency.
 
 > `private` **handleClaim**(): `Promise`\<`void`\>
 
-Defined in: [src/ClaimComponent.ts:50](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L50)
+Defined in: [src/ClaimComponent.ts:50](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ClaimComponent.ts#L50)
 
 Handles the claim transaction submission.
 

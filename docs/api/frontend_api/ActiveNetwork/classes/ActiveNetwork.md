@@ -3,7 +3,7 @@
 
 # Class: ActiveNetwork
 
-Defined in: [src/ActiveNetwork.ts:16](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L16)
+Defined in: [src/ActiveNetwork.ts:16](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L16)
 
 ActiveNetwork class manages network selection and display in the UI.
 
@@ -24,7 +24,7 @@ activeNetwork.bind(document.getElementById('network-selector'))
 
 > **new ActiveNetwork**(`manager`): `ActiveNetwork`
 
-Defined in: [src/ActiveNetwork.ts:25](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L25)
+Defined in: [src/ActiveNetwork.ts:25](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L25)
 
 Creates an instance of ActiveNetwork.
 
@@ -46,7 +46,7 @@ The WalletManager instance for wallet and network operations
 
 > `private` **element**: `HTMLElement` \| `null` = `null`
 
-Defined in: [src/ActiveNetwork.ts:17](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L17)
+Defined in: [src/ActiveNetwork.ts:17](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L17)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [src/ActiveNetwork.ts:17](https://github.com/ipaleka/rewards-site/bl
 
 > `private` **manager**: `WalletManager`
 
-Defined in: [src/ActiveNetwork.ts:25](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L25)
+Defined in: [src/ActiveNetwork.ts:25](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L25)
 
 The WalletManager instance for wallet and network operations
 
@@ -64,7 +64,7 @@ The WalletManager instance for wallet and network operations
 
 > `private` **unsubscribe**: () => `void` \| `null` = `null`
 
-Defined in: [src/ActiveNetwork.ts:18](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L18)
+Defined in: [src/ActiveNetwork.ts:18](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L18)
 
 ## Methods
 
@@ -72,7 +72,7 @@ Defined in: [src/ActiveNetwork.ts:18](https://github.com/ipaleka/rewards-site/bl
 
 > **bind**(`element`): `void`
 
-Defined in: [src/ActiveNetwork.ts:36](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L36)
+Defined in: [src/ActiveNetwork.ts:36](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L36)
 
 Binds the ActiveNetwork instance to a DOM element.
 
@@ -101,7 +101,7 @@ If the element is null or invalid
 
 > **destroy**(): `void`
 
-Defined in: [src/ActiveNetwork.ts:114](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L114)
+Defined in: [src/ActiveNetwork.ts:114](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L114)
 
 Cleans up event listeners and subscriptions.
 
@@ -118,7 +118,7 @@ to prevent memory leaks and unwanted behavior.
 
 > `private` **getCsrfToken**(): `string`
 
-Defined in: [src/ActiveNetwork.ts:101](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L101)
+Defined in: [src/ActiveNetwork.ts:101](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L101)
 
 Retrieves the CSRF token from cookies for API requests.
 
@@ -134,7 +134,7 @@ The CSRF token as a string
 
 > `private` **handleClick**(`e`): `Promise`\<`void`\>
 
-Defined in: [src/ActiveNetwork.ts:54](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L54)
+Defined in: [src/ActiveNetwork.ts:54](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L54)
 
 Handles click events on network selection buttons.
 
@@ -159,7 +159,7 @@ The click event
 
 > `private` **render**(`activeNetwork`): `void`
 
-Defined in: [src/ActiveNetwork.ts:86](https://github.com/ipaleka/rewards-site/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L86)
+Defined in: [src/ActiveNetwork.ts:86](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ActiveNetwork.ts#L86)
 
 Renders the current active network state in the UI.
 

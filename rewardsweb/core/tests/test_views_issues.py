@@ -424,7 +424,7 @@ class TestDbIssueDetailView:
                 "state": "closed",
                 "labels": ["bug", "feature", "urgent"],
                 "assignees": ["user1", "user2", "user3"],
-                "html_url": "https://github.com/asastats/rewards-site/issues/123",
+                "html_url": "https://github.com/asastats/rewards-suite/issues/123",
                 "created_at": "2023-01-01T10:00:00",
                 "updated_at": "2023-01-15T15:30:00",
             },
@@ -447,7 +447,7 @@ class TestDbIssueDetailView:
         assert context["issue_assignees"] == ["user1", "user2", "user3"]
         assert (
             context["issue_html_url"]
-            == "https://github.com/asastats/rewards-site/issues/123"
+            == "https://github.com/asastats/rewards-suite/issues/123"
         )
         assert context["issue_created_at"] == "2023-01-01T10:00:00"
         assert context["issue_updated_at"] == "2023-01-15T15:30:00"

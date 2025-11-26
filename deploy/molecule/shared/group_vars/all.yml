@@ -10,7 +10,7 @@ env_name: "testing_rewardsweb"
 logo_name: asastats
 
 # Repository
-repository_url: https://github.com/asastats/rewards-site.git
+repository_url: https://github.com/asastats/rewards-suite.git
 
 # Default administrator user on the host machine
 admin_user: admin_user

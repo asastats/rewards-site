@@ -1,12 +1,12 @@
 # Rewards Suite
 
-[![build-status](https://github.com/asastats/rewards-site/actions/workflows/build.yml/badge.svg)](https://github.com/asastats/rewards-site/actions/workflows/build.yml) [![build-contract](https://github.com/asastats/rewards-site/actions/workflows/build-contract.yml/badge.svg)](https://github.com/asastats/rewards-site/actions/workflows/build-contract.yml) [![docs](https://app.readthedocs.org/projects/rewards-site/badge/?version=latest)](https://rewards-site.readthedocs.io/en/latest/?badge=latest) [![codecov](https://codecov.io/gh/asastats/rewards-site/graph/badge.svg?token=DQC4SRY8J9)](https://codecov.io/gh/asastats/rewards-site) ![ansible-lint](https://github.com//asastats/rewards-site/actions/workflows/ansible-lint.yml/badge.svg) ![molecule](https://github.com/asastats/rewards-site/actions/workflows/molecule.yml/badge.svg) 
+[![build-status](https://github.com/asastats/rewards-suite/actions/workflows/build.yml/badge.svg)](https://github.com/asastats/rewards-suite/actions/workflows/build.yml) [![build-contract](https://github.com/asastats/rewards-suite/actions/workflows/build-contract.yml/badge.svg)](https://github.com/asastats/rewards-suite/actions/workflows/build-contract.yml) [![docs](https://app.readthedocs.org/projects/rewards-suite/badge/?version=latest)](https://rewards-suite.readthedocs.io/en/latest/?badge=latest) [![codecov](https://codecov.io/gh/asastats/rewards-suite/graph/badge.svg?token=DQC4SRY8J9)](https://codecov.io/gh/asastats/rewards-suite) ![ansible-lint](https://github.com//asastats/rewards-suite/actions/workflows/ansible-lint.yml/badge.svg) ![molecule](https://github.com/asastats/rewards-suite/actions/workflows/molecule.yml/badge.svg) 
 
 This repository contains the infrastructure code for a user rewards system that incentivizes project contributions.
 
 ## How It Works
 
-The website powered by this infrastructure displays historical and recent contributions, hot tasks, contribution guides, and more. To suggest rewards for contributions displayed on the website, community members can use the [Discord Bot](https://github.com/asastats/rewards-site/tree/main/rewardsweb/rewardsbot) or create comments on social media that will trigger the [powered tracker](https://github.com/asastats/rewards-site/tree/main/rewardsweb/trackers).
+The website powered by this infrastructure displays historical and recent contributions, hot tasks, contribution guides, and more. To suggest rewards for contributions displayed on the website, community members can use the [Discord Bot](https://github.com/asastats/rewards-suite/tree/main/rewardsweb/rewardsbot) or create comments on social media that will trigger the [powered tracker](https://github.com/asastats/rewards-suite/tree/main/rewardsweb/trackers).
 
 > [!IMPORTANT]
 > For the bot to access all channels in the dedicated Discord guilds, an admin must assign it a role with appropriate permissions (the `Verified` role in the case of ASA Stats Discord).

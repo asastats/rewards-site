@@ -54,4 +54,4 @@ LIVE_TEST_SERVER_ADDRESS = get_env_variable(
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-ISSUE_TRACKER_NAME = "channel"  # "rewards-site" "test"
+ISSUE_TRACKER_NAME = "channel"  # "rewards-suite" "test"

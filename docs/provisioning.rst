@@ -1,7 +1,7 @@
 Provisioning
 ============
 
-``Ansible`` is Python package used to deploy rewards-site infrastructure.
+``Ansible`` is Python package used to deploy rewards-suite infrastructure.
 
 This guide is made for ``Ubuntu Server 24.04.03 LTS`` hosts, but it's applicable for many other Debian based Linux/GNU distros.
 

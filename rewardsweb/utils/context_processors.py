@@ -12,7 +12,7 @@ def global_constants(request):
     """
     return {
         "PROJECT_OWNER": settings.PROJECT_OWNER,
-        "PROJECT_NAME": f"{settings.PROJECT_OWNER} Rewards" ,
-        "PROJECT_WEBSITE_NAME": f"{settings.PROJECT_OWNER} Rewards website" ,
+        "PROJECT_NAME": f"{settings.PROJECT_OWNER} Rewards",
+        "PROJECT_WEBSITE_NAME": f"{settings.PROJECT_OWNER} Rewards website",
         "PROJECT_DOMAIN": settings.PROJECT_DOMAIN,
     }

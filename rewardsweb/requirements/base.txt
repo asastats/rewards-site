@@ -16,6 +16,7 @@ drf-spectacular-sidecar==2025.10.1
 django-allauth[socialaccount]>=65.13.0
 py-algorand-sdk>=2.11.1
 django-widget-tweaks>=1.5.0
+django-simple-captcha>=0.6.2
 ## wallet connect
 msgpack>=1.1.2
 PyNaCl>=1.6.0

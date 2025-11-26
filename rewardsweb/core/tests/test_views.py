@@ -6,15 +6,18 @@ import pytest
 from allauth.account.forms import LoginForm, SignupForm
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
 from django.test import RequestFactory, TestCase
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext_lazy
 from django.views import View
-from django.views.generic import DetailView, ListView, UpdateView
+from django.views.generic import DetailView, FormView, ListView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 
-from core.forms import ProfileFormSet, UpdateUserForm
+from core.forms import DeactivateProfileForm, ProfileFormSet, UpdateUserForm
 from core.models import Contribution, Contributor, Cycle
 from core.views import (
+    DeactivateProfileView,
     IndexView,
     LoginView,
     ProfileDisplay,
@@ -343,6 +346,93 @@ class TestDbProfileEditView(BaseUserCreatedView):
         )
         # Check.
         assert isinstance(view_method.context_data["view"], ProfileUpdate)
+
+
+class DeactivateProfilePageTest(TestCase):
+    def setUp(self):
+        self.user = user_model.objects.create(
+            email="deactivate_profile@testuser.com",
+            username="deactivate_profile",
+        )
+        self.user.set_password("12345o")
+        self.user.save()
+        self.client.login(username="deactivate_profile", password="12345o")
+
+    def post_invalid_input(self):
+        return self.client.post(reverse("deactivate_profile"), data={"captcha": "1234"})
+
+    def test_deactivate_profile_page_uses_deactivate_profile_template(self):
+        response = self.client.get(reverse("deactivate_profile"))
+        self.assertTemplateUsed(response, "deactivate_profile.html")
+
+    def test_deactivate_profile_page_deactivate_uses_deactivateprofileform_object(self):
+        response = self.client.get(reverse("deactivate_profile"))
+        self.assertIsInstance(response.context["form"], DeactivateProfileForm)
+        self.assertContains(response, "captcha_0")
+
+    def test_deactivate_profile_page_for_invalid_input_nothing_changed_in_db(self):
+        is_active = self.user.is_active
+        self.post_invalid_input()
+        self.assertEqual(is_active, self.user.is_active)
+
+    def test_deactivate_profile_page_deactivate_for_invalid_renders_profile_template(
+        self,
+    ):
+        response = self.post_invalid_input()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "deactivate_profile.html")
+
+    def test_deactivate_profile_page_deactivate_for_invalid_passes_form_to_template(
+        self,
+    ):
+        response = self.post_invalid_input()
+        self.assertIsInstance(response.context["form"], DeactivateProfileForm)
+
+    def test_deactivate_profile_page_deactivate_invalid_form_submit(self):
+        response = self.client.get(reverse("deactivate_profile"))
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            reverse("deactivate_profile"),
+            dict(captcha_0="abc", captcha_1="wrong response"),
+        )
+        self.assertFormError(
+            response.context_data["form"], "captcha", gettext_lazy("Invalid CAPTCHA")
+        )
+
+
+class TestDeactivateProfileViewTest:
+    """Testing class for :class:`core.views.DeactivateProfileView`."""
+
+    # # DeactivateProfileView
+    def test_deactivateprofileview_issubclass_of_formview(self):
+        assert issubclass(DeactivateProfileView, FormView)
+
+    def test_deactivateprofileview_sets_template_name(self):
+        assert DeactivateProfileView.template_name == "deactivate_profile.html"
+
+    def test_deactivateprofileview_sets_form_class_to_deatctivateprofileform(self):
+        assert DeactivateProfileView.form_class == DeactivateProfileForm
+
+    def test_deactivateprofileview_sets_success_url(self):
+        assert DeactivateProfileView.success_url == "/accounts/inactive/"
+
+
+@pytest.mark.django_db
+class TestDbDeactivateProfileViewTest(BaseUserCreatedView):
+    def test_deactivateprofileview_form_valid_calls_deactivate_profile_form_method(
+        self, mocker
+    ):
+        # Setup view
+        view = DeactivateProfileView()
+        view = self.setup_view(view, self.request)
+        # Run.
+        form = mocker.MagicMock()
+        response = view.form_valid(form)
+        # Check.
+        assert isinstance(response, HttpResponseRedirect)
+        assert response.url == "/accounts/inactive/"
+        form.deactivate_profile.assert_called_once()
+        form.deactivate_profile.assert_called_with(self.request)
 
 
 class LoginPageTest(TestCase):

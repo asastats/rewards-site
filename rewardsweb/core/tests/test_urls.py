@@ -23,6 +23,12 @@ class TestCoreUrls:
         assert url.lookup_str == "core.views.ProfileEditView"
         assert url.name == "profile"
 
+    def test_core_urls_deactivate_profile(self):
+        url = self._url_from_pattern("profile/deactivate/")
+        assert isinstance(url, URLPattern)
+        assert url.lookup_str == "core.views.DeactivateProfileView"
+        assert url.name == "deactivate_profile"
+
     def test_core_urls_cycles(self):
         url = self._url_from_pattern("cycles/")
         assert isinstance(url, URLPattern)
@@ -108,4 +114,4 @@ class TestCoreUrls:
         assert url.name == "unconfirmed_contributions"
 
     def test_core_urls_patterns_count(self):
-        assert len(urls.urlpatterns) == 16
+        assert len(urls.urlpatterns) == 17

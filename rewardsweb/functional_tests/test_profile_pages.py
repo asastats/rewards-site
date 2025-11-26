@@ -173,6 +173,21 @@ class ProfileScenarioTests(ProfileBaseTest):
 
         wait_for_any_text(self.driver, ["social", "connection", "provider"], timeout=10)
 
+    def test_navigate_to_deactivate_account_from_profile(self):
+
+        link = self.driver.find_element(
+            By.CSS_SELECTOR, "a[href='/profile/deactivate/']"
+        )
+        link.click()
+
+        wait_for_any_text(self.driver, ["Deactivate account"], timeout=10)
+
+        captcha_image = self.driver.find_element(By.TAG_NAME, "img")
+        self.assertIn("/captcha/image/", captcha_image.get_attribute("src"))
+
+        captcha_input = self.driver.find_element(By.ID, "id_captcha_1")
+        self.assertEqual("captcha_1", captcha_input.get_attribute("name"))
+
     # Structure
     def test_profile_page_structure_and_fields(self):
         src = self.driver.page_source.lower()

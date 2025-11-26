@@ -7,6 +7,11 @@ from core import views
 urlpatterns = [
     path("", views.IndexView.as_view(), name="index"),
     path("profile/", views.ProfileEditView.as_view(), name="profile"),
+    path(
+        "profile/deactivate/",
+        views.DeactivateProfileView.as_view(),
+        name="deactivate_profile",
+    ),
     path("cycles/", views.CycleListView.as_view(), name="cycles"),
     path("cycle/<int:pk>", views.CycleDetailView.as_view(), name="cycle_detail"),
     path("contributors/", views.ContributorListView.as_view(), name="contributors"),

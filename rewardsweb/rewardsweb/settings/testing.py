@@ -3,10 +3,6 @@
 from .base import *
 
 DEBUG = False
-ADMINS = [
-    ("Eduard Ravnić", "info@asastats.com"),
-    ("Ivica Paleka", "ipaleka@asastats.com"),
-]
 
 ALLOWED_HOSTS = ["*"]
 
@@ -26,7 +22,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
-COOKIE_ARGUMENTS = {"domain": "rewards.asastats.com"}
+COOKIE_ARGUMENTS = {"domain": PROJECT_DOMAIN}
 
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 

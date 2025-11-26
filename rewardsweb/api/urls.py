@@ -1,4 +1,4 @@
-"""Module containing ASA Stats Rewards API URL configuration."""
+"""Module containing Rewards Suite API URL configuration."""
 
 from django.urls import path
 

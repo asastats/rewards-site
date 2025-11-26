@@ -182,7 +182,7 @@ class ProfileScenarioTests(ProfileBaseTest):
 
         wait_for_any_text(self.driver, ["Deactivate account"], timeout=10)
 
-        captcha_image = self.driver.find_element(By.TAG_NAME, "img")
+        captcha_image = self.driver.find_element(By.CSS_SELECTOR, "img.captcha")
         self.assertIn("/captcha/image/", captcha_image.get_attribute("src"))
 
         captcha_input = self.driver.find_element(By.ID, "id_captcha_1")
@@ -213,7 +213,6 @@ class ProfileScenarioTests(ProfileBaseTest):
 
         # Look for true error elements only
         error_selectors = [
-            ".text-error",
             ".alert-error .alert-content",  # actual visible content, not wrapper div
             ".errorlist li",
             "[role='alert']",

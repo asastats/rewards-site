@@ -1,1 +1,1 @@
-"""Initialization module for ASA Stats Rewards API package."""
+"""Initialization module for Rewards Suite API package."""

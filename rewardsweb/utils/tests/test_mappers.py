@@ -7,7 +7,6 @@ from django.conf import settings
 from django.http import Http404
 
 from core.models import Issue, IssueStatus
-from utils.constants.core import GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS
 from utils.mappers import (
     _create_contributor_from_text,
     _create_issues_bulk,
@@ -2114,7 +2113,13 @@ class TestUtilsMappersMapOpenIssues:
             return_value={"feature request": "mock_reward"},
         )
 
-        excluded_contributor = GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS[0]
+        # Patch the constant directly at the module where it's used
+        excluded_contributor = "foobar"
+        mocker.patch(
+            "utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [excluded_contributor]
+        )
+
+        # Mock Contributor.objects.all() to return a contributor that should be excluded
         mocker.patch(
             "utils.mappers.Contributor.objects.all",
             return_value=[

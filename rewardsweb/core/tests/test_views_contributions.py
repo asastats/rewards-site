@@ -1596,7 +1596,7 @@ class TestDbContributorListViewHtmx:
         html = response.content.decode()
 
         assert "<html" in html.lower()  # ✅ full HTML page
-        assert "ASA Stats Contributors" in html
+        assert f"{settings.PROJECT_OWNER} Contributors" in html
         assert "Bob" in html
 
 

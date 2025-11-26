@@ -395,7 +395,7 @@ class DeactivateProfileForm(Form):
 class ProfileForm(ModelForm):
     """Form class for editing user profile's data.
 
-    :var ProfileForm.issue_tracker_api_token: user's personal GitHub access token
+    :var ProfileForm.issue_tracker_api_token: user's personal issue tracker access token
     :type ProfileForm.issue_tracker_api_token: :class:`django.forms.CharField`
     """
 
@@ -404,10 +404,10 @@ class ProfileForm(ModelForm):
         widget=TextInput(
             attrs={
                 "class": TEXTINPUT_CLASS,
-                "placeholder": "Enter your GitHub token (optional)",
+                "placeholder": "Enter your issue tracker token (optional)",
             }
         ),
-        help_text="Optional: GitHub personal access token for accessing issues",
+        help_text="Optional: Issue tracker personal access token for accessing issues",
     )
 
     class Meta:

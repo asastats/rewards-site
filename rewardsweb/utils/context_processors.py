@@ -10,10 +10,9 @@ def global_constants(request):
     :type request: :class:`django.http.HttpRequest`
     :return: dict
     """
-
     return {
+        "PROJECT_OWNER": settings.PROJECT_OWNER,
+        "PROJECT_NAME": f"{settings.PROJECT_OWNER} Rewards" ,
+        "PROJECT_WEBSITE_NAME": f"{settings.PROJECT_OWNER} Rewards website" ,
         "PROJECT_DOMAIN": settings.PROJECT_DOMAIN,
-        # "COMPANY_NAME": settings.COMPANY_NAME,
-        # "SUPPORT_EMAIL": settings.SUPPORT_EMAIL,
-        # "MAX_UPLOAD_SIZE": settings.MAX_UPLOAD_SIZE,
     }

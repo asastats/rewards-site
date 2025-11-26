@@ -1,1 +1,1 @@
-"""Initialization module for Rewards website functional tests."""
+"""Initialization module for Rewards Suite website functional tests."""

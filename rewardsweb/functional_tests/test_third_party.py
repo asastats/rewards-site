@@ -26,9 +26,7 @@ class DeactivateProfile3rdpartyTest(TestCase):
         self.client.login(username="deactivate_profile", password="12345o")
 
     def __extract_hash_and_response(self, r):
-        hash_ = re.findall(
-            r'value="([0-9a-f]+)" required id="id_captcha_', str(r.content)
-        )[0]
+        hash_ = re.findall(r'name="captcha_0" value="([0-9a-f]+)"', str(r.content))[0]
         response = CaptchaStore.objects.get(hashkey=hash_).response
         return hash_, response
 

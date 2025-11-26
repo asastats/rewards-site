@@ -1,4 +1,4 @@
-"""Module containing base class for Rewards website functional tests."""
+"""Module containing base class for Rewards Suite website functional tests."""
 
 import platform
 

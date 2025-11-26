@@ -1,1 +1,1 @@
-"""Initialization module for unit tests for ASA Stats Rewards bot package."""
+"""Initialization module for Rewards Suite Discord bot's unit tests package."""

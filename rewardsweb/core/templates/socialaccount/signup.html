@@ -2,7 +2,7 @@
 {% load i18n allauth account %}
 
 {% block head_title %}
-  {% trans "Complete Signup - ASA Stats Rewards" %}
+  {% trans "Complete Signup - {{ PROJECT_NAME }}" %}
 {% endblock %}
 
 {% block page_title %}Complete Your {{ provider_name }} Signup{% endblock %}
@@ -65,7 +65,7 @@
                 {% blocktrans with provider_name=account.get_provider.name %}
                   You're connecting your {{ provider_name }} account. 
                   Please provide the following information to complete your registration 
-                  and start using ASA Stats Rewards.
+                  and start using {{ PROJECT_NAME }}.
                 {% endblocktrans %}
               </p>
             </div>
@@ -197,7 +197,7 @@
           </div>
           <div class="flex items-start gap-2">
             <i class="fas fa-check text-success mt-1"></i>
-            <span>Start earning ASA Stats rewards</span>
+            <span>Start earning {{ PROJECT_NAME }}</span>
           </div>
         </div>
       </div>

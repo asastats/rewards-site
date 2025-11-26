@@ -450,7 +450,10 @@ class TestProfileForm:
         assert isinstance(form.base_fields["issue_tracker_api_token"].widget, TextInput)
         assert "class" in form.base_fields["issue_tracker_api_token"].widget.attrs
         assert "placeholder" in form.base_fields["issue_tracker_api_token"].widget.attrs
-        assert "GitHub" in form.base_fields["issue_tracker_api_token"].help_text
+        assert (
+            "personal access token"
+            in form.base_fields["issue_tracker_api_token"].help_text
+        )
 
     # # Meta
     def test_profileform_meta_model_is_profile(self):

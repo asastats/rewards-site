@@ -1,4 +1,4 @@
-"""Module with functions for deploying ASA Stats Rewards smart contract to blockchain."""
+"""Module with functions for deploying Rewards Suite smart contract to blockchain."""
 
 import json
 from pathlib import Path
@@ -47,7 +47,7 @@ def delete_dapp(network, app_id):
 
 
 def deploy_app(network="testnet"):
-    """Compile ASA Stats Rewards smart contract, deploy it, and update the artifact.
+    """Compile Rewards Suite smart contract, deploy it, and update the artifacts.
 
     This function orchestrates the deployment process by:
     1. Compiling the TEAL approval and clear programs

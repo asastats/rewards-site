@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
   <head>
     {% block title %}
-      <title>ASA Stats Rewards Suite website</title>
+      <title>{{ PROJECT_WEBSITE_NAME }}</title>
     {% endblock %}
     {% load static %}
     <meta charset="utf-8" />
@@ -38,7 +38,7 @@
           <!-- Page Title in Center -->
           <div class="flex-1">
             <h1 class="text-xl font-bold text-left">
-              {% block page_title %}ASA Stats Rewards{% endblock %}
+              {% block page_title %}{{ PROJECT_NAME }}{% endblock %}
             </h1>
           </div>
 

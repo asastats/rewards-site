@@ -1,5 +1,5 @@
-:mod:`rewardsbot` --  ASA Stats rewards bot's package
-*****************************************************
+:mod:`rewardsbot` --  Rewards Suite Discord bot's package
+*********************************************************
 
 .. automodule:: rewardsbot
   :members:
@@ -7,8 +7,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.controllers` -- ASA Stats rewards bot's controllers package
-----------------------------------------------------------------------------
+:mod:`rewardsbot.controllers` -- Rewards Suite Discord bot's controllers package
+--------------------------------------------------------------------------------
 
 .. automodule:: rewardsbot.controllers
   :members:
@@ -16,8 +16,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.controllers.command_handler` --  ASA Stats rewards bot's command handler module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`rewardsbot.controllers.command_handler` --  Rewards Suite Discord bot's command handler module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: rewardsbot.controllers.command_handler
   :members:
@@ -25,8 +25,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.models` -- ASA Stats rewards bot's models package
-------------------------------------------------------------------
+:mod:`rewardsbot.models` -- Rewards Suite Discord bot's models package
+----------------------------------------------------------------------
 
 .. automodule:: rewardsbot.models
   :members:
@@ -34,8 +34,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.models.contribution` --  ASA Stats rewards bot's contribution nodel module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`rewardsbot.models.contribution` --  Rewards Suite Discord bot's contribution nodel module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: rewardsbot.models.contribution
   :members:
@@ -43,8 +43,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.models.cycle` --  ASA Stats rewards bot's cycle nodel module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`rewardsbot.models.cycle` --  Rewards Suite Discord bot's cycle nodel module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: rewardsbot.models.cycle
   :members:
@@ -52,8 +52,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.services` -- ASA Stats rewards bot's services package
-----------------------------------------------------------------------
+:mod:`rewardsbot.services` -- Rewards Suite Discord bot's services package
+--------------------------------------------------------------------------
 
 .. automodule:: rewardsbot.services
   :members:
@@ -61,8 +61,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.services.cycle` --  ASA Stats rewards bot's cycle service module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`rewardsbot.services.cycle` --  Rewards Suite Discord bot's cycle service module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: rewardsbot.services.cycle
   :members:
@@ -70,8 +70,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.services.suggestion` --  ASA Stats rewards bot's suggestion service module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`rewardsbot.services.suggestion` --  Rewards Suite Discord bot's suggestion service module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: rewardsbot.services.suggestion
   :members:
@@ -79,8 +79,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.services.user` --  ASA Stats rewards bot's user service module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`rewardsbot.services.user` --  Rewards Suite Discord bot's user service module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: rewardsbot.services.user
   :members:
@@ -88,8 +88,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.utils` -- ASA Stats rewards bot's utils package
-----------------------------------------------------------------
+:mod:`rewardsbot.utils` -- Rewards Suite Discord bot's utils package
+--------------------------------------------------------------------
 
 .. automodule:: rewardsbot.utils
   :members:
@@ -97,8 +97,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.utils.api` --  Utility module for accessing ASA Stats rewards API
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:mod:`rewardsbot.utils.api` --  Utility module for accessing Rewards Suite API
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: rewardsbot.utils.api
   :members:
@@ -115,8 +115,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.bot` -- Module for ASA Stats rewards Discord bot
------------------------------------------------------------------
+:mod:`rewardsbot.bot` -- Module for Rewards Suite Discord bot creation
+----------------------------------------------------------------------
 
 .. automodule:: rewardsbot.bot
   :members:
@@ -124,8 +124,8 @@
   :show-inheritance:
 
 
-:mod:`rewardsbot.config` -- Module for initialization of ASA Stats rewards bot environment variables
-----------------------------------------------------------------------------------------------------
+:mod:`rewardsbot.config` -- Module for initialization of Rewards Suite Discord bot environment variables
+--------------------------------------------------------------------------------------------------------
 
 .. automodule:: rewardsbot.config
   :members:

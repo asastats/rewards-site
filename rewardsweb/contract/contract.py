@@ -1,4 +1,4 @@
-"""ASA Stats Rewards smart contract module."""
+"""Rewards Suite smart contract module."""
 
 from algopy import (
     Account,

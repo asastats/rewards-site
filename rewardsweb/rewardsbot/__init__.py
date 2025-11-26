@@ -1,1 +1,1 @@
-"""Initialization module for ASA Stats Rewards bot package."""
+"""Initialization module for Rewards Suite Discord bot package."""

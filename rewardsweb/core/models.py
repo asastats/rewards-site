@@ -15,7 +15,7 @@ from utils.helpers import parse_full_handle
 
 
 class ContributorManager(models.Manager):
-    """ASA Stats contributor's data manager."""
+    """Rewards Suite contributor's data manager."""
 
     def from_full_handle(self, full_handle, address=None):
         """Return contributor model instance created from provided `full_handle`.
@@ -80,7 +80,7 @@ class ContributorManager(models.Manager):
 
 
 class Contributor(models.Model):
-    """ASA Stats contributor's data model."""
+    """Rewards Suite contributor's data model."""
 
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=ADDRESS_LEN, null=True)
@@ -390,7 +390,7 @@ class SuperuserLog(models.Model):
 
 
 class SocialPlatform(models.Model):
-    """ASA Stats social media platform's data model."""
+    """Rewards Suite social media platform's data model."""
 
     name = models.CharField(max_length=50)
     prefix = models.CharField(max_length=2, blank=True)
@@ -420,7 +420,7 @@ class SocialPlatform(models.Model):
 
 
 class HandleManager(models.Manager):
-    """ASA Stats social media handle data manager."""
+    """Rewards Suite social media handle data manager."""
 
     def from_address_and_full_handle(self, address, full_handle):
         """Return handle model instance derived from provided `address` and `full_handle`.
@@ -453,7 +453,7 @@ class HandleManager(models.Manager):
 
 
 class Handle(models.Model):
-    """ASA Stats social media handle data model."""
+    """Rewards Suite social media handle data model."""
 
     contributor = models.ForeignKey(Contributor, default=None, on_delete=models.CASCADE)
     platform = models.ForeignKey(SocialPlatform, default=None, on_delete=models.CASCADE)
@@ -483,7 +483,7 @@ class Handle(models.Model):
 
 
 class Cycle(models.Model):
-    """ASA Stats periodic rewards cycle data model.."""
+    """Rewards Suite periodic rewards cycle data model.."""
 
     start = models.DateField()
     end = models.DateField(blank=True, null=True)
@@ -572,7 +572,7 @@ class Cycle(models.Model):
 
 
 class RewardType(models.Model):
-    """ASA Stats reward type data model."""
+    """Rewards Suite reward type data model."""
 
     label = models.CharField(max_length=5, blank=True)
     name = models.CharField(max_length=50, blank=True)
@@ -605,7 +605,7 @@ class RewardType(models.Model):
 
 
 class Reward(models.Model):
-    """ASA Stats reward data model."""
+    """Rewards Suite reward data model."""
 
     type = models.ForeignKey(RewardType, default=None, on_delete=models.CASCADE)
     level = models.IntegerField(default=1)
@@ -636,7 +636,7 @@ class Reward(models.Model):
 
 
 class IssueManager(models.Manager):
-    """ASA Stats issues data manager."""
+    """Rewards Suite issues data manager."""
 
     def confirm_contribution_with_issue(self, issue_number, contribution):
         """Create issue from provided number and assign it to confirmed `contribution`.
@@ -657,7 +657,7 @@ class IssueManager(models.Manager):
 
 
 class IssueStatus(models.TextChoices):
-    """ASA Stats GitHub channel issue status choices."""
+    """Rewards Suite GitHub channel issue status choices."""
 
     CREATED = "created", "Created"
     WONTFIX = "wontfix", "Wontfix"
@@ -667,7 +667,7 @@ class IssueStatus(models.TextChoices):
 
 
 class Issue(models.Model):
-    """ASA Stats GitHub issue model."""
+    """Rewards Suite GitHub issue model."""
 
     number = models.IntegerField()
     status = models.CharField(

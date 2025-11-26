@@ -1,5 +1,5 @@
-:mod:`api` -- ASA Stats rewards API package
-*******************************************
+:mod:`api` -- Rewards Suite API package
+***************************************
 
 .. automodule:: api
   :members:
@@ -7,8 +7,8 @@
   :show-inheritance:
 
 
-:mod:`api.serializers` -- ASA Stats rewards API serializers
------------------------------------------------------------
+:mod:`api.serializers` -- Rewards Suite API serializers
+-------------------------------------------------------
 
 .. automodule:: api.serializers
   :members:
@@ -16,8 +16,8 @@
   :show-inheritance:
 
 
-:mod:`api.urls` -- ASA Stats rewards API URL configuration module
------------------------------------------------------------------
+:mod:`api.urls` -- Rewards Suite API URL configuration module
+-------------------------------------------------------------
 
 .. automodule:: api.urls
   :members:
@@ -25,8 +25,8 @@
   :show-inheritance:
 
 
-:mod:`api.views` -- ASA Stats rewards API views module
-------------------------------------------------------
+:mod:`api.views` -- Rewards Suite API views module
+--------------------------------------------------
 
 .. automodule:: api.views
   :members:
@@ -34,8 +34,8 @@
   :show-inheritance:
 
 
-:mod:`contract` -- Rewards smart contract package
-*************************************************
+:mod:`contract` -- Rewards Suite smart contract package
+*******************************************************
 
 .. automodule:: contract
   :members:
@@ -43,8 +43,8 @@
   :show-inheritance:
 
 
-:mod:`contract.artifacts` -- Rewards smart contract artifacts
--------------------------------------------------------------
+:mod:`contract.artifacts` -- Smart contract artifacts
+-----------------------------------------------------
 
 .. automodule:: contract.artifacts
   :members:
@@ -52,8 +52,8 @@
   :show-inheritance:
 
 
-:mod:`contract.contract` -- Rewards smart contract module
----------------------------------------------------------
+:mod:`contract.contract` -- Smart contract creation module
+----------------------------------------------------------
 
 .. automodule:: contract.contract
   :members:
@@ -70,8 +70,8 @@
   :show-inheritance:
 
 
-:mod:`contract.helpers` -- Rewards smart contract helpers functions module
---------------------------------------------------------------------------
+:mod:`contract.helpers` -- Smart contract helper functions module
+-----------------------------------------------------------------
 
 .. automodule:: contract.helpers
   :members:
@@ -88,8 +88,8 @@
   :show-inheritance:
 
 
-:mod:`contract.tests` -- Rewards smart contract unit-tests package
-------------------------------------------------------------------
+:mod:`contract.tests` -- Smart contract unit-tests package
+----------------------------------------------------------
 
 .. automodule:: contract.tests
   :members:

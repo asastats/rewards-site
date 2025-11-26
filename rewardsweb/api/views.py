@@ -1,4 +1,4 @@
-"""Module containing ASA Stats Rewards API views."""
+"""Module containing Rewards Suite API views."""
 
 from adrf.views import APIView
 from asgiref.sync import sync_to_async

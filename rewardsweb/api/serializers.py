@@ -1,4 +1,4 @@
-"""Module containing ASA Stats Rewards API serializers."""
+"""Module containing Rewards Suite API serializers."""
 
 from adrf.serializers import ModelSerializer, Serializer
 from rest_framework.serializers import (

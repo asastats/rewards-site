@@ -149,7 +149,7 @@ class CommonAuthTests(SeleniumTestCase):
         self.driver.get(self.get_url(self.page_url))
         home = self.driver.find_element(By.XPATH, "//a[contains(., 'Back to Home')]")
         home.click()
-        assert "ASA Stats Rewards" in self.driver.page_source
+        assert "{{ PROJECT_NAME }}" in self.driver.page_source
 
     #
     # --- VALIDATION TESTS
@@ -199,7 +199,7 @@ class LoginPageLinkTests(LoginPageTests):
     def test_link_back_to_home(self):
         link = self.driver.find_element(By.XPATH, "//a[contains(., 'Back to Home')]")
         link.click()
-        assert "ASA Stats Rewards" in self.driver.page_source
+        assert "{{ PROJECT_NAME }}" in self.driver.page_source
 
 
 class SignupPageTests(CommonAuthTests):
@@ -227,4 +227,4 @@ class SignupPageLinkTests(SignupPageTests):
     def test_back_to_home(self):
         link = self.driver.find_element(By.XPATH, "//a[contains(., 'Back to Home')]")
         link.click()
-        assert "ASA Stats Rewards" in self.driver.page_source
+        assert "{{ PROJECT_NAME }}" in self.driver.page_source

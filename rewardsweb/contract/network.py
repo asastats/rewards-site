@@ -421,9 +421,9 @@ def process_allocations(network, addresses, amounts):
     :type token_id: int
     :var atc_stub: collection of data required to create atomic transaction
     :type atc_stub: dict
-    :var admin_address: ASA Stats admin address
+    :var admin_address: Rewards Suite smart contract admin address
     :type admin_address: str
-    :var app_address: ASA Stats Rewards dApp address
+    :var app_address: Rewards Suite smart contract address
     :type app_address: str
     :var app_id: Rewards dApp unique identifier
     :type app_id: int

@@ -26,7 +26,8 @@ location /static/ {
 """
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.asastats.com",
+    f"https://*.{PROJECT_DOMAIN.split('.', 1)[1]}",
+    f"https://{PROJECT_DOMAIN}"
 ]
 
 DATABASES = {

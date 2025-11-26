@@ -244,7 +244,9 @@ DEFAULT_FROM_EMAIL = get_env_variable("EMAIL_DEFAULT_FROM", "")
 # These settings control the behavior and appearance of your site.
 # =============================================================================
 
-# You may want to set the same value in deploy/group_vars/all/vars.yml
+PROJECT_OWNER = "ASA Stats"
+
+# You may want to set the same domain in deploy/group_vars/all/vars.yml
 PROJECT_DOMAIN = "rewards.asastats.com"
 
 ADMINS = [

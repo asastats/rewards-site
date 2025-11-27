@@ -1,39 +1,26 @@
-"""Testing module for :py:mod:`trackers.twitter` module."""
+"""Testing module for :py:mod:`trackers.twitterapiio` module."""
 
 from datetime import datetime
 
-from trackers.twitter import TwitterTracker
+from trackers.twitterapiio import TwitterapiioTracker
 
 
 class TestTrackersTwitter:
-    """Testing class for :class:`trackers.twitter.TwitterTracker`."""
+    """Testing class for :class:`trackers.twitter.TwitterapiioTracker`."""
 
     # __init__
-    def test_trackers_twittertracker_init_success(self, mocker, twitter_config):
-        mock_client = mocker.patch("tweepy.Client")
-        mock_user = mocker.MagicMock()
-        mock_user_data = mocker.MagicMock()
-        mock_user_data.id = "12345"
-        mock_user.data = mock_user_data
-        mock_client.return_value.get_me.return_value = mock_user
-
-        instance = TwitterTracker(lambda x: None, twitter_config)
-
-        mock_client.assert_called_once_with(
-            bearer_token="test_bearer_token",
-            consumer_key="test_consumer_key",
-            consumer_secret="test_consumer_secret",
-            access_token="test_access_token",
-            access_token_secret="test_access_token_secret",
-        )
-        assert instance.bot_user_id == "12345"
+    def test_trackers_twittertracker_init_success(self, twitterapiio_config):
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
+        assert instance.api_key == twitterapiio_config["api_key"]
+        assert instance.target_handle == twitterapiio_config["target_handle"]
+        assert instance.batch_size == twitterapiio_config["batch_size"]
 
     # _get_original_tweet_info
     def test_trackers_twittertracker_get_original_tweet_info_success(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet_data = mocker.MagicMock()
         mock_tweet_data.id = "original_tweet_123"
@@ -61,10 +48,10 @@ class TestTrackersTwitter:
         )
 
     def test_trackers_twittertracker_get_original_tweet_info_no_data(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_response = mocker.MagicMock()
         mock_response.data = None
@@ -78,10 +65,10 @@ class TestTrackersTwitter:
         assert contributor == ""
 
     def test_trackers_twittertracker_get_original_tweet_info_no_users(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet_data = mocker.MagicMock()
         mock_tweet_data.id = "original_tweet_123"
@@ -99,10 +86,10 @@ class TestTrackersTwitter:
         assert contributor == ""
 
     def test_trackers_twittertracker_get_original_tweet_info_user_not_found(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet_data = mocker.MagicMock()
         mock_tweet_data.id = "original_tweet_123"
@@ -125,10 +112,10 @@ class TestTrackersTwitter:
         assert contributor == ""  # Author not found in users
 
     def test_trackers_twittertracker_get_original_tweet_info_exception(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
         instance.logger = mocker.MagicMock()
 
         instance.client.get_tweet.side_effect = Exception("API error")
@@ -145,10 +132,10 @@ class TestTrackersTwitter:
 
     # _extract_reply_mention_data
     def test_trackers_twittertracker_extract_reply_mention_data_with_reply(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_ref_tweet = mocker.MagicMock()
@@ -174,10 +161,10 @@ class TestTrackersTwitter:
         mock_get_original_info.assert_called_once_with("ref_tweet_123")
 
     def test_trackers_twittertracker_extract_reply_mention_data_no_referenced_tweets(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.referenced_tweets = None
@@ -191,10 +178,10 @@ class TestTrackersTwitter:
         assert contributor == ""
 
     def test_trackers_twittertracker_extract_reply_mention_data_no_reply_type(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_ref_tweet = mocker.MagicMock()
@@ -217,10 +204,10 @@ class TestTrackersTwitter:
 
     # _get_content_preview
     def test_trackers_twittertracker_get_content_preview_with_text(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.text = (
@@ -234,10 +221,10 @@ class TestTrackersTwitter:
         assert len(result) == 200
 
     def test_trackers_twittertracker_get_content_preview_no_text(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.text = None
@@ -247,10 +234,10 @@ class TestTrackersTwitter:
         assert result == ""
 
     def test_trackers_twittertracker_get_content_preview_empty_text(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.text = ""
@@ -260,10 +247,10 @@ class TestTrackersTwitter:
         assert result == ""
 
     def test_trackers_twittertracker_get_content_preview_no_text_attr(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         # Create a simple mock without MagicMock's automatic attribute creation
         class SimpleMock:
@@ -277,10 +264,10 @@ class TestTrackersTwitter:
 
     # _get_timestamp
     def test_trackers_twittertracker_get_timestamp_with_created_at(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.created_at = datetime(2023, 1, 1, 12, 0, 0)
@@ -290,10 +277,10 @@ class TestTrackersTwitter:
         assert result == "2023-01-01T12:00:00"
 
     def test_trackers_twittertracker_get_timestamp_no_created_at(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.created_at = None
@@ -304,10 +291,10 @@ class TestTrackersTwitter:
         assert len(result) > 0
 
     def test_trackers_twittertracker_get_timestamp_no_created_at_attr(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         # Create a simple mock without MagicMock's automatic attribute creation
         class SimpleMock:
@@ -322,10 +309,10 @@ class TestTrackersTwitter:
 
     # extract_mention_data
     def test_trackers_twittertracker_extract_mention_data_reply(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.author_id = "user123"
@@ -356,10 +343,10 @@ class TestTrackersTwitter:
         assert result["item_id"] == "tweet123"
 
     def test_trackers_twittertracker_extract_mention_data_no_reply(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.author_id = "user123"
@@ -380,10 +367,10 @@ class TestTrackersTwitter:
         assert result["contributor"] == "suggester_user"  # Falls back to suggester
 
     def test_trackers_twittertracker_extract_mention_data_no_contributor_in_reply(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.author_id = "user123"
@@ -405,10 +392,10 @@ class TestTrackersTwitter:
         assert result["contributor"] == "suggester_user"  # Falls back to suggester
 
     def test_trackers_twittertracker_extract_mention_data_no_suggester_in_user_map(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.author_id = "unknown_user"
@@ -428,10 +415,10 @@ class TestTrackersTwitter:
         assert result["contributor"] == ""  # Falls back to empty suggester
 
     def test_trackers_twittertracker_extract_mention_data_no_text(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mocker.patch("tweepy.Client")
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.author_id = "user123"
@@ -453,7 +440,7 @@ class TestTrackersTwitter:
 
     # # run
     def test_trackers_twittertracker_run_wrapper_calls_base_run(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
@@ -466,8 +453,8 @@ class TestTrackersTwitter:
         mocked_base_run = mocker.patch("trackers.twitter.BaseMentionTracker.run")
 
         # Create instance (MessageParser.parse mocked out)
-        tracker = TwitterTracker(
-            parse_message_callback=lambda x: x, config=twitter_config
+        tracker = TwitterapiioTracker(
+            parse_message_callback=lambda x: x, config=twitterapiio_config
         )
 
         # Call the wrapper
@@ -480,7 +467,7 @@ class TestTrackersTwitter:
         )
 
     # check_mentions
-    def test_trackers_twittertracker_check_mentions_found(self, mocker, twitter_config):
+    def test_trackers_twittertracker_check_mentions_found(self, mocker, twitterapiio_config):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
         mock_user_data = mocker.MagicMock()
@@ -488,7 +475,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
 
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.id = "tweet123"
@@ -524,7 +511,7 @@ class TestTrackersTwitter:
         mock_process_mention.assert_called_once()
 
     def test_trackers_twittertracker_check_mentions_no_data(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
@@ -533,7 +520,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
 
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_response = mocker.MagicMock()
         mock_response.data = None
@@ -544,7 +531,7 @@ class TestTrackersTwitter:
         assert result == 0
 
     def test_trackers_twittertracker_check_mentions_no_users_in_includes(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
@@ -553,7 +540,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
 
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.id = "tweet123"
@@ -574,7 +561,7 @@ class TestTrackersTwitter:
         # Should still process even without user map
 
     def test_trackers_twittertracker_check_mentions_exception(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
@@ -583,7 +570,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
 
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         instance.client.get_users_mentions.side_effect = Exception("API error")
         mock_log_action = mocker.patch.object(instance, "log_action")
@@ -599,7 +586,7 @@ class TestTrackersTwitter:
         mock_log_action.assert_called_with("twitter_check_error", "Error: API error")
 
     def test_trackers_twittertracker_check_mentions_already_processed(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
@@ -608,7 +595,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
 
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.id = "tweet123"
@@ -629,7 +616,7 @@ class TestTrackersTwitter:
         mock_process_mention.assert_not_called()
 
     def test_trackers_twittertracker_check_mentions_process_mention_false(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
@@ -638,7 +625,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
 
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_tweet = mocker.MagicMock()
         mock_tweet.id = "tweet123"
@@ -659,7 +646,7 @@ class TestTrackersTwitter:
         mock_process_mention.assert_called_once()
 
     def test_trackers_twittertracker_run_mentions_found_logging(
-        self, mocker, twitter_config
+        self, mocker, twitterapiio_config
     ):
         mock_client = mocker.patch("tweepy.Client")
         mock_user = mocker.MagicMock()
@@ -668,7 +655,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
 
-        instance = TwitterTracker(lambda x: None, twitter_config)
+        instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
 
         mock_check_mentions = mocker.patch.object(instance, "check_mentions")
         mock_check_mentions.return_value = 5

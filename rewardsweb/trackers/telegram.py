@@ -20,25 +20,25 @@ class TelegramTracker(BaseMentionTracker):
     :type TelegramTracker.tracked_chats: list
     """
 
-    def __init__(self, parse_message_callback, telegram_config, chats_collection):
+    def __init__(self, parse_message_callback, config, chats_collection):
         """Initialize Telegram tracker.
 
         :param parse_message_callback: function to call when mention is found
         :type parse_message_callback: callable
-        :param telegram_config: configuration dictionary for Telegram API
-        :type telegram_config: dict
+        :param config: configuration dictionary for Telegram API
+        :type config: dict
         :param chats_collection: list of chat usernames or IDs to monitor
         :type chats_collection: list
         """
         super().__init__("telegram", parse_message_callback)
 
         self.client = TelegramClient(
-            session=telegram_config.get("session_name", "telegram_tracker"),
-            api_id=telegram_config["api_id"],
-            api_hash=telegram_config["api_hash"],
+            session=config.get("session_name", "telegram_tracker"),
+            api_id=config["api_id"],
+            api_hash=config["api_hash"],
         )
 
-        self.bot_username = telegram_config.get("bot_username", "").lower()
+        self.bot_username = config.get("bot_username", "").lower()
         self.tracked_chats = chats_collection
 
         self.logger.info(

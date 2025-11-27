@@ -1,21 +1,19 @@
-"""Module containing class for tracking mentions on X/Twitter."""
+"""Module containing class for tracking mentions on X using TwitterAPI.io."""
 
 from datetime import datetime
-
-import tweepy
 
 from trackers.base import BaseMentionTracker
 
 
-class TwitterTracker(BaseMentionTracker):
+class TwitterapiioTracker(BaseMentionTracker):
     """Tracker for Twitter mentions of the bot account.
 
-    :var TwitterTracker.client: authenticated Twitter client
-    :type TwitterTracker.client: :class:`tweepy.Client`
-    :var TwitterTracker.bot_user: bot user information from Twitter
-    :type TwitterTracker.bot_user: :class:`tweepy.models.User`
-    :var TwitterTracker.bot_user_id: ID of the bot user
-    :type TwitterTracker.bot_user_id: str
+    :var TwitterapiioTracker.client: authenticated Twitter client
+    :type TwitterapiioTracker.client: :class:`tweepy.Client`
+    :var TwitterapiioTracker.bot_user: bot user information from Twitter
+    :type TwitterapiioTracker.bot_user: :class:`tweepy.models.User`
+    :var TwitterapiioTracker.bot_user_id: ID of the bot user
+    :type TwitterapiioTracker.bot_user_id: str
     """
 
     def __init__(self, parse_message_callback, config):
@@ -32,23 +30,14 @@ class TwitterTracker(BaseMentionTracker):
         :var bot_user_id: ID of the bot user
         :type bot_user_id: str
         """
-        super().__init__("twitter", parse_message_callback)
+        super().__init__("twitterapiio", parse_message_callback)
+        self.api_key = config["api_key"]
+        self.target_handle = config["target_handle"]
+        self.batch_size = config["batch_size"]
 
-        self.client = tweepy.Client(
-            bearer_token=config["bearer_token"],
-            consumer_key=config["consumer_key"],
-            consumer_secret=config["consumer_secret"],
-            access_token=config["access_token"],
-            access_token_secret=config["access_token_secret"],
-        )
-
-        # Get bot user info
-        self.bot_user = self.client.get_me()
-        self.bot_user_id = self.bot_user.data.id
-
-        self.logger.info("Twitter tracker initialized")
+        self.logger.info("TwitterAPI.io tracker initialized")
         self.log_action(
-            "initialized", f"Tracking mentions for user ID: {self.bot_user_id}"
+            "initialized", f"Tracking mentions for handle: {self.target_handle}"
         )
 
     def _get_original_tweet_info(self, referenced_tweet_id):

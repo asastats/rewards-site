@@ -201,7 +201,7 @@ class TestTrackersBaseMentionTracker:
             "trackers.base.social_platform_prefixes"
         )
         mock_social_platform_prefixes.return_value = [("Testplatform", "TP_")]
-        instance = BaseMentionTracker("testplatform", lambda x: None)
+        instance = BaseMentionTracker("testplatform123", lambda x: None)
         parsed_message = {"title": "Test Title", "description": "Test Description"}
         message_data = {"contribution_url": "http://example.com"}  # No contributor
         result = instance.prepare_contribution_data(parsed_message, message_data)

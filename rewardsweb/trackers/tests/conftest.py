@@ -53,6 +53,7 @@ def twitter_config():
         "consumer_secret": "test_consumer_secret",
         "access_token": "test_access_token",
         "access_token_secret": "test_access_token_secret",
+        "target_user_id": "test_user_id",
         "poll_interval": 15,
     }
 

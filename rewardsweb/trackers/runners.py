@@ -112,4 +112,4 @@ def run_twitterapiio_tracker():
 #     from dotenv import load_dotenv
 
 #     load_dotenv(load_dotenv(Path(__file__).parent.parent / ".env"))
-#     run_twitterapiio_tracker()
+#     run_twitter_tracker()

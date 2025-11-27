@@ -12,10 +12,8 @@ class TwitterTracker(BaseMentionTracker):
 
     :var TwitterTracker.client: authenticated Twitter client
     :type TwitterTracker.client: :class:`tweepy.Client`
-    :var TwitterTracker.bot_user: bot user information from Twitter
-    :type TwitterTracker.bot_user: :class:`tweepy.models.User`
-    :var TwitterTracker.bot_user_id: ID of the bot user
-    :type TwitterTracker.bot_user_id: str
+    :var TwitterTracker.target_user_id: Twitter user ID to track
+    :type TwitterTracker.target_user_id: str`
     """
 
     def __init__(self, parse_message_callback, config):
@@ -25,12 +23,6 @@ class TwitterTracker(BaseMentionTracker):
         :type parse_message_callback: callable
         :param config: configuration dictionary for X API
         :type config: dict
-        :var client: authenticated Twitter client
-        :type client: :class:`tweepy.Client`
-        :var bot_user: bot user information from Twitter
-        :type bot_user: :class:`tweepy.models.User`
-        :var bot_user_id: ID of the bot user
-        :type bot_user_id: str
         """
         super().__init__("twitter", parse_message_callback)
 
@@ -42,13 +34,11 @@ class TwitterTracker(BaseMentionTracker):
             access_token_secret=config["access_token_secret"],
         )
 
-        # Get bot user info
-        self.bot_user = self.client.get_me()
-        self.bot_user_id = self.bot_user.data.id
+        self.target_user_id = config["target_user_id"]
 
         self.logger.info("Twitter tracker initialized")
         self.log_action(
-            "initialized", f"Tracking mentions for user ID: {self.bot_user_id}"
+            "initialized", f"Tracking mentions for user ID:: {self.target_user_id}"
         )
 
     def _get_original_tweet_info(self, referenced_tweet_id):
@@ -221,7 +211,7 @@ class TwitterTracker(BaseMentionTracker):
         try:
             # Get recent mentions
             mentions = self.client.get_users_mentions(
-                self.bot_user_id,
+                self.target_user_id,
                 tweet_fields=[
                     "created_at",
                     "conversation_id",

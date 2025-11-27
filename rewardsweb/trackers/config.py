@@ -132,6 +132,7 @@ def twitter_config():
         "access_token_secret": get_env_variable(
             "TRACKER_TWITTER_ACCESS_TOKEN_SECRET", ""
         ),
+        "target_user_id": get_env_variable("TRACKER_TWITTER_TARGET_USER_ID", ""),
         "poll_interval": int(get_env_variable("TRACKER_TWITTER_POLL_INTERVAL", 720)),
     }
 

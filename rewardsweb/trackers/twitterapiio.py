@@ -2,10 +2,13 @@
 
 import json
 from datetime import datetime
+from urllib.parse import urlencode
 
 import requests
 
 from trackers.base import BaseMentionTracker
+
+TWITTERAPIIO_BASE_URL = "https://api.twitterapi.io/twitter"
 
 
 class TwitterapiioTracker(BaseMentionTracker):
@@ -28,13 +31,13 @@ class TwitterapiioTracker(BaseMentionTracker):
 
         :param parse_message_callback: function to call when a mention is found
         :type parse_message_callback: callable
-        :param config: configuration dictionary for X API, must include 'api_key', 'target_handle', and 'batch_size'
+        :param config: configuration dictionary for X API
         :type config: dict
         """
         super().__init__("twitterapiio", parse_message_callback)
         self.api_key = config["api_key"]
         self.target_handle = config["target_handle"]
-        self.batch_size = config.get("batch_size", 20)  # Default to 20 if not in config
+        self.batch_size = config["batch_size"]
 
         self.logger.info("TwitterAPI.io tracker initialized")
         self.log_action(
@@ -45,7 +48,7 @@ class TwitterapiioTracker(BaseMentionTracker):
     def _twitter_created_at_to_unix(created_at):
         """Converts Twitter's 'createdAt' string to a Unix timestamp.
 
-        :param created_at: The timestamp string from the Twitter API. (e.g., 'Sat Nov 22 04:28:58 +0000 2025')
+        :param created_at: The timestamp string from the Twitter API.
         :type created_at: str
         :return: The Unix timestamp.
         :rtype: int
@@ -60,8 +63,6 @@ class TwitterapiioTracker(BaseMentionTracker):
 
         :param tweet_ids: A list of tweet ID strings to fetch.
         :type tweet_ids: list
-        :var url: The API endpoint for fetching tweets.
-        :type url: str
         :var headers: The request headers, including the API key.
         :type headers: dict
         :var params: The request parameters, containing the comma-separated tweet IDs.
@@ -76,12 +77,13 @@ class TwitterapiioTracker(BaseMentionTracker):
         if not tweet_ids:
             return {}
 
-        url = "https://api.twitterapi.io/twitter/tweets"
         headers = {"X-API-Key": self.api_key}
         params = {"tweet_ids": ",".join(tweet_ids)}
-
+        encoded_params = urlencode(params, safe=",")
         try:
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(
+                f"{TWITTERAPIIO_BASE_URL}/tweets?{encoded_params}", headers=headers
+            )
             response.raise_for_status()
             data = response.json()
 
@@ -116,8 +118,6 @@ class TwitterapiioTracker(BaseMentionTracker):
         :type since_time: int, optional
         :return: A generator that yields individual mention tweets, potentially with 'parent_tweet' key.
         :rtype: generator
-        :var url: The API endpoint for fetching user mentions.
-        :type url: str
         :var headers: The request headers, including the API key.
         :type headers: dict
         :var params: The request parameters.
@@ -131,7 +131,6 @@ class TwitterapiioTracker(BaseMentionTracker):
         :var parent_tweets: A dictionary mapping parent tweet IDs to tweet objects.
         :type parent_tweets: dict
         """
-        url = "https://api.twitterapi.io/twitter/user/mentions"
         headers = {"X-API-Key": self.api_key}
         params = {"userName": self.target_handle}
         if since_time:
@@ -143,7 +142,11 @@ class TwitterapiioTracker(BaseMentionTracker):
         while True:
             params["cursor"] = cursor
             try:
-                response = requests.get(url, headers=headers, params=params)
+                response = requests.get(
+                    f"{TWITTERAPIIO_BASE_URL}/user/mentions",
+                    headers=headers,
+                    params=params,
+                )
                 response.raise_for_status()
                 data = response.json()
 
@@ -159,20 +162,26 @@ class TwitterapiioTracker(BaseMentionTracker):
             mentions_batch.extend(tweets_page)
 
             if len(mentions_batch) >= self.batch_size or not data.get("has_next_page"):
-                parent_tweet_ids = list(
-                    set(
-                        m["inReplyToId"]
-                        for m in mentions_batch
-                        if m.get("isReply") and m.get("inReplyToId")
+                parent_tweet_ids = sorted(
+                    list(
+                        set(
+                            m["inReplyToId"]
+                            for m in mentions_batch
+                            if m.get("isReply") and m.get("inReplyToId")
+                        )
                     )
                 )
-                parent_tweets = self._get_tweets_by_ids(parent_tweet_ids)
+                parent_tweets = {}
+                for i in range(0, len(parent_tweet_ids), self.batch_size):
+                    chunk = parent_tweet_ids[i : i + self.batch_size]
+                    parent_tweets.update(self._get_tweets_by_ids(chunk))
 
                 for mention in mentions_batch:
                     if mention.get("isReply"):
                         parent_id = mention.get("inReplyToId")
                         if parent_id in parent_tweets:
                             mention["parent_tweet"] = parent_tweets[parent_id]
+
                     yield mention
 
                 mentions_batch = []
@@ -215,26 +224,10 @@ class TwitterapiioTracker(BaseMentionTracker):
             or f"https://twitter.com/i/web/status/{tweet_id}",
             "contributor": contributor_handle,
             "type": "tweet",
-            "content_preview": mention["text"][:200],
+            "content": mention["text"],
             "timestamp": self._twitter_created_at_to_unix(mention["createdAt"]),
             "item_id": tweet_id,
         }
-
-    def process_mention(self, tweet_id, data):
-        """Process a mention by calling the callback and marking it as processed.
-
-        :param tweet_id: The ID of the tweet to process.
-        :type tweet_id: str
-        :param data: The standardized mention data.
-        :type data: dict
-        :return: True if the mention was successfully processed, False otherwise.
-        :rtype: bool
-        """
-        if self.parse_message_callback(data):
-            self.db.mark_processed(tweet_id, self.platform_name, data)
-            return True
-
-        return False
 
     def check_mentions(self):
         """Check for new Twitter mentions and process them.
@@ -275,7 +268,7 @@ class TwitterapiioTracker(BaseMentionTracker):
                 tweet_id = mention["id"]
                 if not self.is_processed(tweet_id):
                     data = self.extract_mention_data(mention)
-                    if self.process_mention(tweet_id, data):
+                    if self.process_mention(tweet_id, data, f"@{self.target_handle}"):
                         mentions_found += 1
 
         except Exception as e:

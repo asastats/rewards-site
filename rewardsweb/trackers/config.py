@@ -2,12 +2,6 @@
 
 from utils.helpers import get_env_variable
 
-PLATFORM_CONTEXT_FIELDS = {
-    "reddit": "subreddit",
-    "twitter": "tweet_author",
-    "telegram": "telegram_chat",
-    "discord": "discord_channel",
-}
 REWARDS_API_BASE_URL = get_env_variable(
     "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
 )
@@ -151,7 +145,7 @@ def twitterapiio_config():
     return {
         "api_key": get_env_variable("TRACKER_TWITTERAPIIO_API_KEY", ""),
         "target_handle": get_env_variable("TRACKER_TWITTERAPIIO_TARGET_HANDLE", ""),
-        "batch_size": int(get_env_variable("TRACKER_TWITTERAPIIO_BATCH_SIZE", 20)),
+        "batch_size": int(get_env_variable("TRACKER_TWITTERAPIIO_BATCH_SIZE", 10)),
         "poll_interval": int(
             get_env_variable("TRACKER_TWITTERAPIIO_POLL_INTERVAL", 15)
         ),

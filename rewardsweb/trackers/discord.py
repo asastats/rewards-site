@@ -487,7 +487,7 @@ class DiscordTracker(BaseMentionTracker):
 
         if not self.is_processed(message_id):
             data = await self.extract_mention_data(message)
-            if self.process_mention(message_id, data):
+            if self.process_mention(message_id, data, f"@{self.bot_user_id}"):
                 self.processed_messages.add(message_id)
                 self.logger.info(
                     f"Processed mention in {message.guild.name} / {message.channel.name}"
@@ -586,7 +586,7 @@ class DiscordTracker(BaseMentionTracker):
             "discord_guild": message.guild.name,
             "channel_id": message.channel.id,
             "guild_id": message.guild.id,
-            "content_preview": message.content[:200] if message.content else "",
+            "content": message.content if message.content else "",
             "timestamp": message.created_at.isoformat(),
             "item_id": f"discord_{message.guild.id}_{message.channel.id}_{message.id}",
         }
@@ -683,7 +683,7 @@ class DiscordTracker(BaseMentionTracker):
 
                 if not self.is_processed(message_id):
                     data = await self.extract_mention_data(message)
-                    if self.process_mention(message_id, data):
+                    if self.process_mention(message_id, data, f"@{self.bot_user_id}"):
                         mention_count += 1
                         self.processed_messages.add(message_id)
 

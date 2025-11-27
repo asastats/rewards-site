@@ -1,7 +1,6 @@
 """Testing module for :py:mod:`trackers.config` module."""
 
 from trackers.config import (
-    PLATFORM_CONTEXT_FIELDS,
     discord_config,
     discord_guilds,
     reddit_config,
@@ -15,16 +14,6 @@ from trackers.config import (
 
 class TestTrackersConfig:
     """Testing class for :py:mod:`trackers.config` module."""
-
-    # PLATFORM_CONTEXT_FIELDS
-    def test_trackers_database_platform_context_fields(self):
-        expected_fields = {
-            "reddit": "subreddit",
-            "twitter": "tweet_author",
-            "telegram": "telegram_chat",
-            "discord": "discord_channel",
-        }
-        assert PLATFORM_CONTEXT_FIELDS == expected_fields
 
     # discord_config
     def test_trackers_config_discord_config_for_empty_environment_variables(
@@ -335,7 +324,7 @@ class TestTrackersConfig:
         calls = [
             mocker.call("TRACKER_TWITTERAPIIO_API_KEY", ""),
             mocker.call("TRACKER_TWITTERAPIIO_TARGET_HANDLE", ""),
-            mocker.call("TRACKER_TWITTERAPIIO_BATCH_SIZE", 20),
+            mocker.call("TRACKER_TWITTERAPIIO_BATCH_SIZE", 10),
             mocker.call("TRACKER_TWITTERAPIIO_POLL_INTERVAL", 15),
         ]
         mock_env.assert_has_calls(calls, any_order=True)

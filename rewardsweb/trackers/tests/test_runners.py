@@ -153,7 +153,7 @@ class TestTrackersRunners:
             config=reddit_config,
             subreddits_to_track=mocked_subreddits.return_value,
         )
-        tracker.run.assert_called_once_with(poll_interval_minutes=30)
+        tracker.run.assert_called_once_with(poll_interval_minutes=15)
 
     # # run_telegram_tracker
     def test_trackers_runners_run_telegram_tracker_for_interval_set(
@@ -212,7 +212,7 @@ class TestTrackersRunners:
             config=telegram_config,
             chats_collection=mocked_chats.return_value,
         )
-        tracker.run.assert_called_once_with(poll_interval_minutes=30)
+        tracker.run.assert_called_once_with(poll_interval_minutes=15)
 
     # # run_twitter_tracker
     def test_trackers_runners_run_twitter_tracker_for_interval_set(
@@ -263,7 +263,7 @@ class TestTrackersRunners:
             parse_message_callback=parser.parse,
             config=twitter_config,
         )
-        tracker.run.assert_called_once_with(poll_interval_minutes=720)
+        tracker.run.assert_called_once_with(poll_interval_minutes=15)
 
     # # run_twitterapiio_tracker
     def test_trackers_runners_run_twitterapiio_tracker_for_interval_set(

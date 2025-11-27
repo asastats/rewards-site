@@ -4,8 +4,6 @@ import json
 import sqlite3
 from pathlib import Path
 
-from trackers.config import PLATFORM_CONTEXT_FIELDS
-
 
 class MentionDatabaseManager:
     """Database manager for social media mention tracking.
@@ -43,7 +41,6 @@ class MentionDatabaseManager:
                 platform TEXT NOT NULL,
                 processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 suggester TEXT,
-                context_field TEXT,
                 raw_data TEXT
             )
         """
@@ -92,27 +89,13 @@ class MentionDatabaseManager:
         :type data: dict
         :var cursor: database cursor
         :type cursor: :class:`sqlite3.Cursor`
-        :var context_field: platform-specific context field value
-        :type context_field: str or None
         """
         cursor = self.conn.cursor()
-
-        context_field = None
-        if platform_name in PLATFORM_CONTEXT_FIELDS:
-            context_field_name = PLATFORM_CONTEXT_FIELDS[platform_name]
-            context_field = data.get(context_field_name)
-
         cursor.execute(
             """INSERT INTO processed_mentions 
-               (item_id, platform, suggester, context_field, raw_data) 
-               VALUES (?, ?, ?, ?, ?)""",
-            (
-                item_id,
-                platform_name,
-                data.get("suggester"),
-                context_field,
-                json.dumps(data),
-            ),
+               (item_id, platform, suggester, raw_data) 
+               VALUES (?, ?, ?, ?)""",
+            (item_id, platform_name, data.get("suggester"), json.dumps(data)),
         )
         self.conn.commit()
 

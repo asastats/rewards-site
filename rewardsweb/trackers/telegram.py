@@ -1,7 +1,6 @@
 """Module containing class for tracking mentions on Telegram."""
 
 import asyncio
-import time
 from datetime import datetime
 
 from telethon import TelegramClient

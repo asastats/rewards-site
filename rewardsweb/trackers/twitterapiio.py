@@ -1,245 +1,289 @@
-"""Module containing class for tracking mentions on X using TwitterAPI.io."""
+"Module containing class for tracking mentions on X using TwitterAPI.io."
 
+import json
 from datetime import datetime
+
+import requests
 
 from trackers.base import BaseMentionTracker
 
 
 class TwitterapiioTracker(BaseMentionTracker):
-    """Tracker for Twitter mentions of the bot account.
+    """Tracker for Twitter mentions of a specific account using the TwitterAPI.io service.
 
-    :var TwitterapiioTracker.client: authenticated Twitter client
-    :type TwitterapiioTracker.client: :class:`tweepy.Client`
-    :var TwitterapiioTracker.bot_user: bot user information from Twitter
-    :type TwitterapiioTracker.bot_user: :class:`tweepy.models.User`
-    :var TwitterapiioTracker.bot_user_id: ID of the bot user
-    :type TwitterapiioTracker.bot_user_id: str
+    This class handles fetching new mentions, retrieving the parent tweets of replies
+    in efficient batches, and saving the timestamp of the last processed mention
+    to avoid reprocessing.
+
+    :var TwitterapiioTracker.api_key: The API key for the TwitterAPI.io service.
+    :type TwitterapiioTracker.api_key: str
+    :var TwitterapiioTracker.target_handle: The Twitter screen name of the account to track.
+    :type TwitterapiioTracker.target_handle: str
+    :var TwitterapiioTracker.batch_size: The number of mentions to collect before fetching their parent tweets.
+    :type TwitterapiioTracker.batch_size: int
     """
 
     def __init__(self, parse_message_callback, config):
-        """Initialize Twitter tracker.
+        """Initialize the TwitterapiioTracker instance.
 
-        :param parse_message_callback: function to call when mention is found
+        :param parse_message_callback: function to call when a mention is found
         :type parse_message_callback: callable
-        :param config: configuration dictionary for X API
+        :param config: configuration dictionary for X API, must include 'api_key', 'target_handle', and 'batch_size'
         :type config: dict
-        :var client: authenticated Twitter client
-        :type client: :class:`tweepy.Client`
-        :var bot_user: bot user information from Twitter
-        :type bot_user: :class:`tweepy.models.User`
-        :var bot_user_id: ID of the bot user
-        :type bot_user_id: str
         """
         super().__init__("twitterapiio", parse_message_callback)
         self.api_key = config["api_key"]
         self.target_handle = config["target_handle"]
-        self.batch_size = config["batch_size"]
+        self.batch_size = config.get("batch_size", 20)  # Default to 20 if not in config
 
         self.logger.info("TwitterAPI.io tracker initialized")
         self.log_action(
             "initialized", f"Tracking mentions for handle: {self.target_handle}"
         )
 
-    def _get_original_tweet_info(self, referenced_tweet_id):
-        """Get original tweet information for reply mentions.
+    @staticmethod
+    def _twitter_created_at_to_unix(created_at):
+        """Converts Twitter's 'createdAt' string to a Unix timestamp.
 
-        :param referenced_tweet_id: ID of the referenced tweet
-        :type referenced_tweet_id: str
-        :var original_tweet: response from Twitter API for the referenced tweet
-        :type original_tweet: :class:`tweepy.models.Response`
-        :var contribution_url: URL to the original tweet
-        :type contribution_url: str
-        :var contributor: username of the original tweet author
-        :type contributor: str
-        :var original_user_map: mapping of user IDs to user objects
-        :type original_user_map: dict
-        :var author: user object of the original tweet author
-        :type author: :class:`tweepy.models.User`
-        :return: tuple of (contribution_url, contributor_username)
-        :rtype: tuple
+        :param created_at: The timestamp string from the Twitter API. (e.g., 'Sat Nov 22 04:28:58 +0000 2025')
+        :type created_at: str
+        :return: The Unix timestamp.
+        :rtype: int
+        :var dt: The datetime object parsed from the string.
+        :type dt: :class:`datetime.datetime`
         """
-        try:
-            original_tweet = self.client.get_tweet(
-                referenced_tweet_id,
-                tweet_fields=["created_at", "author_id", "text"],
-                expansions=["author_id"],
-            )
+        dt = datetime.strptime(created_at, "%a %b %d %H:%M:%S %z %Y")
+        return int(dt.timestamp())
 
-            if not original_tweet.data:
-                return "", ""
+    def _get_tweets_by_ids(self, tweet_ids):
+        """Fetch details for multiple tweets by their IDs in a single API call.
 
-            contribution_url = (
-                f"https://twitter.com/i/web/status/{original_tweet.data.id}"
-            )
-
-            contributor = ""
-            if original_tweet.includes and "users" in original_tweet.includes:
-                users = original_tweet.includes["users"]
-                original_user_map = {u.id: u.username for u in users}
-                author_id = original_tweet.data.author_id
-                contributor = original_user_map.get(author_id, "")
-
-            return contribution_url, contributor
-
-        except Exception as e:
-            self.logger.warning(
-                f"Failed to get original tweet {referenced_tweet_id}: {e}"
-            )
-            return "", ""
-
-    def _extract_reply_mention_data(self, tweet, user_map):
-        """Extract data for reply mentions.
-
-        :param tweet: Twitter tweet object
-        :type tweet: :class:`tweepy.models.Tweet`
-        :param user_map: mapping of user IDs to usernames
-        :type user_map: dict
-        :var contribution_url: URL to the contribution tweet
-        :type contribution_url: str
-        :var contributor: username of the contributor
-        :type contributor: str
-        :var ref: referenced tweet object
-        :type ref: :class:`tweepy.models.ReferencedTweet`
-        :return: tuple of (contribution_url, contributor)
-        :rtype: tuple
-        """
-        contribution_url, contributor = "", ""
-
-        if tweet.referenced_tweets:
-            for ref in tweet.referenced_tweets:
-                if ref.type == "replied_to":
-                    contribution_url, contributor = self._get_original_tweet_info(
-                        ref.id
-                    )
-                    break
-
-        return contribution_url, contributor
-
-    def _get_content_preview(self, tweet):
-        """Safely get content preview from tweet text.
-
-        :param tweet: Twitter tweet object
-        :type tweet: :class:`tweepy.models.Tweet`
-        :return: content preview string
-        :rtype: str
-        """
-        if hasattr(tweet, "text") and tweet.text:
-            return tweet.text[:200]
-
-        return ""
-
-    def _get_timestamp(self, tweet):
-        """Safely get timestamp from tweet.
-
-        :param tweet: Twitter tweet object
-        :type tweet: :class:`tweepy.models.Tweet`
-        :return: ISO format timestamp string
-        :rtype: str
-        """
-        if hasattr(tweet, "created_at") and tweet.created_at:
-            return tweet.created_at.isoformat()
-
-        return datetime.now().isoformat()
-
-    def extract_mention_data(self, tweet, user_map):
-        """Extract standardized data from Twitter mention.
-
-        :param tweet: Twitter tweet object
-        :type tweet: :class:`tweepy.models.Tweet`
-        :param user_map: mapping of user IDs to usernames
-        :type user_map: dict
-        :var suggester_username: username of the user who mentioned the bot
-        :type suggester_username: str
-        :var contribution_url: URL to the contribution tweet
-        :type contribution_url: str
-        :var contributor: username of the contributor
-        :type contributor: str
-        :var suggestion_url: URL to the suggestion tweet
-        :type suggestion_url: str
-        :var data: extracted data dictionary
+        :param tweet_ids: A list of tweet ID strings to fetch.
+        :type tweet_ids: list
+        :var url: The API endpoint for fetching tweets.
+        :type url: str
+        :var headers: The request headers, including the API key.
+        :type headers: dict
+        :var params: The request parameters, containing the comma-separated tweet IDs.
+        :type params: dict
+        :var response: The HTTP response from the API.
+        :type response: :class:`requests.Response`
+        :var data: The JSON response data from the API.
         :type data: dict
-        :return: standardized mention data
+        :return: A dictionary mapping tweet IDs to their corresponding tweet objects.
         :rtype: dict
         """
-        # Get suggester username from user_map
-        suggester_username = user_map.get(tweet.author_id, "")
+        if not tweet_ids:
+            return {}
 
-        # Handle reply mentions
-        contribution_url, contributor = self._extract_reply_mention_data(
-            tweet, user_map
-        )
-
-        # If not a reply, use current tweet as contribution
-        if not contribution_url:
-            contribution_url = f"https://twitter.com/i/web/status/{tweet.id}"
-            contributor = suggester_username
-
-        suggestion_url = f"https://twitter.com/i/web/status/{tweet.id}"
-
-        data = {
-            "suggester": suggester_username,
-            "suggestion_url": suggestion_url,
-            "contribution_url": contribution_url,
-            "contributor": contributor or suggester_username,
-            "type": "tweet",
-            "content_preview": self._get_content_preview(tweet),
-            "timestamp": self._get_timestamp(tweet),
-            "item_id": tweet.id,
-        }
-
-        return data
-
-    def check_mentions(self):
-        """Check for new mentions on Twitter.
-
-        :var mention_count: number of new mentions found
-        :type mention_count: int
-        :var mentions: recent mentions from Twitter API
-        :type mentions: :class:`tweepy.models.Response`
-        :var user_map: mapping of user IDs to usernames from API response
-        :type user_map: dict
-        :var tweet: individual tweet from mentions
-        :type tweet: :class:`tweepy.models.Tweet`
-        :var data: extracted mention data
-        :type data: dict
-        :return: number of new mentions processed
-        :rtype: int
-        """
-        mention_count = 0
+        url = "https://api.twitterapi.io/twitter/tweets"
+        headers = {"X-API-Key": self.api_key}
+        params = {"tweet_ids": ",".join(tweet_ids)}
 
         try:
-            # Get recent mentions
-            mentions = self.client.get_users_mentions(
-                self.bot_user_id,
-                tweet_fields=[
-                    "created_at",
-                    "conversation_id",
-                    "author_id",
-                    "text",
-                    "referenced_tweets",
-                ],
-                expansions=["author_id"],
-                max_results=20,
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("status") == "success" and data.get("tweets"):
+                return {tweet["id"]: tweet for tweet in data["tweets"]}
+
+            else:
+                self.logger.warning(
+                    f"API Error fetching tweet IDs: {data.get('message')}"
+                )
+                return {}
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Request error fetching tweet IDs: {e}")
+            return {}
+
+        except (
+            requests.exceptions.RequestException,
+            json.JSONDecodeError,
+            ValueError,
+        ) as e:
+            self.logger.error(f"Failed to decode JSON from response: {e}")
+            return {}
+
+    def _get_all_mentions(self, since_time=None):
+        """Yield Twitter mentions, fetching in batches together with parent tweet.
+
+        This generator fetches mentions from the TwitterAPI.io service, handles
+        pagination, and enriches reply mentions with their parent tweet data.
+
+        :param since_time: A Unix timestamp to fetch mentions on or after this time.
+        :type since_time: int, optional
+        :return: A generator that yields individual mention tweets, potentially with 'parent_tweet' key.
+        :rtype: generator
+        :var url: The API endpoint for fetching user mentions.
+        :type url: str
+        :var headers: The request headers, including the API key.
+        :type headers: dict
+        :var params: The request parameters.
+        :type params: dict
+        :var cursor: The pagination cursor from the API.
+        :type cursor: str
+        :var mentions_batch: A list to hold the current batch of mentions.
+        :type mentions_batch: list
+        :var parent_tweet_ids: A list of unique parent tweet IDs from the batch.
+        :type parent_tweet_ids: list
+        :var parent_tweets: A dictionary mapping parent tweet IDs to tweet objects.
+        :type parent_tweets: dict
+        """
+        url = "https://api.twitterapi.io/twitter/user/mentions"
+        headers = {"X-API-Key": self.api_key}
+        params = {"userName": self.target_handle}
+        if since_time:
+            params["sinceTime"] = since_time
+
+        cursor = ""
+        mentions_batch = []
+
+        while True:
+            params["cursor"] = cursor
+            try:
+                response = requests.get(url, headers=headers, params=params)
+                response.raise_for_status()
+                data = response.json()
+
+            except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
+                self.logger.error(f"An error occurred while fetching mentions: {e}")
+                break
+
+            if data.get("status") != "success":
+                self.logger.error(f"API Error: {data.get('message', 'Unknown error')}")
+                break
+
+            tweets_page = data.get("tweets", [])
+            mentions_batch.extend(tweets_page)
+
+            if len(mentions_batch) >= self.batch_size or not data.get("has_next_page"):
+                parent_tweet_ids = list(
+                    set(
+                        m["inReplyToId"]
+                        for m in mentions_batch
+                        if m.get("isReply") and m.get("inReplyToId")
+                    )
+                )
+                parent_tweets = self._get_tweets_by_ids(parent_tweet_ids)
+
+                for mention in mentions_batch:
+                    if mention.get("isReply"):
+                        parent_id = mention.get("inReplyToId")
+                        if parent_id in parent_tweets:
+                            mention["parent_tweet"] = parent_tweets[parent_id]
+                    yield mention
+
+                mentions_batch = []
+
+            cursor = data.get("next_cursor", "")
+            if not data.get("has_next_page") or not cursor:
+                break
+
+    def is_processed(self, tweet_id):
+        """Check if a tweet has already been processed.
+
+        :param tweet_id: The ID of the tweet to check.
+        :type tweet_id: str
+        :return: True if the tweet has been processed, False otherwise.
+        :rtype: bool
+        """
+        return self.db.is_processed(tweet_id, self.platform_name)
+
+    def extract_mention_data(self, mention):
+        """Extract relevant data from a mention tweet.
+
+        :param mention: The mention tweet object from the Twitter API.
+        :type mention: dict
+        :return: A dictionary containing standardized mention data.
+        :rtype: dict
+        """
+        tweet_id = mention["id"]
+        parent_tweet_url = ""
+        contributor_handle = mention["author"]["userName"]
+
+        if "parent_tweet" in mention:
+            parent = mention["parent_tweet"]
+            parent_tweet_url = f"https://twitter.com/i/web/status/{parent['id']}"
+            contributor_handle = parent["author"]["userName"]
+
+        return {
+            "suggester": mention["author"]["userName"],
+            "suggestion_url": f"https://twitter.com/i/web/status/{tweet_id}",
+            "contribution_url": parent_tweet_url
+            or f"https://twitter.com/i/web/status/{tweet_id}",
+            "contributor": contributor_handle,
+            "type": "tweet",
+            "content_preview": mention["text"][:200],
+            "timestamp": self._twitter_created_at_to_unix(mention["createdAt"]),
+            "item_id": tweet_id,
+        }
+
+    def process_mention(self, tweet_id, data):
+        """Process a mention by calling the callback and marking it as processed.
+
+        :param tweet_id: The ID of the tweet to process.
+        :type tweet_id: str
+        :param data: The standardized mention data.
+        :type data: dict
+        :return: True if the mention was successfully processed, False otherwise.
+        :rtype: bool
+        """
+        if self.parse_message_callback(data):
+            self.db.mark_processed(tweet_id, self.platform_name, data)
+            return True
+
+        return False
+
+    def check_mentions(self):
+        """Check for new Twitter mentions and process them.
+
+        This method fetches new mentions, filters out any that have already been
+        processed, extracts relevant data, and processes the new mentions.
+
+        :return: The number of new mentions found and processed.
+        :rtype: int
+        :var last_timestamp: The last saved Unix timestamp retrieved from the database.
+        :type last_timestamp: int or None
+        :var start_time: The Unix timestamp from which to start fetching new mentions.
+        :type start_time: int or None
+        :var mentions_found: A counter for the number of new mentions found and processed.
+        :type mentions_found: int
+        :var mention_generator: A generator yielding mention tweet objects.
+        :type mention_generator: generator
+        :var mention: An individual mention tweet object from the generator.
+        :type mention: dict
+        :var tweet_id: The ID of the current tweet being processed.
+        :type tweet_id: str
+        :var data: Standardized mention data prepared for processing.
+        :type data: dict
+        """
+        last_timestamp = self.db.last_processed_timestamp(self.platform_name)
+        if not last_timestamp:
+            self.logger.info(
+                "No previous timestamp found. Fetching all available mentions."
             )
 
-            if mentions.data:
-                user_map = {
-                    u.id: u.username for u in mentions.includes.get("users", [])
-                }
+        start_time = last_timestamp + 1 if last_timestamp else None
 
-                for tweet in mentions.data:
-                    if not self.is_processed(tweet.id):
-                        data = self.extract_mention_data(tweet, user_map)
-                        if self.process_mention(tweet.id, data):
-                            mention_count += 1
+        mentions_found = 0
+        try:
+            mention_generator = self._get_all_mentions(since_time=start_time)
 
-            self.log_action("mentions_checked", f"Found {mention_count} new mentions")
+            for mention in mention_generator:
+                tweet_id = mention["id"]
+                if not self.is_processed(tweet_id):
+                    data = self.extract_mention_data(mention)
+                    if self.process_mention(tweet_id, data):
+                        mentions_found += 1
 
         except Exception as e:
-            self.logger.error(f"Error checking Twitter mentions: {e}")
-            self.log_action("twitter_check_error", f"Error: {str(e)}")
+            self.logger.error(f"Error checking mentions: {e}")
+            self.log_action("mentions_check_error", f"Error: {str(e)}")
 
-        return mention_count
+        self.log_action("mentions_checked", f"Found {mentions_found} new mentions")
+        return mentions_found
 
     def run(self, poll_interval_minutes=15, max_iterations=None):
         """Run Twitter mentions tracker.

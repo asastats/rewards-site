@@ -108,6 +108,8 @@ def run_twitterapiio_tracker():
 # if __name__ == "__main__":
 
 #     from pathlib import Path
+
 #     from dotenv import load_dotenv
+
 #     load_dotenv(load_dotenv(Path(__file__).parent.parent / ".env"))
-#     run_reddit_tracker()
+#     run_twitterapiio_tracker()

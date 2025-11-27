@@ -30,9 +30,15 @@ class TestTrackersConfig:
     def test_trackers_config_discord_config_for_empty_environment_variables(
         self, mocker
     ):
-        mocker.patch("utils.helpers.os.environ.__getitem__", side_effect=KeyError(""))
-        result = discord_config()
+        def mock_get_env_variable(key, default=None):
+            if key == "TRACKER_DISCORD_HISTORICAL_CHECK_INTERVAL":
+                return 5
+            return ""
 
+        mocker.patch(
+            "trackers.config.get_env_variable", side_effect=mock_get_env_variable
+        )
+        result = discord_config()
         expected_config = {
             "bot_user_id": "",
             "token": "",
@@ -95,9 +101,17 @@ class TestTrackersConfig:
     def test_trackers_config_reddit_config_for_empty_environment_variables(
         self, mocker
     ):
-        mocker.patch("utils.helpers.os.environ.__getitem__", side_effect=KeyError(""))
-        result = reddit_config()
+        def mock_get_env_variable(key, default=None):
+            if key == "TRACKER_REDDIT_USER_AGENT":
+                return "SocialMentionTracker v1.0"
+            if key == "TRACKER_REDDIT_POLL_INTERVAL":
+                return 30
+            return ""
 
+        mocker.patch(
+            "trackers.config.get_env_variable", side_effect=mock_get_env_variable
+        )
+        result = reddit_config()
         expected_config = {
             "client_id": "",
             "client_secret": "",
@@ -177,9 +191,17 @@ class TestTrackersConfig:
     def test_trackers_config_telegram_config_for_empty_environment_variables(
         self, mocker
     ):
-        mocker.patch("utils.helpers.os.environ.__getitem__", side_effect=KeyError(""))
-        result = telegram_config()
+        def mock_get_env_variable(key, default=None):
+            if key == "TRACKER_TELEGRAM_SESSION_NAME":
+                return "telegram_tracker"
+            if key == "TRACKER_TELEGRAM_POLL_INTERVAL":
+                return 30
+            return ""
 
+        mocker.patch(
+            "trackers.config.get_env_variable", side_effect=mock_get_env_variable
+        )
+        result = telegram_config()
         expected_config = {
             "api_id": "",
             "api_hash": "",
@@ -221,9 +243,15 @@ class TestTrackersConfig:
     def test_trackers_config_twitter_config_for_empty_environment_variables(
         self, mocker
     ):
-        mocker.patch("utils.helpers.os.environ.__getitem__", side_effect=KeyError(""))
-        result = twitter_config()
+        def mock_get_env_variable(key, default=None):
+            if key == "TRACKER_TWITTER_POLL_INTERVAL":
+                return 720
+            return ""
 
+        mocker.patch(
+            "trackers.config.get_env_variable", side_effect=mock_get_env_variable
+        )
+        result = twitter_config()
         expected_config = {
             "bearer_token": "",
             "consumer_key": "",
@@ -269,9 +297,17 @@ class TestTrackersConfig:
     def test_trackers_config_twitterapiio_config_for_empty_environment_variables(
         self, mocker
     ):
-        mocker.patch("utils.helpers.os.environ.__getitem__", side_effect=KeyError(""))
-        result = twitterapiio_config()
+        def mock_get_env_variable(key, default=None):
+            if key == "TRACKER_TWITTERAPIIO_BATCH_SIZE":
+                return 20
+            if key == "TRACKER_TWITTERAPIIO_POLL_INTERVAL":
+                return 15
+            return ""
 
+        mocker.patch(
+            "trackers.config.get_env_variable", side_effect=mock_get_env_variable
+        )
+        result = twitterapiio_config()
         expected_config = {
             "api_key": "",
             "target_handle": "",

@@ -47,6 +47,9 @@ def discord_config():
         "excluded_channel_types": ["voice", "stage", "category"],
         "excluded_channels": excluded_channels,
         "included_channels": included_channels,
+        "check_interval": int(
+            get_env_variable("TRACKER_DISCORD_HISTORICAL_CHECK_INTERVAL", 5)
+        ),
     }
 
 
@@ -76,6 +79,7 @@ def reddit_config():
         ),
         "username": get_env_variable("TRACKER_REDDIT_USERNAME", ""),
         "password": get_env_variable("TRACKER_REDDIT_PASSWORD", ""),
+        "poll_interval": int(get_env_variable("TRACKER_REDDIT_POLL_INTERVAL", 30)),
     }
 
 
@@ -116,6 +120,7 @@ def telegram_config():
             "TRACKER_TELEGRAM_SESSION_NAME", "telegram_tracker"
         ),
         "bot_username": get_env_variable("TRACKER_TELEGRAM_BOT_USERNAME", "").lower(),
+        "poll_interval": int(get_env_variable("TRACKER_TELEGRAM_POLL_INTERVAL", 30)),
     }
 
 
@@ -132,5 +137,22 @@ def twitter_config():
         "access_token": get_env_variable("TRACKER_TWITTER_ACCESS_TOKEN", ""),
         "access_token_secret": get_env_variable(
             "TRACKER_TWITTER_ACCESS_TOKEN_SECRET", ""
+        ),
+        "poll_interval": int(get_env_variable("TRACKER_TWITTER_POLL_INTERVAL", 720)),
+    }
+
+
+def twitterapiio_config():
+    """Return TwitterAPI.io configuration from environment variables.
+
+    :return: TwitterAPI.io configuration dictionary
+    :rtype: dict
+    """
+    return {
+        "api_key": get_env_variable("TRACKER_TWITTERAPIIO_API_KEY", ""),
+        "target_handle": get_env_variable("TRACKER_TWITTERAPIIO_TARGET_HANDLE", ""),
+        "batch_size": int(get_env_variable("TRACKER_TWITTERAPIIO_BATCH_SIZE", 20)),
+        "poll_interval": int(
+            get_env_variable("TRACKER_TWITTERAPIIO_POLL_INTERVAL", 15)
         ),
     }

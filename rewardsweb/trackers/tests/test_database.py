@@ -262,6 +262,67 @@ class TestTrackersMentionDatabaseManager:
         )
         mock_conn.commit.assert_called_once()
 
+    # last_processed_timestamp
+    def test_trackers_database_mentiondatabasemanager_last_processed_timestamp_found(
+        self, mocker
+    ):
+        instance = MentionDatabaseManager()
+        mock_conn = mocker.MagicMock()
+        mock_cursor = mocker.MagicMock()
+        mock_cursor.fetchone.return_value = (1672531199,)
+        mock_conn.cursor.return_value = mock_cursor
+        instance.conn = mock_conn
+
+        result = instance.last_processed_timestamp("test_platform")
+
+        assert result == 1672531199
+        mock_cursor.execute.assert_called_once_with(
+            """SELECT MAX(CAST(json_extract(raw_data, '$.timestamp') AS INTEGER))
+               FROM processed_mentions
+               WHERE platform = ?""",
+            ("test_platform",),
+        )
+
+    def test_trackers_database_mentiondatabasemanager_last_processed_timestamp_not_found(
+        self, mocker
+    ):
+        instance = MentionDatabaseManager()
+        mock_conn = mocker.MagicMock()
+        mock_cursor = mocker.MagicMock()
+        mock_cursor.fetchone.return_value = (None,)
+        mock_conn.cursor.return_value = mock_cursor
+        instance.conn = mock_conn
+
+        result = instance.last_processed_timestamp("test_platform")
+
+        assert result is None
+        mock_cursor.execute.assert_called_once_with(
+            """SELECT MAX(CAST(json_extract(raw_data, '$.timestamp') AS INTEGER))
+               FROM processed_mentions
+               WHERE platform = ?""",
+            ("test_platform",),
+        )
+
+    def test_trackers_database_mentiondatabasemanager_last_processed_timestamp_no_result(
+        self, mocker
+    ):
+        instance = MentionDatabaseManager()
+        mock_conn = mocker.MagicMock()
+        mock_cursor = mocker.MagicMock()
+        mock_cursor.fetchone.return_value = None
+        mock_conn.cursor.return_value = mock_cursor
+        instance.conn = mock_conn
+
+        result = instance.last_processed_timestamp("test_platform")
+
+        assert result is None
+        mock_cursor.execute.assert_called_once_with(
+            """SELECT MAX(CAST(json_extract(raw_data, '$.timestamp') AS INTEGER))
+               FROM processed_mentions
+               WHERE platform = ?""",
+            ("test_platform",),
+        )
+
     # cleanup
     def test_trackers_database_mentiondatabasemanager_cleanup_with_connection(
         self, mocker

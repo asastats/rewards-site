@@ -18,13 +18,13 @@ class TwitterTracker(BaseMentionTracker):
     :type TwitterTracker.bot_user_id: str
     """
 
-    def __init__(self, parse_message_callback, twitter_config):
+    def __init__(self, parse_message_callback, config):
         """Initialize Twitter tracker.
 
         :param parse_message_callback: function to call when mention is found
         :type parse_message_callback: callable
-        :param twitter_config: configuration dictionary for Twitter API
-        :type twitter_config: dict
+        :param config: configuration dictionary for X API
+        :type config: dict
         :var client: authenticated Twitter client
         :type client: :class:`tweepy.Client`
         :var bot_user: bot user information from Twitter
@@ -35,11 +35,11 @@ class TwitterTracker(BaseMentionTracker):
         super().__init__("twitter", parse_message_callback)
 
         self.client = tweepy.Client(
-            bearer_token=twitter_config["bearer_token"],
-            consumer_key=twitter_config["consumer_key"],
-            consumer_secret=twitter_config["consumer_secret"],
-            access_token=twitter_config["access_token"],
-            access_token_secret=twitter_config["access_token_secret"],
+            bearer_token=config["bearer_token"],
+            consumer_key=config["consumer_key"],
+            consumer_secret=config["consumer_secret"],
+            access_token=config["access_token"],
+            access_token_secret=config["access_token_secret"],
         )
 
         # Get bot user info

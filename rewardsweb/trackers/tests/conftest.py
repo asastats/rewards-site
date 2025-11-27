@@ -2,13 +2,13 @@ import pytest
 
 
 @pytest.fixture
-def twitter_config():
+def discord_config():
     return {
-        "bearer_token": "test_bearer_token",
-        "consumer_key": "test_consumer_key",
-        "consumer_secret": "test_consumer_secret",
-        "access_token": "test_access_token",
-        "access_token_secret": "test_access_token_secret",
+        "bot_user_id": "bot_user_id",
+        "token": "token",
+        "excluded_channels": "12345,67890",
+        "included_channels": "123",
+        "check_interval": 8,
     }
 
 
@@ -24,6 +24,11 @@ def reddit_config():
 
 
 @pytest.fixture
+def reddit_subreddits():
+    return ["python", "test"]
+
+
+@pytest.fixture
 def telegram_config():
     return {
         "api_id": "test_api_id",
@@ -34,10 +39,25 @@ def telegram_config():
 
 
 @pytest.fixture
-def reddit_subreddits():
-    return ["python", "test"]
+def telegram_chats():
+    return ["group1", "group2"]
 
 
 @pytest.fixture
-def telegram_chats():
-    return ["group1", "group2"]
+def twitter_config():
+    return {
+        "bearer_token": "test_bearer_token",
+        "consumer_key": "test_consumer_key",
+        "consumer_secret": "test_consumer_secret",
+        "access_token": "test_access_token",
+        "access_token_secret": "test_access_token_secret",
+    }
+
+
+@pytest.fixture
+def twitterapiio_config():
+    return {
+        "api_key": "test_api_key",
+        "target_handle": "test_target_handle",
+        "batch_size": 10,
+    }

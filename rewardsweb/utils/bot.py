@@ -42,12 +42,14 @@ def _parse_discord_url(url):
 def add_reaction_to_message(url, emoji):
     """Add a reaction to an existing Discord message
 
-    :param channel_id: ID of the channel containing the message
-    :type channel_id: str
-    :param message_id: ID of the message to react to
-    :type message_id: str
+    :param url: Discord message's URL
+    :type url: str
     :param emoji: emoji in format name:ID
     :type emoji: str
+    :var channel_id: ID of the channel containing the message
+    :type channel_id: str
+    :var message_id: ID of the message to react to
+    :type message_id: str
     :var headers: headers instance carrying bot token
     :type headers: dict
     :var api_url: fully formatted API URL to add reaction to the message

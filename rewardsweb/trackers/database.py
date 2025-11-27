@@ -116,6 +116,36 @@ class MentionDatabaseManager:
         )
         self.conn.commit()
 
+    def last_processed_timestamp(self, platform_name):
+        """Get the timestamp of the last processed mention for a platform.
+
+        This method retrieves the highest timestamp from all processed mentions
+        for a specific platform. The timestamp is extracted from the `raw_data`
+        JSON field. This is used by trackers to fetch only new mentions since
+        the last successfully processed item.
+
+        :param platform_name: The name of the social media platform.
+        :type platform_name: str
+        :var cursor: The database cursor for executing the query.
+        :type cursor: :class:`sqlite3.Cursor`
+        :var result: The result of the database query.
+        :type result: tuple or None
+        :return: The Unix timestamp of the last processed mention, or None if
+                 no mentions are found for the platform.
+        :rtype: int or None
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """SELECT MAX(CAST(json_extract(raw_data, '$.timestamp') AS INTEGER))
+               FROM processed_mentions
+               WHERE platform = ?""",
+            (platform_name,),
+        )
+        result = cursor.fetchone()
+        if result and result[0] is not None:
+            return result[0]
+        return None
+
     def log_action(self, platform_name, action, details=""):
         """Log platform actions to database.
 

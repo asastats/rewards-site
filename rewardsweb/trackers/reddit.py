@@ -19,30 +19,28 @@ class RedditTracker(BaseMentionTracker):
     :type RedditTracker.tracked_subreddits: list
     """
 
-    def __init__(self, parse_message_callback, reddit_config, subreddits_to_track):
+    def __init__(self, parse_message_callback, config, subreddits_to_track):
         """Initialize Reddit tracker.
 
         :param parse_message_callback: function to call when mention is found
         :type parse_message_callback: callable
-        :param reddit_config: configuration dictionary for Reddit API
-        :type reddit_config: dict
+        :param config: configuration dictionary for Reddit API
+        :type config: dict
         :param subreddits_to_track: list of subreddit names to monitor
         :type subreddits_to_track: list
         """
         super().__init__("reddit", parse_message_callback)
 
         self.reddit = praw.Reddit(
-            client_id=reddit_config["client_id"],
-            client_secret=reddit_config["client_secret"],
-            user_agent=reddit_config["user_agent"],
-            username=reddit_config.get("username"),
-            password=reddit_config.get("password"),
+            client_id=config["client_id"],
+            client_secret=config["client_secret"],
+            user_agent=config["user_agent"],
+            username=config.get("username"),
+            password=config.get("password"),
         )
 
         self.bot_username = (
-            self.reddit.user.me().name.lower()
-            if reddit_config.get("username")
-            else None
+            self.reddit.user.me().name.lower() if config.get("username") else None
         )
         self.tracked_subreddits = subreddits_to_track
 

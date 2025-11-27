@@ -467,7 +467,7 @@ class TestTrackersTwitter:
 
         # Create instance (MessageParser.parse mocked out)
         tracker = TwitterTracker(
-            parse_message_callback=lambda x: x, twitter_config=twitter_config
+            parse_message_callback=lambda x: x, config=twitter_config
         )
 
         # Call the wrapper

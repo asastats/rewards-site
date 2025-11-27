@@ -104,3 +104,11 @@ Run Discord bot
 .. code-block:: bash
 
   PYTHONPATH=rewardsweb python -m rewardsbot.bot
+
+
+Run social media mentions tracker
+---------------------------------
+
+.. code-block:: bash
+
+  PYTHONPATH=rewardsweb python -m trackers.runners

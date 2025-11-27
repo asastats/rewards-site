@@ -263,7 +263,7 @@ class TestTrackesReddit:
         # Create instance (MessageParser.parse mocked out)
         tracker = RedditTracker(
             parse_message_callback=lambda x: x,
-            reddit_config=reddit_config,
+            config=reddit_config,
             subreddits_to_track=reddit_subreddits,
         )
 

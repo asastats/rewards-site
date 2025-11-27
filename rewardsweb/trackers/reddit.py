@@ -85,7 +85,7 @@ class RedditTracker(BaseMentionTracker):
             "contributor": parent.author.name if parent.author else "[deleted]",
             "type": "comment",
             "subreddit": comment.subreddit.display_name,
-            "content_preview": comment.body[:200] if comment.body else "",
+            "content": comment.body if comment.body else "",
             "timestamp": datetime.fromtimestamp(comment.created_utc).isoformat(),
             "item_id": comment.id,
         }
@@ -108,7 +108,7 @@ class RedditTracker(BaseMentionTracker):
             "contributor": submission.author.name if submission.author else "[deleted]",
             "type": "submission",
             "subreddit": submission.subreddit.display_name,
-            "content_preview": submission.title,
+            "content": submission.body,
             "timestamp": datetime.fromtimestamp(submission.created_utc).isoformat(),
             "item_id": submission.id,
         }
@@ -148,7 +148,9 @@ class RedditTracker(BaseMentionTracker):
                     ):
 
                         data = self.extract_mention_data(comment)
-                        if self.process_mention(comment.id, data):
+                        if self.process_mention(
+                            comment.id, data, f"u/{self.bot_username}"
+                        ):
                             mention_count += 1
 
                 # Check submissions for username mentions
@@ -160,7 +162,9 @@ class RedditTracker(BaseMentionTracker):
                     ):
 
                         data = self.extract_mention_data(submission)
-                        if self.process_mention(submission.id, data):
+                        if self.process_mention(
+                            submission.id, data, f"u/{self.bot_username}"
+                        ):
                             mention_count += 1
 
                 # Small delay between subreddit checks

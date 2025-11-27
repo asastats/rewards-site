@@ -55,7 +55,7 @@ def run_reddit_tracker():
         config=config,
         subreddits_to_track=reddit_subreddits(),
     )
-    tracker.run(poll_interval_minutes=config.get("poll_interval", 30))
+    tracker.run(poll_interval_minutes=config.get("poll_interval"))
 
 
 def run_telegram_tracker():
@@ -72,7 +72,7 @@ def run_telegram_tracker():
         config=config,
         chats_collection=telegram_chats(),
     )
-    tracker.run(poll_interval_minutes=config.get("poll_interval", 30))
+    tracker.run(poll_interval_minutes=config.get("poll_interval"))
 
 
 def run_twitter_tracker():
@@ -87,7 +87,7 @@ def run_twitter_tracker():
     tracker = TwitterTracker(
         parse_message_callback=MessageParser().parse, config=config
     )
-    tracker.run(poll_interval_minutes=config.get("poll_interval", 720))
+    tracker.run(poll_interval_minutes=config.get("poll_interval"))
 
 
 def run_twitterapiio_tracker():
@@ -102,7 +102,7 @@ def run_twitterapiio_tracker():
     tracker = TwitterapiioTracker(
         parse_message_callback=MessageParser().parse, config=config
     )
-    tracker.run(poll_interval_minutes=config.get("poll_interval", 15))
+    tracker.run(poll_interval_minutes=config.get("poll_interval"))
 
 
 # if __name__ == "__main__":

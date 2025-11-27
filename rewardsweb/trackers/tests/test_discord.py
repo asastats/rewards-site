@@ -1145,7 +1145,14 @@ class TestDiscordTracker:
         await instance._handle_new_message(mock_message)
 
         mock_extract.assert_called_once_with(mock_message)
-        mock_process.assert_called_once()
+        mock_process.assert_called_once_with(
+            (
+                f"discord_{mock_message.guild.id}_"
+                f"{mock_message.channel.id}_{mock_message.id}"
+            ),
+            {},
+            f"@{instance.bot_user_id}",
+        )
         mock_is_processed.assert_called_once()
         assert len(instance.processed_messages) == 1
 
@@ -1304,7 +1311,7 @@ class TestDiscordTracker:
 
         result = await instance.extract_mention_data(mock_message)
 
-        assert result["content_preview"] == ""
+        assert result["content"] == ""
 
     # Channel history checking tests
     def test_trackers_discord_is_rate_limited_true(
@@ -1412,7 +1419,11 @@ class TestDiscordTracker:
 
         assert result == 1
         mock_extract.assert_called_once_with(mock_message)
-        mock_process.assert_called_once()
+        mock_process.assert_called_once_with(
+            f"discord_111111111111111111_{mock_channel.id}_{mock_message.id}",
+            {},
+            f"@{instance.bot_user_id}",
+        )
 
     @pytest.mark.asyncio
     async def test_trackers_discord_process_channel_messages_bot_message(

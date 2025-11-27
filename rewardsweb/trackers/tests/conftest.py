@@ -20,6 +20,7 @@ def reddit_config():
         "user_agent": "test_user_agent",
         "username": "test_username",
         "password": "test_password",
+        "poll_interval": 15,
     }
 
 
@@ -35,6 +36,7 @@ def telegram_config():
         "api_hash": "test_api_hash",
         "session_name": "test_session",
         "bot_username": "test_bot",
+        "poll_interval": 15,
     }
 
 
@@ -51,6 +53,7 @@ def twitter_config():
         "consumer_secret": "test_consumer_secret",
         "access_token": "test_access_token",
         "access_token_secret": "test_access_token_secret",
+        "poll_interval": 15,
     }
 
 
@@ -60,4 +63,5 @@ def twitterapiio_config():
         "api_key": "test_api_key",
         "target_handle": "test_target_handle",
         "batch_size": 10,
+        "poll_interval": 15,
     }

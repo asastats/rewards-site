@@ -132,13 +132,15 @@ class BaseMentionTracker:
         """
         self.db.mark_processed(item_id, self.platform_name, data)
 
-    def process_mention(self, item_id, data):
+    def process_mention(self, item_id, data, username):
         """Common mention processing logic.
 
         :param item_id: unique identifier for the social media item
         :type item_id: str
         :param data: mention data dictionary
         :type data: dict
+        :param username: mentioned username
+        :type username: str
         :var parsed_message: parsed message result
         :type parsed_message: dict
         :var contribution_data: formatted contribution data
@@ -150,7 +152,7 @@ class BaseMentionTracker:
             if self.is_processed(item_id):
                 return False
 
-            parsed_message = self.parse_message_callback(data)
+            parsed_message = self.parse_message_callback(data.get("content"), username)
             contribution_data = self.prepare_contribution_data(parsed_message, data)
             self.post_new_contribution(contribution_data)
             self.mark_processed(item_id, data)

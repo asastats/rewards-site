@@ -126,7 +126,7 @@ class TwitterTracker(BaseMentionTracker):
 
         return contribution_url, contributor
 
-    def _get_content_preview(self, tweet):
+    def _get_content(self, tweet):
         """Safely get content preview from tweet text.
 
         :param tweet: Twitter tweet object
@@ -135,7 +135,7 @@ class TwitterTracker(BaseMentionTracker):
         :rtype: str
         """
         if hasattr(tweet, "text") and tweet.text:
-            return tweet.text[:200]
+            return tweet.text
 
         return ""
 
@@ -193,7 +193,7 @@ class TwitterTracker(BaseMentionTracker):
             "contribution_url": contribution_url,
             "contributor": contributor or suggester_username,
             "type": "tweet",
-            "content_preview": self._get_content_preview(tweet),
+            "content": self._get_content(tweet),
             "timestamp": self._get_timestamp(tweet),
             "item_id": tweet.id,
         }
@@ -241,7 +241,9 @@ class TwitterTracker(BaseMentionTracker):
                 for tweet in mentions.data:
                     if not self.is_processed(tweet.id):
                         data = self.extract_mention_data(tweet, user_map)
-                        if self.process_mention(tweet.id, data):
+                        if self.process_mention(
+                            tweet.id, data, f"@{data.get('contributor')}"
+                        ):
                             mention_count += 1
 
             self.log_action("mentions_checked", f"Found {mention_count} new mentions")

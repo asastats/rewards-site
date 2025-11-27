@@ -193,7 +193,7 @@ class TelegramTracker(BaseMentionTracker):
             "telegram_chat": chat_title,
             "chat_id": chat.id,
             "chat_username": getattr(chat, "username", None),
-            "content_preview": message.text[:200] if message.text else "",
+            "content": message.text if message.text else "",
             "timestamp": (
                 message.date.isoformat()
                 if hasattr(message, "date")
@@ -239,7 +239,11 @@ class TelegramTracker(BaseMentionTracker):
                 ):
 
                     data = await self.extract_mention_data(message)
-                    if self.process_mention(f"telegram_{chat.id}_{message.id}", data):
+                    if self.process_mention(
+                        f"telegram_{chat.id}_{message.id}",
+                        data,
+                        f"@{self.bot_username}",
+                    ):
                         mention_count += 1
 
         except Exception as e:

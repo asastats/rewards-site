@@ -22,6 +22,8 @@ REWARDS_COLLECTION = (
     ("[ER] Ecosystem Research", 50000, 100000, 200000),
 )
 
+
+# TODO: put these into .env
 DISCORD_EMOJIS = {
     "noted": "noted:930825381974523954",
     "addressed": "addressed:930825322654470204",

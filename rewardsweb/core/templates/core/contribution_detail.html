@@ -207,9 +207,25 @@
         <div class="space-y-4">
           <div class="flex justify-between items-center">
             <span class="text-base-content/70">Status</span>
-            <span class="badge {% if contribution.confirmed %}badge-success{% else %}badge-warning{% endif %}">
-              {% if contribution.confirmed %}Confirmed{% else %}Pending{% endif %}
-            </span>
+            {% if not contribution.confirmed %}
+              <span class="badge badge-warning">Pending</span>
+            {% else %}
+              {% if not contribution.issue %}
+                <span class="badge badge-neutral">Dismissed</span>
+              {% else %}
+                {% with status=contribution.issue.status %}
+                  {% if status == 'wontfix' %}
+                    <span class="badge badge-neutral">{{ status|title }}</span>
+                  {% elif status == 'addressed' or status == 'claimable' %}
+                    <span class="badge badge-success">{{ status|title }}</span>
+                  {% elif status == 'archived' %}
+                    <span class="badge badge-info">{{ status|title }}</span>
+                  {% else %}
+                    <span class="badge badge-warning">{{ status|title }}</span>
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
+            {% endif %}
           </div>
           
           <div class="flex justify-between items-center">

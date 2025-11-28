@@ -110,9 +110,13 @@ class TestIssuesIssuesPrepareFunctions:
     ):
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
         contribution.url = "https://discord.com/channels/test"
+        contribution.platform.name = "discord"
+
         mocked_link = mocker.patch("issues.issues._contributor_link")
 
-        mocked_message_from_url = mocker.patch("issues.issues.message_from_url")
+        mocked_message_from_url = mocker.patch(
+            "updaters.discord.DiscordUpdater.message_from_url"
+        )
         mocked_message_from_url.return_value = {"success": False}
 
         result = _prepare_issue_body_from_contribution(contribution, profile)
@@ -126,6 +130,8 @@ class TestIssuesIssuesPrepareFunctions:
     ):
         contribution, profile = mocker.MagicMock(), "username"
         contribution.url = "https://discord.com/channels/test"
+        contribution.platform.name = "discord"
+
         link = "https://example.com"
         mocked_link = mocker.patch("issues.issues._contributor_link", return_value=link)
 
@@ -136,7 +142,9 @@ class TestIssuesIssuesPrepareFunctions:
             "content": "This is a test message\nwith multiple lines",
         }
 
-        mocked_message_from_url = mocker.patch("issues.issues.message_from_url")
+        mocked_message_from_url = mocker.patch(
+            "updaters.discord.DiscordUpdater.message_from_url"
+        )
         mocked_message_from_url.return_value = test_message
         mocked_datetime = mocker.patch("issues.issues.datetime")
         mocked_datetime.strptime.return_value.strftime.return_value = "15 Oct 14:30"

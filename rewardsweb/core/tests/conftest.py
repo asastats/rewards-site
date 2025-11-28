@@ -49,7 +49,7 @@ def contributor():
 @pytest.fixture
 def social_platform():
     """Create a social platform for testing."""
-    return SocialPlatform.objects.create(name="GitHub", prefix="g@")
+    return SocialPlatform.objects.create(name="Discord", prefix="")
 
 
 @pytest.fixture
@@ -103,11 +103,13 @@ def invalidate_url(contribution):
 @pytest.fixture
 def mock_message_from_url():
     """Mock the message_from_url function."""
-    with mock.patch("core.views.message_from_url") as mock_message:
-        mock_message.return_value = {
+    with mock.patch("core.views.UpdateProvider") as mock_update_provider:
+        mock_updater_instance = mock.MagicMock()
+        mock_updater_instance.message_from_url.return_value = {
             "success": True,
-            "author": "test_user",
+            "author": "test_user_string",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
             "content": "Test message content",
         }
-        yield mock_message
+        mock_update_provider.return_value = mock_updater_instance
+        yield mock_update_provider

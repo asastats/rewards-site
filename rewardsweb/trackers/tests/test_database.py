@@ -242,3 +242,69 @@ class TestTrackersMentionDatabaseManager:
         instance.conn = None
         # Should not raise an exception
         instance.cleanup()
+
+
+class TestTrackersDatabaseMentionDatabaseManagerGetMentionByUrl:
+    """Testing class for :py:meth:`trackers.database.MentionDatabaseManager.mention_raw_data_by_url` method."""
+
+    def setup_method(self):
+        """Set up test method with an in-memory database."""
+        self.db_manager = MentionDatabaseManager(db_path=":memory:")
+        self.db_manager.setup_database()
+
+        # Insert test data
+        test_data_1 = {
+            "item_id": "1",
+            "platform": "twitter",
+            "suggester": "user1",
+            "suggestion_url": "https://twitter.com/status/1",
+            "contribution_url": "https://twitter.com/contrib/1",
+            "content": "Tweet content 1",
+            "timestamp": 1678886400,
+        }
+        test_data_2 = {
+            "item_id": "2",
+            "platform": "reddit",
+            "suggester": "user2",
+            "suggestion_url": "https://reddit.com/post/2",
+            "contribution_url": "https://reddit.com/comment/2",
+            "content": "Reddit content 2",
+            "timestamp": 1678886500,
+        }
+
+        self.db_manager.mark_processed("1", "twitter", test_data_1)
+        self.db_manager.mark_processed("2", "reddit", test_data_2)
+
+    def teardown_method(self):
+        """Tear down test method by closing the database connection."""
+        self.db_manager.cleanup()
+
+    def test_trackers_database_mentiondatabasemanager_mention_raw_data_by_url_suggestion_url(
+        self,
+    ):
+        """Test retrieving a mention by its suggestion_url."""
+        url = "https://twitter.com/status/1"
+        mention = self.db_manager.mention_raw_data_by_url(url)
+        assert mention is not None
+        assert mention["item_id"] == "1"
+        assert mention["platform"] == "twitter"
+        assert mention["content"] == "Tweet content 1"
+
+    def test_trackers_database_mentiondatabasemanager_mention_raw_data_by_url_contribution_url(
+        self,
+    ):
+        """Test retrieving a mention by its contribution_url."""
+        url = "https://reddit.com/comment/2"
+        mention = self.db_manager.mention_raw_data_by_url(url)
+        assert mention is not None
+        assert mention["item_id"] == "2"
+        assert mention["platform"] == "reddit"
+        assert mention["content"] == "Reddit content 2"
+
+    def test_trackers_database_mentiondatabasemanager_mention_raw_data_by_url_not_found(
+        self,
+    ):
+        """Test retrieving a mention for a URL that does not exist."""
+        url = "https://nonexistent.com/url"
+        mention = self.db_manager.mention_raw_data_by_url(url)
+        assert mention is None

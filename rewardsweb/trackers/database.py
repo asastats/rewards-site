@@ -127,6 +127,35 @@ class MentionDatabaseManager:
         result = cursor.fetchone()
         if result and result[0] is not None:
             return result[0]
+
+        return None
+
+    def mention_raw_data_by_url(self, url):
+        """Get a mention by its URL.
+
+        Searches for a mention where the 'suggestion_url' or 'contribution_url'
+        in the raw_data JSON field matches the provided URL.
+
+        :param url: The URL to search for.
+        :type url: str
+        :var cursor: The database cursor for executing the query.
+        :type cursor: :class:`sqlite3.Cursor`
+        :var result: The result of the database query.
+        :type result: tuple or None
+        :return: The raw_data of the mention as a dictionary, or None if not found.
+        :rtype: dict or None
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """SELECT raw_data FROM processed_mentions
+               WHERE json_extract(raw_data, '$.suggestion_url') = ?
+               OR json_extract(raw_data, '$.contribution_url') = ?""",
+            (url, url),
+        )
+        result = cursor.fetchone()
+        if result:
+            return json.loads(result[0])
+
         return None
 
     def log_action(self, platform_name, action, details=""):

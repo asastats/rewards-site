@@ -2,17 +2,12 @@
 
 from datetime import datetime, timezone
 
-from trackers.database import MentionDatabaseManager
+from trackers.models import Mention
 from updaters.base import BaseUpdater
 
 
 class TwitterUpdater(BaseUpdater):
     """Main class for retrieving and adding X/Twitter messages."""
-
-    def __init__(self, *args, **kwargs):
-        """Initialize updater."""
-        super().__init__(*args, **kwargs)
-        self.db_manager = MentionDatabaseManager()
 
     def add_reaction_to_message(self, url, reaction_name):
         """Add reaction to message.
@@ -39,15 +34,15 @@ class TwitterUpdater(BaseUpdater):
 
         :param url: twitter URL to get message from
         :type url: str
-        :var message_data: Twitter message data from database
-        :type message_data: dict
+        :var mention: Twitter mention data from database
+        :type mention: :class:`trackers.models.Mention`
         :return: dictionary with message data
         :rtype: dict
         """
-        message_data = self.db_manager.get_mention_by_url(url)
+        mention = Mention.objects.get_mention_by_url(url)
 
-        if message_data:
-            timestamp = message_data.get("timestamp")
+        if mention:
+            timestamp = mention.raw_data.get("timestamp")
             if timestamp:
                 dt_object = datetime.fromtimestamp(timestamp, tz=timezone.utc)
                 timestamp_str = dt_object.isoformat()
@@ -55,11 +50,11 @@ class TwitterUpdater(BaseUpdater):
                 timestamp_str = ""
             return {
                 "success": True,
-                "content": message_data.get("content", ""),
-                "author": message_data.get("contributor", "Unknown"),
+                "content": mention.raw_data.get("content", ""),
+                "author": mention.raw_data.get("contributor", "Unknown"),
                 "timestamp": timestamp_str,
-                "message_id": message_data.get("item_id"),
-                "raw_data": message_data,
+                "message_id": mention.item_id,
+                "raw_data": mention.raw_data,
             }
         else:
             return {

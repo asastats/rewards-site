@@ -1,6 +1,7 @@
 """Testing module for :py:mod:`trackers.models` module."""
 
 import pytest
+from asgiref.sync import sync_to_async
 
 from trackers.models import Mention, MentionLog
 
@@ -64,10 +65,11 @@ class TestTrackersModelsMentionManager:
 class TestTrackersModelsMentionLogManager:
     """Testing class for :class:`trackers.models.MentionLogManager` class."""
 
-    def test_trackers_models_mentionlogmanager_log_action(self):
+    @pytest.mark.asyncio
+    async def test_trackers_models_mentionlogmanager_log_action(self):
         """Test log_action method."""
-        MentionLog.objects.log_action("test_platform", "test_action", "test_details")
-        log = MentionLog.objects.first()
+        await MentionLog.objects.log_action("test_platform", "test_action", "test_details")
+        log = await sync_to_async(MentionLog.objects.first)() # Use sync_to_async for synchronous query
         assert log.platform == "test_platform"
         assert log.action == "test_action"
         assert log.details == "test_details"

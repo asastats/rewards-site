@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 
+from asgiref.sync import sync_to_async
 from django.db import models
 from django.db.models import Max
 from django.db.models.expressions import RawSQL
@@ -129,6 +130,7 @@ class Mention(models.Model):
 class MentionLogManager(models.Manager):
     """Social media mention log's data manager."""
 
+    @sync_to_async
     def log_action(self, platform_name, action, details=""):
         """Log platform actions to database.
 

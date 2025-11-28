@@ -241,10 +241,6 @@ class DiscordTracker(BaseMentionTracker):
         self.logger.info(
             f"Multi-guild Discord tracker initialized for {len(guilds_collection) if guilds_collection else 'all'} guilds"
         )
-        self.log_action(
-            "initialized",
-            f"Tracking {len(guilds_collection) if guilds_collection else 'all'} guilds",
-        )
 
         # Set up event handlers
         self._setup_events()
@@ -270,7 +266,11 @@ class DiscordTracker(BaseMentionTracker):
         # Discover channels for all guilds
         await self._discover_all_guild_channels()
 
-        self.log_action(
+        await self.log_action(
+            "initialized",
+            f"Tracking {len(self.tracked_guilds) if self.tracked_guilds else 'all'} guilds",
+        )
+        await self.log_action(
             "connected",
             f"Logged in as {self.client.user}, tracking {len(self.all_tracked_channels)} channels across {len(self.guild_channels)} guilds",
         )
@@ -291,7 +291,7 @@ class DiscordTracker(BaseMentionTracker):
         """
         self.logger.info(f"Joined new guild: {guild.name} (ID: {guild.id})")
         await self._discover_guild_channels(guild)
-        self.log_action("guild_joined", f"Guild: {guild.name}")
+        await self.log_action("guild_joined", f"Guild: {guild.name}")
 
     async def _on_guild_remove(self, guild):
         """Called when the bot is removed from a guild.
@@ -301,7 +301,7 @@ class DiscordTracker(BaseMentionTracker):
         """
         self.logger.info(f"Left guild: {guild.name} (ID: {guild.id})")
         self._remove_guild_from_tracking(guild.id)
-        self.log_action("guild_left", f"Guild: {guild.name}")
+        await self.log_action("guild_left", f"Guild: {guild.name}")
 
     def _remove_guild_from_tracking(self, guild_id):
         """Remove a guild from tracking.
@@ -840,7 +840,11 @@ class DiscordTracker(BaseMentionTracker):
         finally:
             await self.client.close()
             await asyncio.sleep(0)
-            await asyncio.to_thread(self.cleanup)
+            await self.cleanup()
+
+    async def cleanup(self):
+        """Perform graceful cleanup for the Discord tracker."""
+        self.logger.info(f"{self.platform_name} tracker cleanup completed")
 
     async def _run_main_loop(self, historical_check_interval):
         """Run the main tracking loop.

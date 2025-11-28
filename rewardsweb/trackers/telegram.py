@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime
 
+from asgiref.sync import sync_to_async
 from telethon import TelegramClient
 
 from trackers.base import BaseMentionTracker
@@ -43,7 +44,16 @@ class TelegramTracker(BaseMentionTracker):
         self.logger.info(
             f"Telegram tracker initialized for {len(chats_collection)} chats"
         )
-        self.log_action("initialized", f"Tracking {len(chats_collection)} chats")
+
+    async def _post_init_setup(self, chats_collection):
+        """Perform asynchronous setup tasks after initialization."""
+        await self.log_action("initialized", f"Tracking {len(chats_collection)} chats")
+
+    async def cleanup(self):
+        """Perform graceful cleanup of the Telegram client."""
+        if self.client and self.client.is_connected():
+            self.logger.info("Disconnecting Telegram client")
+            await self.client.disconnect()
 
     async def _get_chat_entity(self, chat_identifier):
         """Get chat entity from identifier.
@@ -235,11 +245,13 @@ class TelegramTracker(BaseMentionTracker):
                 if (
                     self.bot_username
                     and self.bot_username in (message.text or "").lower()
-                    and not self.is_processed(f"telegram_{chat.id}_{message.id}")
+                    and not await self.is_processed_async(
+                        f"telegram_{chat.id}_{message.id}"
+                    )
                 ):
 
                     data = await self.extract_mention_data(message)
-                    if self.process_mention(
+                    if await self.process_mention(
                         f"telegram_{chat.id}_{message.id}",
                         data,
                         f"@{self.bot_username}",
@@ -248,7 +260,7 @@ class TelegramTracker(BaseMentionTracker):
 
         except Exception as e:
             self.logger.error(f"Error checking chat {chat_identifier}: {e}")
-            self.log_action(
+            await self.log_action(
                 "chat_check_error", f"Chat: {chat_identifier}, Error: {str(e)}"
             )
 
@@ -296,16 +308,25 @@ class TelegramTracker(BaseMentionTracker):
         try:
             # Start the client and run the check
             with self.client:
-                loop = asyncio.get_event_loop()
+                # Ensure an event loop is running for async operations
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
                 mention_count = loop.run_until_complete(self.check_mentions_async())
                 return mention_count
 
         except Exception as e:
             self.logger.error(f"Error in Telegram mention check: {e}")
-            self.log_action("telegram_check_error", f"Error: {str(e)}")
+            asyncio.run(self.log_action("telegram_check_error", f"Error: {str(e)}"))
             return 0
 
-    def run(self, poll_interval_minutes=30, max_iterations=None):
+    async def is_processed_async(self, item_id):
+        return await sync_to_async(self.is_processed)(item_id)
+
+    async def run(self, poll_interval_minutes=30, max_iterations=None):
         """Run Telegram mentions tracker.
 
         Ensures the Telegram client is available before starting. When valid,
@@ -321,7 +342,16 @@ class TelegramTracker(BaseMentionTracker):
             self.logger.error("Cannot start Telegram tracker - client not available")
             return
 
-        super().run(
-            poll_interval_minutes=poll_interval_minutes,
-            max_iterations=max_iterations,
-        )
+        # Connect client if not already connected
+        if not self.client.is_connected():
+            await self.client.start()
+
+        await self._post_init_setup(self.tracked_chats)
+
+        try:
+            await sync_to_async(super().run)(
+                poll_interval_minutes=poll_interval_minutes,
+                max_iterations=max_iterations,
+            )
+        finally:
+            await self.cleanup()

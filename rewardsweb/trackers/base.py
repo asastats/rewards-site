@@ -1,5 +1,6 @@
 """Module containing base tracker class."""
 
+import asyncio
 import logging
 import os
 import signal
@@ -8,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
+from asgiref.sync import sync_to_async
 
 from trackers.config import REWARDS_API_BASE_URL
 from trackers.models import Mention, MentionLog
@@ -125,7 +127,7 @@ class BaseMentionTracker:
         """
         Mention.objects.mark_processed(item_id, self.platform_name, data)
 
-    def process_mention(self, item_id, data, username):
+    async def process_mention(self, item_id, data, username):
         """Common mention processing logic.
 
         :param item_id: unique identifier for the social media item
@@ -153,7 +155,7 @@ class BaseMentionTracker:
             self.logger.info(
                 f"Processed mention from {data.get('suggester', 'unknown')}"
             )
-            self.log_action(
+            await self.log_action(
                 "mention_processed",
                 f"Item: {item_id}, Suggester: {data.get('suggester')}",
             )
@@ -162,10 +164,10 @@ class BaseMentionTracker:
 
         except Exception as e:
             self.logger.error(f"Error processing mention {item_id}: {e}")
-            self.log_action("processing_error", f"Item: {item_id}, Error: {str(e)}")
+            await self.log_action("processing_error", f"Item: {item_id}, Error: {str(e)}")
             return False
 
-    def log_action(self, action, details=""):
+    async def log_action(self, action, details=""):
         """Log platform actions to database.
 
         :param action: description of the action performed
@@ -173,7 +175,7 @@ class BaseMentionTracker:
         :param details: additional details about the action
         :type details: str
         """
-        MentionLog.objects.log_action(self.platform_name, action, details)
+        await MentionLog.objects.log_action(self.platform_name, action, details)
 
     def prepare_contribution_data(self, parsed_message, message_data):
         """Prepare contribution data for POST request from provided arguments.
@@ -247,13 +249,13 @@ class BaseMentionTracker:
         except requests.exceptions.RequestException as e:
             raise Exception(f"API request failed: {e}")
 
-    def run(self, poll_interval_minutes=30, max_iterations=None):
-        """Main run loop for synchronous mention trackers.
+    async def run(self, poll_interval_minutes=30, max_iterations=None, check_mentions_callable=None):
+        """Main run loop for asynchronous mention trackers.
 
         Implements shared logic for all polling-based trackers:
 
         * logs tracker startup and poll interval
-        * periodically calls :meth:`BaseMentionTracker.check_mentions`
+        * periodically calls :meth:`BaseMentionTracker.check_mentions` (or provided callable)
         * logs when new mentions are found
         * sleeps between polls in an interruptible way
         * handles graceful shutdown on :class:`KeyboardInterrupt` and OS signals
@@ -264,6 +266,8 @@ class BaseMentionTracker:
         :param max_iterations: maximum number of polls before stopping
                               (``None`` for infinite loop)
         :type max_iterations: int or None
+        :param check_mentions_callable: optional callable to use instead of default check_mentions
+        :type check_mentions_callable: callable or None
         :var iteration: current iteration count
         :type iteration: int
         :var mentions_found: number of new mentions found in current poll
@@ -275,7 +279,7 @@ class BaseMentionTracker:
             f"Starting {self.platform_name} tracker with "
             f"{poll_interval_minutes} minute intervals"
         )
-        self.log_action("started", f"Poll interval: {poll_interval_minutes} minutes")
+        await self.log_action("started", f"Poll interval: {poll_interval_minutes} minutes")
 
         iteration = 0
 
@@ -290,7 +294,11 @@ class BaseMentionTracker:
                     f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                 )
 
-                mentions_found = self.check_mentions()
+                if check_mentions_callable:
+                    mentions_found = await check_mentions_callable()
+                else:
+                    # Default check_mentions is synchronous, run it in a thread pool
+                    mentions_found = await sync_to_async(self.check_mentions)()
 
                 if mentions_found and mentions_found > 0:
                     self.logger.info(f"Found {mentions_found} new mentions")
@@ -303,9 +311,9 @@ class BaseMentionTracker:
 
         except KeyboardInterrupt:
             self.logger.info(f"{self.platform_name} tracker stopped by user")
-            self.log_action("stopped", "User interrupt")
+            await self.log_action("stopped", "User interrupt")
 
         except Exception as e:
             self.logger.error(f"{self.platform_name} tracker error: {e}")
-            self.log_action("error", f"Tracker error: {str(e)}")
+            await self.log_action("error", f"Tracker error: {str(e)}")
             raise

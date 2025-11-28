@@ -26,7 +26,7 @@ from core.models import (
 )
 from issues.issues import IssueProvider
 from utils.constants.core import (
-    GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS,
+    EXCLUDED_CONTRIBUTORS,
     GITHUB_ISSUES_START_DATE,
     ISSUE_CREATION_LABEL_CHOICES,
     REWARDS_COLLECTION,
@@ -566,7 +566,7 @@ def _map_closed_addressed_issues(github_issues):
     contributors = {
         c.info: c.id
         for c in Contributor.objects.all()
-        if not any(u in c.info for u in GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS)
+        if not any(u in c.info for u in EXCLUDED_CONTRIBUTORS)
     }
 
     # Fetch all platforms by name
@@ -778,14 +778,13 @@ def _map_open_issues(github_issues):
     # Fetch existing rewards mapping
     reward_mapping = _build_reward_mapping()
 
+    # TODO: check why ipaleka is added among contributors during import
+
     # Fetch all contributors and create info mapping
     contributors = {
         contributor.info: contributor.id
         for contributor in Contributor.objects.all()
-        if not any(
-            username in contributor.info
-            for username in GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS
-        )
+        if not any(username in contributor.info for username in EXCLUDED_CONTRIBUTORS)
     }
 
     # Fetch all platforms by name
@@ -897,10 +896,7 @@ def _map_unprocessed_closed_archived_issues(github_issues):
     contributors = {
         contributor.info: contributor.id
         for contributor in Contributor.objects.all()
-        if not any(
-            username in contributor.info
-            for username in GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS
-        )
+        if not any(username in contributor.info for username in EXCLUDED_CONTRIBUTORS)
     }
 
     # Fetch all platforms by name

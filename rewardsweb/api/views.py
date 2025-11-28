@@ -256,7 +256,7 @@ class AddContributionView(LocalhostAPIView):
             :return: tuple of (serialized_data, errors)
             :rtype: tuple
             """
-            contributor = Contributor.objects.from_handle(raw_data.get("username"))
+            contributor = Contributor.objects.from_full_handle(raw_data.get("username"))
             cycle = Cycle.objects.latest("start")
             platform = SocialPlatform.objects.get(name=raw_data.get("platform"))
             label, name = (

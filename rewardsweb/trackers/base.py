@@ -11,7 +11,7 @@ import requests
 
 from trackers.config import REWARDS_API_BASE_URL
 from trackers.database import MentionDatabaseManager
-from utils.helpers import social_platform_prefixes
+from utils.helpers import get_env_variable, social_platform_prefixes
 
 
 class BaseMentionTracker:
@@ -185,6 +185,9 @@ class BaseMentionTracker:
     def prepare_contribution_data(self, parsed_message, message_data):
         """Prepare contribution data for POST request from provided arguments.
 
+        Check if username is among excluded contributors and if it is then set
+        the username to suggester value instead of contributor.
+
         :param parsed_message: parsed message result
         :type parsed_message: dict
         :param message_data: original message data
@@ -203,6 +206,8 @@ class BaseMentionTracker:
             if name in self.platform_name.capitalize()
         )
         username = message_data.get("contributor")
+        if not username or username in get_env_variable("EXCLUDED_CONTRIBUTORS", ""):
+            username = message_data.get("suggester")
 
         return {
             **parsed_message,

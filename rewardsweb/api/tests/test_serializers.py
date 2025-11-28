@@ -164,7 +164,7 @@ class TestApiSerializersRewardSerializer:
             "amount": 500,
             "description": "Medium quality content creation",
         }
-        serializer = RewardSerializer(data=reward_data)
+        RewardSerializer(data=reward_data)
         # This might still fail due to unique constraints, but we test the basic structure
         # In practice, you'd mock the queryset or use fixtures
 

@@ -529,7 +529,7 @@ class TestApiViewsAddContributionView:
         # Mock the actual database calls inside process_contribution
         with patch("api.views.sync_to_async") as mock_sync_to_async:
             with patch("api.views.Contributor.objects") as mock_cntrs:
-                mock_cntrs.from_handle.return_value = mock_contributor
+                mock_cntrs.from_full_handle.return_value = mock_contributor
 
                 with patch("api.views.Cycle.objects") as mock_cycle_objs:
                     mock_cycle_objs.latest.return_value = mock_cycle
@@ -568,7 +568,7 @@ class TestApiViewsAddContributionView:
                                         response = await view.post(mock_request)
 
                                         # Verify database calls with correct parsing
-                                        mock_cntrs.from_handle.assert_called_once_with(
+                                        mock_cntrs.from_full_handle.assert_called_once_with(
                                             "testuser"
                                         )
                                         mock_cycle_objs.latest.assert_called_once_with(
@@ -800,7 +800,7 @@ class TestApiViewsAddContributionView:
         # Mock the actual database calls inside process_contribution
         with patch("api.views.sync_to_async") as mock_sync_to_async:
             with patch("api.views.Contributor.objects") as mock_contributor_objects:
-                mock_contributor_objects.from_handle.return_value = mock_contributor
+                mock_contributor_objects.from_full_handle.return_value = mock_contributor
 
                 with patch("api.views.Cycle.objects") as mock_cycle_objects:
                     mock_cycle_objects.latest.return_value = mock_cycle
@@ -839,7 +839,7 @@ class TestApiViewsAddContributionView:
                                         response = await view.post(mock_request)
 
                                         # Verify database calls were made
-                                        mock_contributor_objects.from_handle.assert_called_once_with(
+                                        mock_contributor_objects.from_full_handle.assert_called_once_with(
                                             "testuser"
                                         )
                                         mock_cycle_objects.latest.assert_called_once_with(

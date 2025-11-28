@@ -14,6 +14,23 @@ class TestTrackersParser:
         return MessageParser()
 
     @pytest.mark.parametrize(
+        "code,typ",
+        [
+            ("F", "[F] Feature Request"),
+            ("B", "[B] Bug Report"),
+            ("AT", "[AT] Admin Task"),
+            ("CT", "[CT] Content Task"),
+            ("IC", "[IC] Issue Creation"),
+            ("TWR", "[TWR] Twitter Post"),
+            ("D", "[D] Development"),
+            ("ER", "[ER] Ecosystem Research"),
+        ],
+    )
+    def test_trackers_parser_full_type_from_parsed_type(self, parser, code, typ):
+        """Test the _clean_message method."""
+        assert parser._full_type_from_parsed_type(code) == typ
+
+    @pytest.mark.parametrize(
         "message, arg, expected",
         [
             ("  @myhandle  message  ", "@myhandle", "message"),
@@ -99,7 +116,7 @@ class TestTrackersParser:
                 "@myhandle type:Feature level:1 title:This is something I want you to know about",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "This is something I want you to know about",
                 },
@@ -108,7 +125,7 @@ class TestTrackersParser:
                 "type:Feature Request @myhandle level:1 title:This is something I want you to know about",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "This is something I want you to know about",
                 },
@@ -117,7 +134,7 @@ class TestTrackersParser:
                 "type:Feature Request level:1 title:This is something I want you to know about @myhandle",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "This is something I want you to know about",
                 },
@@ -126,7 +143,7 @@ class TestTrackersParser:
                 "type:Feature Request level:1 title:This is something I want you to know about @myhandle",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "This is something I want you to know about",
                 },
@@ -135,7 +152,7 @@ class TestTrackersParser:
                 "Feature1 This is something I want you to know about u/handle",
                 "u/handle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "This is something I want you to know about",
                 },
@@ -144,7 +161,7 @@ class TestTrackersParser:
                 "This is something I want you to know about u/handle F1",
                 "u/handle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "This is something I want you to know about",
                 },
@@ -153,7 +170,7 @@ class TestTrackersParser:
                 "This is something u/handle F",
                 "u/handle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,  # notice default of 1
                     "comment": "This is something",
                 },
@@ -162,7 +179,7 @@ class TestTrackersParser:
                 "Request l2 subject:This is something I want you to know about @myhandle",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 2,
                     "comment": "This is something I want you to know about",
                 },
@@ -171,7 +188,7 @@ class TestTrackersParser:
                 "This is something u/handle bug",
                 "u/handle",
                 {
-                    "type": "B",
+                    "type": "[B] Bug Report",
                     "level": 1,
                     "comment": "This is something",
                 },
@@ -180,7 +197,7 @@ class TestTrackersParser:
                 "t:F l:2 subject:This is something I want you to know about @myhandle",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 2,
                     "comment": "This is something I want you to know about",
                 },
@@ -189,7 +206,7 @@ class TestTrackersParser:
                 "t:F l:2 s:This is something I want you to know about @myhandle",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 2,
                     "comment": "This is something I want you to know about",
                 },
@@ -198,7 +215,7 @@ class TestTrackersParser:
                 "CT2 This is also @myhandle",
                 "@myhandle",
                 {
-                    "type": "CT",
+                    "type": "[CT] Content Task",
                     "level": 2,
                     "comment": "This is also",
                 },
@@ -207,7 +224,7 @@ class TestTrackersParser:
                 "This is a research @myhandle research",
                 "@myhandle",
                 {
-                    "type": "ER",
+                    "type": "[ER] Ecosystem Research",
                     "level": 1,
                     "comment": "This is a research",
                 },
@@ -216,7 +233,7 @@ class TestTrackersParser:
                 "@myhandle Hello there",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "Hello there",
                 },
@@ -225,7 +242,7 @@ class TestTrackersParser:
                 "Just a title @myhandle",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 1,
                     "comment": "Just a title",
                 },
@@ -234,7 +251,7 @@ class TestTrackersParser:
                 "l3 another title with only level @myhandle",
                 "@myhandle",
                 {
-                    "type": "F",
+                    "type": "[F] Feature Request",
                     "level": 3,
                     "comment": "another title with only level",
                 },
@@ -243,7 +260,7 @@ class TestTrackersParser:
                 "development a title with only type @myhandle",
                 "@myhandle",
                 {
-                    "type": "D",
+                    "type": "[D] Development",
                     "level": 1,
                     "comment": "a title with only type",
                 },

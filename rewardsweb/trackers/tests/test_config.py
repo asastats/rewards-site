@@ -247,6 +247,7 @@ class TestTrackersConfig:
             "consumer_secret": "",
             "access_token": "",
             "access_token_secret": "",
+            "target_user_id": "",
             "poll_interval": 720,
         }
         assert result == expected_config
@@ -259,6 +260,7 @@ class TestTrackersConfig:
             "TRACKER_TWITTER_CONSUMER_SECRET": "test_secret",
             "TRACKER_TWITTER_ACCESS_TOKEN": "test_token",
             "TRACKER_TWITTER_ACCESS_TOKEN_SECRET": "test_token_secret",
+            "TRACKER_TWITTER_TARGET_USER_ID": "test_user_id",
             "TRACKER_TWITTER_POLL_INTERVAL": "30",
         }.get(key, default)
         result = twitter_config()
@@ -268,6 +270,7 @@ class TestTrackersConfig:
             "consumer_secret": "test_secret",
             "access_token": "test_token",
             "access_token_secret": "test_token_secret",
+            "target_user_id": "test_user_id",
             "poll_interval": 30,
         }
         assert result == expected_config
@@ -277,10 +280,11 @@ class TestTrackersConfig:
             mocker.call("TRACKER_TWITTER_CONSUMER_SECRET", ""),
             mocker.call("TRACKER_TWITTER_ACCESS_TOKEN", ""),
             mocker.call("TRACKER_TWITTER_ACCESS_TOKEN_SECRET", ""),
+            mocker.call("TRACKER_TWITTER_TARGET_USER_ID", ""),
             mocker.call("TRACKER_TWITTER_POLL_INTERVAL", 720),
         ]
         mock_env.assert_has_calls(calls, any_order=True)
-        assert mock_env.call_count == 6
+        assert mock_env.call_count == 7
 
     # twitterapiio_config
     def test_trackers_config_twitterapiio_config_for_empty_environment_variables(

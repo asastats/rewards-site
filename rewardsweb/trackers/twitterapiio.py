@@ -18,11 +18,11 @@ class TwitterapiioTracker(BaseMentionTracker):
     in efficient batches, and saving the timestamp of the last processed mention
     to avoid reprocessing.
 
-    :var TwitterapiioTracker.api_key: The API key for the TwitterAPI.io service.
+    :var TwitterapiioTracker.api_key: API key for the TwitterAPI.io service
     :type TwitterapiioTracker.api_key: str
-    :var TwitterapiioTracker.target_handle: The Twitter screen name of the account to track.
+    :var TwitterapiioTracker.target_handle: Twitter screen name of the account to track
     :type TwitterapiioTracker.target_handle: str
-    :var TwitterapiioTracker.batch_size: The number of mentions to collect before fetching their parent tweets.
+    :var TwitterapiioTracker.batch_size: number of mentions to collect in a batch
     :type TwitterapiioTracker.batch_size: int
     """
 

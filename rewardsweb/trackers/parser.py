@@ -45,6 +45,17 @@ class MessageParser:
         work_message = message.replace(arg, "").strip()
         return " ".join(work_message.split())
 
+    def _full_type_from_parsed_type(self, parsed_type):
+        """Return full request type from provided parsed type/code.
+
+        :param parsed_type: request type code
+        :type parsed_type: str
+        :rtype: str
+        """
+        return next(
+            entry[0] for entry in REWARDS_COLLECTION if f"[{parsed_type}]" in entry[0]
+        )
+
     def _parse_combined_type_level(self, message):
         """Parse combined type and level from the message (e.g., F1, CT2).
 
@@ -135,7 +146,7 @@ class MessageParser:
 
         parsed_type, level, work_message = self._parse_combined_type_level(work_message)
         if parsed_type:
-            result["type"] = parsed_type
+            result["type"] = self._full_type_from_parsed_type(parsed_type)
             result["level"] = level
 
         explicit_level, work_message = self._parse_explicit_level(work_message)
@@ -145,11 +156,11 @@ class MessageParser:
         if not result["type"]:
             explicit_type, work_message = self._parse_explicit_type(work_message)
             if explicit_type:
-                result["type"] = explicit_type
+                result["type"] = self._full_type_from_parsed_type(explicit_type)
 
         result["comment"] = self._parse_title(work_message)
 
         if result["type"] is None:
-            result["type"] = "F"
+            result["type"] = "[F] Feature Request"
 
         return result

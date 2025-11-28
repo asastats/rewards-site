@@ -11,11 +11,6 @@ class TestTrackersTwitter:
     # __init__
     def test_trackers_twittertracker_init_success(self, mocker, twitter_config):
         mock_client = mocker.patch("tweepy.Client")
-        mock_user = mocker.MagicMock()
-        mock_user_data = mocker.MagicMock()
-        mock_user_data.id = "12345"
-        mock_user.data = mock_user_data
-        mock_client.return_value.get_me.return_value = mock_user
         instance = TwitterTracker(lambda x: None, twitter_config)
         mock_client.assert_called_once_with(
             bearer_token="test_bearer_token",
@@ -24,7 +19,7 @@ class TestTrackersTwitter:
             access_token="test_access_token",
             access_token_secret="test_access_token_secret",
         )
-        assert instance.bot_user_id == "12345"
+        assert instance.target_user_id == twitter_config["target_user_id"]
 
     # _get_original_tweet_info
     def test_trackers_twittertracker_get_original_tweet_info_success(
@@ -428,7 +423,7 @@ class TestTrackersTwitter:
         result = instance.check_mentions()
         assert result == 1
         instance.client.get_users_mentions.assert_called_once_with(
-            "12345",
+            twitter_config["target_user_id"],
             tweet_fields=[
                 "created_at",
                 "conversation_id",

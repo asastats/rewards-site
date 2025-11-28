@@ -189,25 +189,26 @@ class BaseMentionTracker:
         :type parsed_message: dict
         :param message_data: original message data
         :type message_data: dict
-        :var platform: social media provider name
-        :type platform: str
-        :var prefix: internal username prefix for the platform
-        :type prefix: str
+        :var platform_name: social media provider name
+        :type platform_name: str
+        :var platform_prefix: internal username prefix for the platform
+        :type platform_prefix: str
         :var username: contributor's username/handle in the platform
         :type username: str
         :return: dict
         """
-        platform = self.platform_name.capitalize()
-        prefix = next(
-            prefix for name, prefix in social_platform_prefixes() if name == platform
+        platform_name, platform_prefix = next(
+            (name, prefix)
+            for name, prefix in social_platform_prefixes()
+            if name in self.platform_name.capitalize()
         )
         username = message_data.get("contributor")
 
         return {
             **parsed_message,
-            "username": f"{prefix}{username}",
+            "username": f"{platform_prefix}{username}",
             "url": message_data.get("contribution_url"),
-            "platform": platform,
+            "platform": platform_name,
         }
 
     def post_new_contribution(self, contribution_data):

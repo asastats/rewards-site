@@ -47,14 +47,9 @@ from core.models import (
     IssueStatus,
 )
 from issues.issues import IssueProvider, issue_data_for_contribution
-from utils.bot import (
-    add_reaction_to_message,
-    add_reply_to_message,
-    message_from_url,
-)
+from updaters.updaters import UpdateProvider
 from utils.constants.core import (
     ALGORAND_WALLETS,
-    DISCORD_EMOJIS,
     ISSUE_CREATION_LABEL_CHOICES,
     ISSUE_PRIORITY_CHOICES,
 )
@@ -213,7 +208,8 @@ class ContributionInvalidateView(UpdateView):
         context["type"] = self.kwargs.get("reaction")
 
         contribution = self.object  # Use self.object instead of querying again
-        message = message_from_url(contribution.url)
+        updater = UpdateProvider(contribution.platform.name)
+        message = updater.message_from_url(contribution.url)
         if message.get("success"):
             author = message.get("author")
             timestamp = datetime.strptime(
@@ -234,6 +230,7 @@ class ContributionInvalidateView(UpdateView):
         """Set contribution as confirmed with reaction and optional reply."""
         reaction = self.kwargs.get("reaction")
         comment = form.cleaned_data.get("comment")
+        updater = UpdateProvider(self.object.platform.name)
 
         # Track operations that need to be performed
         operations = []
@@ -248,7 +245,7 @@ class ContributionInvalidateView(UpdateView):
         reply_success = True
         if comment:
             try:
-                reply_success = add_reply_to_message(self.object.url, comment)
+                reply_success = updater.add_reply_to_message(self.object.url, comment)
                 if not reply_success:
                     failed_operations.append("reply")
             except Exception as e:
@@ -260,8 +257,8 @@ class ContributionInvalidateView(UpdateView):
         reaction_success = True
         try:
 
-            reaction_success = add_reaction_to_message(
-                self.object.url, DISCORD_EMOJIS.get(reaction)
+            reaction_success = updater.add_reaction_to_message(
+                self.object.url, reaction
             )
             if not reaction_success:
                 failed_operations.append("reaction")
@@ -823,9 +820,8 @@ class IssueDetailView(DetailView):
                 self.request.user.profile.log_action("issue_closed", success_message)
                 messages.success(request, success_message)
                 for contribution in self.get_object().contribution_set.all():
-                    add_reaction_to_message(
-                        contribution.url, DISCORD_EMOJIS.get(action)
-                    )
+                    updater = UpdateProvider(contribution.platform.name)
+                    updater.add_reaction_to_message(contribution.url, action)
 
                 issue.status = (
                     IssueStatus.ADDRESSED
@@ -1049,7 +1045,8 @@ class CreateIssueView(FormView):
         self.request.user.profile.log_action(
             "contribution_created", contribution.info()
         )
-        add_reaction_to_message(contribution.url, DISCORD_EMOJIS.get("noted"))
+        updater = UpdateProvider(contribution.platform.name)
+        updater.add_reaction_to_message(contribution.url, "noted")
 
         return super().form_valid(form)
 

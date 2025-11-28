@@ -7,7 +7,7 @@ from django.conf import settings
 
 from core.models import Contributor
 from issues.providers import BitbucketProvider, GithubProvider, GitlabProvider
-from utils.bot import message_from_url
+from updaters.updaters import UpdateProvider
 
 ISSUE_TRACKER_PROVIDERS_REGISTRY = {
     "github": GithubProvider,
@@ -107,14 +107,15 @@ def _prepare_issue_body_from_contribution(contribution, profile):
     if not contribution.url:
         return issue_body
 
-    message = message_from_url(contribution.url)
+    updater = UpdateProvider(contribution.platform.name)
+    message = updater.message_from_url(contribution.url)
     if message.get("success"):
         timestamp = datetime.strptime(
             message.get("timestamp"), "%Y-%m-%dT%H:%M:%S.%f%z"
         ).strftime("%d %b %H:%M")
         contributor = _contributor_link(message.get("author"))
         issue_body = (
-            f"By {contributor} on {timestamp} in [Discord]"
+            f"By {contributor} on {timestamp} in [{contribution.platform.name.title()}]"
             f"({contribution.url}): // su: {str(profile)}\n"
         )
         for line in message.get("content").split("\n"):

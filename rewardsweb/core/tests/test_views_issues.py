@@ -1137,7 +1137,9 @@ class TestIssueDetailViewSubmissionHandlers:
         mock_close_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
-        mock_add_reaction = mocker.patch("core.views.add_reaction_to_message")
+        mock_add_reaction = mocker.patch(
+            "updaters.discord.DiscordUpdater.add_reaction_to_message"
+        )
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
         mocked_process = mocker.patch(
             "core.views.process_allocations_for_contributions",
@@ -1178,9 +1180,7 @@ class TestIssueDetailViewSubmissionHandlers:
 
         # Check that close_issue_with_labels was called with empty comment
         mock_close_issue.assert_called_once()
-        mock_add_reaction.assert_called_once_with(
-            contribution.url, DISCORD_EMOJIS.get("addressed")
-        )
+        mock_add_reaction.assert_called_once_with(contribution.url, "addressed")
 
         calls = [
             mocker.call(
@@ -2265,7 +2265,9 @@ class TestDbCreateIssueView:
         mock_confirm_contribution = mocker.patch(
             "core.views.Issue.objects.confirm_contribution_with_issue"
         )
-        mock_add_reaction = mocker.patch("core.views.add_reaction_to_message")
+        mock_add_reaction = mocker.patch(
+            "updaters.discord.DiscordUpdater.add_reaction_to_message"
+        )
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
 
         # Create mock form with valid data

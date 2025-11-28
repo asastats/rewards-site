@@ -618,24 +618,27 @@ class TestContributionInvalidateViewDb:
         """Test successful form submission with and without comment."""
         client.force_login(superuser)
 
-        mock_add_reply = mocker.patch(
-            "core.views.add_reply_to_message", return_value=True
-        )
-        mock_add_reaction = mocker.patch(
-            "core.views.add_reaction_to_message", return_value=True
-        )
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reply_to_message.return_value = True
+        mock_updater_instance.add_reaction_to_message.return_value = True
+        mock_update_provider = mocker.patch("core.views.UpdateProvider")
+        mock_update_provider.return_value = mock_updater_instance
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
 
         response = client.post(invalidate_url, {"comment": comment})
 
         # Check that operations were called appropriately
+        mock_update_provider.assert_called_once_with(contribution.platform.name)
         if comment:
-            mock_add_reply.assert_called_once_with(contribution.url, expected_comment)
+            mock_updater_instance.add_reply_to_message.assert_called_once_with(
+                contribution.url, expected_comment
+            )
         else:
-            mock_add_reply.assert_not_called()
+            mock_updater_instance.add_reply_to_message.assert_not_called()
 
-        mock_add_reaction.assert_called_once_with(
-            contribution.url, DISCORD_EMOJIS.get("duplicate")
+        mock_updater_instance.add_reaction_to_message.assert_called_once_with(
+            contribution.url, "duplicate"
         )
 
         # Check that contribution was confirmed
@@ -661,8 +664,18 @@ class TestContributionInvalidateViewDb:
         """Test form submission when reply operation fails."""
         client.force_login(superuser)
 
-        mocker.patch("core.views.add_reply_to_message", return_value=False)
-        mocker.patch("core.views.add_reaction_to_message", return_value=True)
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reply_to_message.return_value = False
+        mock_updater_instance.add_reaction_to_message.return_value = True
+        mock_updater_instance.message_from_url.return_value = {
+            "success": True,
+            "author": "test_user",
+            "timestamp": "2024-01-01T12:00:00.000000+00:00",
+            "content": "Test message",
+        }
+        mock_update_provider = mocker.patch("core.views.UpdateProvider")
+        mock_update_provider.return_value = mock_updater_instance
 
         response = client.post(invalidate_url, {"comment": "This is a test reply"})
 
@@ -681,7 +694,17 @@ class TestContributionInvalidateViewDb:
         """Test form submission when reaction operation fails."""
         client.force_login(superuser)
 
-        mocker.patch("core.views.add_reaction_to_message", return_value=False)
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reaction_to_message.return_value = False
+        mock_updater_instance.message_from_url.return_value = {
+            "success": True,
+            "author": "test_user",
+            "timestamp": "2024-01-01T12:00:00.000000+00:00",
+            "content": "Test message",
+        }
+        mock_update_provider = mocker.patch("core.views.UpdateProvider")
+        mock_update_provider.return_value = mock_updater_instance
 
         response = client.post(invalidate_url, {"comment": ""})
 
@@ -704,8 +727,18 @@ class TestContributionInvalidateViewDb:
         """Test form submission when both operations fail."""
         client.force_login(superuser)
 
-        mocker.patch("core.views.add_reply_to_message", return_value=False)
-        mocker.patch("core.views.add_reaction_to_message", return_value=False)
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reply_to_message.return_value = False
+        mock_updater_instance.add_reaction_to_message.return_value = False
+        mock_updater_instance.message_from_url.return_value = {
+            "success": True,
+            "author": "test_user",
+            "timestamp": "2024-01-01T12:00:00.000000+00:00",
+            "content": "Test message",
+        }
+        mock_update_provider = mocker.patch("core.views.UpdateProvider")
+        mock_update_provider.return_value = mock_updater_instance
 
         response = client.post(invalidate_url, {"comment": "This is a test reply"})
 
@@ -723,10 +756,20 @@ class TestContributionInvalidateViewDb:
         """Test form submission when reply operation raises exception."""
         client.force_login(superuser)
 
-        mocker.patch(
-            "core.views.add_reply_to_message", side_effect=Exception("Reply failed")
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reply_to_message.side_effect = Exception(
+            "Reply failed"
         )
-        mocker.patch("core.views.add_reaction_to_message", return_value=True)
+        mock_updater_instance.add_reaction_to_message.return_value = True
+        mock_updater_instance.message_from_url.return_value = {
+            "success": True,
+            "author": "test_user",
+            "timestamp": "2024-01-01T12:00:00.000000+00:00",
+            "content": "Test message",
+        }
+        mock_update_provider = mocker.patch("core.views.UpdateProvider")
+        mock_update_provider.return_value = mock_updater_instance
 
         response = client.post(invalidate_url, {"comment": "This is a test reply"})
 
@@ -747,10 +790,19 @@ class TestContributionInvalidateViewDb:
         """Test form submission when reaction operation raises exception."""
         client.force_login(superuser)
 
-        mocker.patch(
-            "core.views.add_reaction_to_message",
-            side_effect=Exception("Reaction failed"),
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reaction_to_message.side_effect = Exception(
+            "Reaction failed"
         )
+        mock_updater_instance.message_from_url.return_value = {
+            "success": True,
+            "author": "test_user",
+            "timestamp": "2024-01-01T12:00:00.000000+00:00",
+            "content": "Test message",
+        }
+        mock_update_provider = mocker.patch("core.views.UpdateProvider")
+        mock_update_provider.return_value = mock_updater_instance
 
         response = client.post(invalidate_url, {"comment": ""})
 
@@ -778,15 +830,17 @@ class TestContributionInvalidateViewDb:
 
         client.force_login(superuser)
 
-        mock_add_reaction = mocker.patch(
-            "core.views.add_reaction_to_message", return_value=True
-        )
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reaction_to_message.return_value = True
+        mock_update_provider = mocker.patch("core.views.UpdateProvider")
+        mock_update_provider.return_value = mock_updater_instance
 
         client.post(url, {"comment": ""})
 
         # Check that reaction was called with correct type
-        mock_add_reaction.assert_called_once_with(
-            contribution.url, DISCORD_EMOJIS.get(reaction)
+        mock_updater_instance.add_reaction_to_message.assert_called_once_with(
+            contribution.url, reaction
         )
 
         # Check success
@@ -825,8 +879,10 @@ class TestContributionInvalidateViewDb:
             kwargs={"pk": contribution.pk, "reaction": "duplicate"},
         )
 
-        # Mock message_from_url to return failure
-        mocker.patch("core.views.message_from_url", return_value={"success": False})
+        # Mock UpdateProvider to return failure
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.message_from_url.return_value = {"success": False}
+        mocker.patch("core.views.UpdateProvider", return_value=mock_updater_instance)
 
         client.force_login(superuser)
         response = client.get(url)
@@ -841,8 +897,11 @@ class TestContributionInvalidateViewDb:
         """Test success message includes reply information when comment is provided."""
         client.force_login(superuser)
 
-        mocker.patch("core.views.add_reply_to_message", return_value=True)
-        mocker.patch("core.views.add_reaction_to_message", return_value=True)
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reply_to_message.return_value = True
+        mock_updater_instance.add_reaction_to_message.return_value = True
+        mocker.patch("core.views.UpdateProvider", return_value=mock_updater_instance)
 
         response = client.post(invalidate_url, {"comment": "Test reply"})
 
@@ -859,7 +918,10 @@ class TestContributionInvalidateViewDb:
         """Test success message excludes reply information when no comment is provided."""
         client.force_login(superuser)
 
-        mocker.patch("core.views.add_reaction_to_message", return_value=True)
+        # Mock the UpdateProvider
+        mock_updater_instance = mocker.MagicMock()
+        mock_updater_instance.add_reaction_to_message.return_value = True
+        mocker.patch("core.views.UpdateProvider", return_value=mock_updater_instance)
 
         response = client.post(invalidate_url, {"comment": ""})
 

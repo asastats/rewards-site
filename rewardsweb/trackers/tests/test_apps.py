@@ -6,11 +6,11 @@ from trackers.apps import TrackersConfig
 
 
 class TestWalletauthApps:
-    """Testing class for :py:mod:`walletauth.apps` module."""
+    """Testing class for :py:mod:`trackers.apps` module."""
 
     # # TrackersConfig
-    def test_walletauth_apps_trackersconfig_is_subclass_of_appconfig(self):
+    def test_trackers_apps_trackersconfig_is_subclass_of_appconfig(self):
         assert issubclass(TrackersConfig, AppConfig)
 
-    def test_walletauth_apps_trackersconfig_sets_name(self):
-        assert TrackersConfig.name == "walletauth"
+    def test_trackers_apps_trackersconfig_sets_name(self):
+        assert TrackersConfig.name == "trackers"

@@ -1,11 +1,13 @@
 """Testing module for :py:mod:`trackers.reddit` module."""
 
 import praw
+import pytest
 
 from trackers.reddit import RedditTracker
 
 
-class TestTrackesReddit:
+@pytest.mark.django_db
+class TestTrackersReddit:
     """Testing class for :class:`trackers.reddit.RedditTracker`."""
 
     # __init__

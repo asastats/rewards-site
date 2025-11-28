@@ -10,6 +10,7 @@ import requests
 from trackers.twitterapiio import TwitterapiioTracker
 
 
+@pytest.mark.django_db
 class TestTrackersTwitterApiIOTracker:
     """Testing class for :class:`trackers.twitterapiio.TwitterapiioTracker`."""
 

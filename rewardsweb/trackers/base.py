@@ -309,4 +309,3 @@ class BaseMentionTracker:
             self.logger.error(f"{self.platform_name} tracker error: {e}")
             self.log_action("error", f"Tracker error: {str(e)}")
             raise
-

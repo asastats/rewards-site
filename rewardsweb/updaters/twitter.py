@@ -1,7 +1,5 @@
 """Module containing class for retrieving and adding X/Twitter messages."""
 
-from datetime import datetime, timezone
-
 from trackers.models import Mention
 from updaters.base import BaseUpdater
 
@@ -34,30 +32,7 @@ class TwitterUpdater(BaseUpdater):
 
         :param url: twitter URL to get message from
         :type url: str
-        :var mention: Twitter mention data from database
-        :type mention: :class:`trackers.models.Mention`
         :return: dictionary with message data
         :rtype: dict
         """
-        mention = Mention.objects.get_mention_by_url(url)
-
-        if mention:
-            timestamp = mention.raw_data.get("timestamp")
-            if timestamp:
-                dt_object = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-                timestamp_str = dt_object.isoformat()
-            else:
-                timestamp_str = ""
-            return {
-                "success": True,
-                "content": mention.raw_data.get("content", ""),
-                "author": mention.raw_data.get("contributor", "Unknown"),
-                "timestamp": timestamp_str,
-                "message_id": mention.item_id,
-                "raw_data": mention.raw_data,
-            }
-        else:
-            return {
-                "success": False,
-                "error": f"Message not found for URL: {url}",
-            }
+        return Mention.objects.message_from_url(url)

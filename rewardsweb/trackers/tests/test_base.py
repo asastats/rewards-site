@@ -11,6 +11,7 @@ import trackers.base
 from trackers.base import BaseMentionTracker
 
 
+@pytest.mark.django_db
 class TestTrackersBaseMentionTracker:
     """Testing class for :class:`trackers.base.BaseMentionTracker` class."""
 

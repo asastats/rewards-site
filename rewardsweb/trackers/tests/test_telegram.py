@@ -7,6 +7,7 @@ import pytest
 from trackers.telegram import TelegramTracker
 
 
+@pytest.mark.django_db
 class TestTrackersTelegram:
     """Testing class for :class:`trackers.telegram.TelegramTracker`."""
 

@@ -66,9 +66,7 @@ class TestTrackersModelsMentionLogManager:
 
     def test_trackers_models_mentionlogmanager_log_action(self):
         """Test log_action method."""
-        MentionLog.objects.log_action(
-            "test_platform", "test_action", "test_details"
-        )
+        MentionLog.objects.log_action("test_platform", "test_action", "test_details")
         log = MentionLog.objects.first()
         assert log.platform == "test_platform"
         assert log.action == "test_action"
@@ -76,8 +74,8 @@ class TestTrackersModelsMentionLogManager:
 
 
 @pytest.mark.django_db
-class TestTrackersModelsMentionManagerGetMentionByUrl:
-    """Testing class for :py:meth:`trackers.models.MentionManager.get_mention_by_url` method."""
+class TestTrackersModelsMentionManagerMessageFromUrl:
+    """Testing class for :py:meth:`trackers.models.MentionManager.message_from_url` method."""
 
     def setup_method(self):
         """Set up test method."""
@@ -89,6 +87,7 @@ class TestTrackersModelsMentionManagerGetMentionByUrl:
             "contribution_url": "https://twitter.com/contrib/1",
             "content": "Tweet content 1",
             "timestamp": 1678886400,
+            "contributor": "userA",
         }
         test_data_2 = {
             "item_id": "2",
@@ -98,38 +97,36 @@ class TestTrackersModelsMentionManagerGetMentionByUrl:
             "contribution_url": "https://reddit.com/comment/2",
             "content": "Reddit content 2",
             "timestamp": 1678886500,
+            "contributor": "userB",
         }
-        Mention.objects.create(
-            item_id="1", platform="twitter", raw_data=test_data_1
-        )
-        Mention.objects.create(
-            item_id="2", platform="reddit", raw_data=test_data_2
-        )
+        Mention.objects.create(item_id="1", platform="twitter", raw_data=test_data_1)
+        Mention.objects.create(item_id="2", platform="reddit", raw_data=test_data_2)
 
-    def test_trackers_models_mentionmanager_get_mention_by_url_suggestion_url(
+    def test_trackers_models_mentionmanager_message_from_url_suggestion_url(
         self,
     ):
         """Test retrieving a mention by its suggestion_url."""
         url = "https://twitter.com/status/1"
-        mention = Mention.objects.get_mention_by_url(url)
-        assert mention is not None
-        assert mention.item_id == "1"
-        assert mention.platform == "twitter"
-        assert mention.raw_data["content"] == "Tweet content 1"
+        message = Mention.objects.message_from_url(url)
+        assert message["success"] is True
+        assert message["content"] == "Tweet content 1"
+        assert message["author"] == "userA"
+        assert message["message_id"] == "1"
 
-    def test_trackers_models_mentionmanager_get_mention_by_url_contribution_url(
+    def test_trackers_models_mentionmanager_message_from_url_contribution_url(
         self,
     ):
         """Test retrieving a mention by its contribution_url."""
         url = "https://reddit.com/comment/2"
-        mention = Mention.objects.get_mention_by_url(url)
-        assert mention is not None
-        assert mention.item_id == "2"
-        assert mention.platform == "reddit"
-        assert mention.raw_data["content"] == "Reddit content 2"
+        message = Mention.objects.message_from_url(url)
+        assert message["success"] is True
+        assert message["content"] == "Reddit content 2"
+        assert message["author"] == "userB"
+        assert message["message_id"] == "2"
 
-    def test_trackers_models_mentionmanager_get_mention_by_url_not_found(self):
+    def test_trackers_models_mentionmanager_message_from_url_not_found(self):
         """Test retrieving a mention for a URL that does not exist."""
         url = "https://nonexistent.com/url"
-        mention = Mention.objects.get_mention_by_url(url)
-        assert mention is None
+        message = Mention.objects.message_from_url(url)
+        assert message["success"] is False
+        assert "not found" in message["error"]

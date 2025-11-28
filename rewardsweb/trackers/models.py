@@ -1,9 +1,10 @@
 """Module containing trackers' ORM models."""
 
-import json
+from datetime import datetime, timezone
 
 from django.db import models
 from django.db.models import Max
+from django.db.models.expressions import RawSQL
 
 
 class MentionManager(models.Manager):
@@ -53,25 +54,56 @@ class MentionManager(models.Manager):
                  no mentions are found for the platform.
         :rtype: int or None
         """
-        return self.filter(platform=platform_name).aggregate(
-            max_timestamp=Max("raw_data__timestamp")
+        max_timestamp = self.filter(platform=platform_name).aggregate(
+            max_timestamp=Max(RawSQL("CAST(raw_data->>'timestamp' AS BIGINT)", []))
         )["max_timestamp"]
+        return max_timestamp
 
-    def get_mention_by_url(self, url):
+    def _get_mention_by_url(self, url):
         """Get a mention by its URL.
-
-        Searches for a mention where the 'suggestion_url' or 'contribution_url'
-        in the raw_data JSON field matches the provided URL.
 
         :param url: The URL to search for.
         :type url: str
-        :return: The raw_data of the mention as a dictionary, or None if not found.
-        :rtype: dict or None
+        :return: mention instance or None
+        :rtype: :class:`Mention` or None
         """
         return self.filter(
             models.Q(raw_data__suggestion_url=url)
             | models.Q(raw_data__contribution_url=url)
         ).first()
+
+    def message_from_url(self, url):
+        """Retrieve message content from provided `url`.
+
+        :param url: URL to get message from
+        :type url: str
+        :var mention: mention data from database
+        :type mention: :class:`Mention`
+        :return: dictionary with message data
+        :rtype: dict
+        """
+        mention = self._get_mention_by_url(url)
+
+        if mention:
+            timestamp = mention.raw_data.get("timestamp")
+            if timestamp:
+                dt_object = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                timestamp_str = dt_object.isoformat()
+            else:
+                timestamp_str = ""
+            return {
+                "success": True,
+                "content": mention.raw_data.get("content", ""),
+                "author": mention.raw_data.get("contributor", "Unknown"),
+                "timestamp": timestamp_str,
+                "message_id": mention.item_id,
+                "raw_data": mention.raw_data,
+            }
+        else:
+            return {
+                "success": False,
+                "error": f"Message not found for URL: {url}",
+            }
 
 
 class Mention(models.Model):

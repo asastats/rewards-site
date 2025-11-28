@@ -2,9 +2,12 @@
 
 from datetime import datetime
 
+import pytest
+
 from trackers.twitter import TwitterTracker
 
 
+@pytest.mark.django_db
 class TestTrackersTwitter:
     """Testing class for :class:`trackers.twitter.TwitterTracker`."""
 

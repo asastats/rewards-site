@@ -24,7 +24,7 @@ from core.models import (
     RewardType,
     SocialPlatform,
 )
-from issues.issues import IssueProvider
+from issues.main import IssueProvider
 from utils.constants.core import (
     EXCLUDED_CONTRIBUTORS,
     GITHUB_ISSUES_START_DATE,

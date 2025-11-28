@@ -7,7 +7,7 @@ from django.conf import settings
 
 from core.models import Contributor
 from issues.providers import BitbucketProvider, GithubProvider, GitlabProvider
-from updaters.updaters import UpdateProvider
+from updaters.main import UpdateProvider
 
 ISSUE_TRACKER_PROVIDERS_REGISTRY = {
     "github": GithubProvider,

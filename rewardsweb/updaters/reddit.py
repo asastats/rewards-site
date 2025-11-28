@@ -1,11 +1,13 @@
-"""Reddit updater."""
+"""Module containing class for retrieving and adding Reddit post and comments."""
+
+from datetime import datetime, timezone
 
 from trackers.database import MentionDatabaseManager
 from updaters.base import BaseUpdater
 
 
 class RedditUpdater(BaseUpdater):
-    """Reddit updater."""
+    """Main class for retrieving and adding Reddit post and comments."""
 
     def __init__(self, *args, **kwargs):
         """Initialize updater."""
@@ -42,18 +44,23 @@ class RedditUpdater(BaseUpdater):
         :return: dictionary with message data
         :rtype: dict
         """
-        message_data = self.db_manager.mention_raw_data_by_url(url)
+        message_data = self.db_manager.get_mention_by_url(url)
 
         if message_data:
+            timestamp = message_data.get("timestamp")
+            if timestamp:
+                dt_object = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                timestamp_str = dt_object.isoformat()
+            else:
+                timestamp_str = ""
             return {
                 "success": True,
                 "content": message_data.get("content", ""),
                 "author": message_data.get("contributor", "Unknown"),
-                "timestamp": message_data.get("timestamp", ""),
+                "timestamp": timestamp_str,
                 "message_id": message_data.get("item_id"),
                 "raw_data": message_data,
             }
-
         else:
             return {
                 "success": False,

@@ -1,7 +1,5 @@
 """Testing module for :py:mod:`updaters.reddit` module."""
 
-from unittest import mock
-
 import pytest
 
 from updaters.reddit import RedditUpdater
@@ -28,13 +26,14 @@ class TestUpdatersRedditRedditUpdater:
         with pytest.raises(NotImplementedError):
             self.updater.add_reply_to_message("some_url", "some_text")
 
-    @mock.patch("updaters.reddit.MentionDatabaseManager")
     def test_updaters_reddit_redditupdater_message_from_url_for_no_message_found(
-        self, mock_db_manager
+        self, mocker
     ):
-        """Test message_from_url when no message is found in the database."""
-        mock_db_instance = mock_db_manager.return_value
-        mock_db_instance.mention_raw_data_by_url.return_value = None
+        mock_db_instance = mocker.MagicMock()
+        mocker.patch(
+            "updaters.reddit.MentionDatabaseManager", return_value=mock_db_instance
+        )
+        mock_db_instance.get_mention_by_url.return_value = None
         self.updater.db_manager = mock_db_instance
 
         url = "https://reddit.com/r/subreddit/comments/123"
@@ -44,15 +43,15 @@ class TestUpdatersRedditRedditUpdater:
         }
         returned = self.updater.message_from_url(url)
         assert returned == expected
-        mock_db_instance.mention_raw_data_by_url.assert_called_once_with(url)
+        mock_db_instance.get_mention_by_url.assert_called_once_with(url)
 
-    @mock.patch("updaters.reddit.MentionDatabaseManager")
-    def test_updaters_reddit_redditupdater_message_from_url_functionality(
-        self, mock_db_manager
-    ):
-        """Test message_from_url when a message is found."""
-        mock_db_instance = mock_db_manager.return_value
+    def test_updaters_reddit_redditupdater_message_from_url_functionality(self, mocker):
+        mock_db_instance = mocker.MagicMock()
+        mocker.patch(
+            "updaters.reddit.MentionDatabaseManager", return_value=mock_db_instance
+        )
         url = "https://reddit.com/r/subreddit/comments/456"
+        timestamp = 1678876400
         message_data = {
             "suggester": "userA",
             "suggestion_url": url,
@@ -60,20 +59,20 @@ class TestUpdatersRedditRedditUpdater:
             "contributor": "userB",
             "type": "comment",
             "content": "This is a comment",
-            "timestamp": 1678886400,
+            "timestamp": timestamp,
             "item_id": "456",
         }
-        mock_db_instance.mention_raw_data_by_url.return_value = message_data
+        mock_db_instance.get_mention_by_url.return_value = message_data
         self.updater.db_manager = mock_db_instance
 
         expected = {
             "success": True,
             "content": "This is a comment",
             "author": "userB",
-            "timestamp": 1678886400,
+            "timestamp": "2023-03-15T10:33:20+00:00",
             "message_id": "456",
             "raw_data": message_data,
         }
         returned = self.updater.message_from_url(url)
         assert returned == expected
-        mock_db_instance.mention_raw_data_by_url.assert_called_once_with(url)
+        mock_db_instance.get_mention_by_url.assert_called_once_with(url)

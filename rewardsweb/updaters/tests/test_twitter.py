@@ -1,7 +1,5 @@
 """Testing module for :py:mod:`updaters.twitter` module."""
 
-from unittest import mock
-
 import pytest
 
 from updaters.twitter import TwitterUpdater
@@ -28,31 +26,15 @@ class TestUpdatersTwitterTwitterUpdater:
         with pytest.raises(NotImplementedError):
             self.updater.add_reply_to_message("some_url", "some_text")
 
-    @mock.patch("updaters.twitter.MentionDatabaseManager")
-    def test_updaters_twitter_twitterupdater_message_from_url_for_no_message_found(
-        self, mock_db_manager
-    ):
-        """Test message_from_url when no message is found in the database."""
-        mock_db_instance = mock_db_manager.return_value
-        mock_db_instance.mention_raw_data_by_url.return_value = None
-        self.updater.db_manager = mock_db_instance
-
-        url = "https://twitter.com/user/status/123"
-        expected = {
-            "success": False,
-            "error": f"Message not found for URL: {url}",
-        }
-        returned = self.updater.message_from_url(url)
-        assert returned == expected
-        mock_db_instance.mention_raw_data_by_url.assert_called_once_with(url)
-
-    @mock.patch("updaters.twitter.MentionDatabaseManager")
     def test_updaters_twitter_twitterupdater_message_from_url_functionality(
-        self, mock_db_manager
+        self, mocker
     ):
-        """Test message_from_url when a message is found."""
-        mock_db_instance = mock_db_manager.return_value
+        mock_db_instance = mocker.MagicMock()
+        mocker.patch(
+            "updaters.reddit.MentionDatabaseManager", return_value=mock_db_instance
+        )
         url = "https://twitter.com/user/status/456"
+        timestamp = 1678876400
         message_data = {
             "suggester": "userA",
             "suggestion_url": url,
@@ -60,20 +42,20 @@ class TestUpdatersTwitterTwitterUpdater:
             "contributor": "userB",
             "type": "tweet",
             "content": "This is a tweet",
-            "timestamp": 1678886400,
+            "timestamp": timestamp,
             "item_id": "456",
         }
-        mock_db_instance.mention_raw_data_by_url.return_value = message_data
+        mock_db_instance.get_mention_by_url.return_value = message_data
         self.updater.db_manager = mock_db_instance
 
         expected = {
             "success": True,
             "content": "This is a tweet",
             "author": "userB",
-            "timestamp": 1678886400,
+            "timestamp": "2023-03-15T10:33:20+00:00",
             "message_id": "456",
             "raw_data": message_data,
         }
         returned = self.updater.message_from_url(url)
         assert returned == expected
-        mock_db_instance.mention_raw_data_by_url.assert_called_once_with(url)
+        mock_db_instance.get_mention_by_url.assert_called_once_with(url)

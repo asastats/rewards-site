@@ -1,6 +1,6 @@
 """Testing module for :py:mod:`api.views` module."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from adrf.views import APIView
@@ -86,25 +86,23 @@ class TestApiViewsHelpers:
         mock_cycle.total_rewards = 300
 
         # Mock sync_to_async calls to return awaitable objects
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            # Create awaitable mocks that return the expected values
-            mock_contributor_rewards = AsyncMock(
-                return_value={"addr1": 100, "addr2": 200}
-            )
-            mock_total_rewards = AsyncMock(return_value=300)
-            mock_sync_to_async.side_effect = [
-                mock_contributor_rewards,
-                mock_total_rewards,
-            ]
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        # Create awaitable mocks that return the expected values
+        mock_contributor_rewards = AsyncMock(return_value={"addr1": 100, "addr2": 200})
+        mock_total_rewards = AsyncMock(return_value=300)
+        mock_sync_to_async.side_effect = [
+            mock_contributor_rewards,
+            mock_total_rewards,
+        ]
 
-            # Mock serializer
-            mock_serializer = mocker.MagicMock()
-            mock_serializer.data = {"id": 1, "start": "2023-01-01", "end": "2023-01-31"}
-            mock_serializer.is_valid.return_value = True
-            with patch(
-                "api.views.AggregatedCycleSerializer", return_value=mock_serializer
-            ):
-                response = await aggregated_cycle_response(mock_cycle)
+        # Mock serializer
+        mock_serializer = mocker.MagicMock()
+        mock_serializer.data = {"id": 1, "start": "2023-01-01", "end": "2023-01-31"}
+        mock_serializer.is_valid.return_value = True
+        mocker.patch(
+            "api.views.AggregatedCycleSerializer", return_value=mock_serializer
+        )
+        response = await aggregated_cycle_response(mock_cycle)
 
         assert isinstance(response, Response)
         assert response.status_code == status.HTTP_200_OK
@@ -115,19 +113,19 @@ class TestApiViewsHelpers:
         mock_humanized_data = [{"id": 1, "contributor_name": "test"}]
 
         # Mock sync_to_async to return awaitable
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_humanize = AsyncMock(return_value=mock_humanized_data)
-            mock_sync_to_async.return_value = mock_humanize
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_humanize = AsyncMock(return_value=mock_humanized_data)
+        mock_sync_to_async.return_value = mock_humanize
 
-            # Mock serializer
-            mock_serializer = mocker.MagicMock()
-            mock_serializer.data = mock_humanized_data
-            mock_serializer.is_valid.return_value = True
-            with patch(
-                "api.views.HumanizedContributionSerializer",
-                return_value=mock_serializer,
-            ):
-                response = await contributions_response(mock_contributions)
+        # Mock serializer
+        mock_serializer = mocker.MagicMock()
+        mock_serializer.data = mock_humanized_data
+        mock_serializer.is_valid.return_value = True
+        mocker.patch(
+            "api.views.HumanizedContributionSerializer",
+            return_value=mock_serializer,
+        )
+        response = await contributions_response(mock_contributions)
 
         assert isinstance(response, Response)
         assert response.status_code == status.HTTP_200_OK
@@ -159,20 +157,20 @@ class TestApiViewsCycleAggregatedView:
         mock_cycle = mocker.MagicMock(spec=Cycle)
 
         # Mock sync_to_async to return awaitable that returns the cycle
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=mock_cycle)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=mock_cycle)
+        mock_sync_to_async.return_value = mock_db_call
 
-            with patch(
-                "api.views.aggregated_cycle_response", new_callable=AsyncMock
-            ) as mock_response:
-                mock_response.return_value = Response({"id": cycle_id})
+        mock_response = mocker.patch(
+            "api.views.aggregated_cycle_response", new_callable=AsyncMock
+        )
+        mock_response.return_value = Response({"id": cycle_id})
 
-                response = await view.get(mock_request, cycle_id)
+        response = await view.get(mock_request, cycle_id)
 
-                mock_sync_to_async.assert_called_once()
-                mock_response.assert_called_once_with(mock_cycle)
-                assert isinstance(response, Response)
+        mock_sync_to_async.assert_called_once()
+        mock_response.assert_called_once_with(mock_cycle)
+        assert isinstance(response, Response)
 
     @pytest.mark.asyncio
     async def test_api_views_cycle_aggregated_view_get_nonexistent_cycle(self, mocker):
@@ -181,21 +179,19 @@ class TestApiViewsCycleAggregatedView:
         cycle_id = 999
 
         # Mock sync_to_async to return awaitable that returns None
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=None)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=None)
+        mock_sync_to_async.return_value = mock_db_call
 
-            with patch(
-                "api.views.aggregated_cycle_response", new_callable=AsyncMock
-            ) as mock_response:
-                mock_response.return_value = Response(
-                    {"error": "Cycle not found"}, status=404
-                )
+        mock_response = mocker.patch(
+            "api.views.aggregated_cycle_response", new_callable=AsyncMock
+        )
+        mock_response.return_value = Response({"error": "Cycle not found"}, status=404)
 
-                response = await view.get(mock_request, cycle_id)
+        response = await view.get(mock_request, cycle_id)
 
-                mock_response.assert_called_once_with(None)
-                assert isinstance(response, Response)
+        mock_response.assert_called_once_with(None)
+        assert isinstance(response, Response)
 
 
 class TestApiViewsCurrentCycleAggregatedView:
@@ -212,20 +208,20 @@ class TestApiViewsCurrentCycleAggregatedView:
         mock_cycle = mocker.MagicMock(spec=Cycle)
 
         # Mock sync_to_async to return awaitable
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=mock_cycle)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=mock_cycle)
+        mock_sync_to_async.return_value = mock_db_call
 
-            with patch(
-                "api.views.aggregated_cycle_response", new_callable=AsyncMock
-            ) as mock_response:
-                mock_response.return_value = Response({"id": 1})
+        mock_response = mocker.patch(
+            "api.views.aggregated_cycle_response", new_callable=AsyncMock
+        )
+        mock_response.return_value = Response({"id": 1})
 
-                response = await view.get(mock_request)
+        response = await view.get(mock_request)
 
-                mock_sync_to_async.assert_called_once()
-                mock_response.assert_called_once_with(mock_cycle)
-                assert isinstance(response, Response)
+        mock_sync_to_async.assert_called_once()
+        mock_response.assert_called_once_with(mock_cycle)
+        assert isinstance(response, Response)
 
 
 class TestApiViewsCyclePlainView:
@@ -243,20 +239,20 @@ class TestApiViewsCyclePlainView:
         mock_cycle = mocker.MagicMock(spec=Cycle)
 
         # Mock sync_to_async to return awaitable
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=mock_cycle)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=mock_cycle)
+        mock_sync_to_async.return_value = mock_db_call
 
-            with patch("api.views.CycleSerializer") as mock_serializer:
-                mock_serializer_instance = mocker.MagicMock()
-                mock_serializer_instance.data = {"id": cycle_id}
-                mock_serializer.return_value = mock_serializer_instance
+        mock_serializer_instance = mocker.MagicMock()
+        mock_serializer_instance.data = {"id": cycle_id}
+        mock_serializer = mocker.patch("api.views.CycleSerializer")
+        mock_serializer.return_value = mock_serializer_instance
 
-                response = await view.get(mock_request, cycle_id)
+        response = await view.get(mock_request, cycle_id)
 
-                mock_serializer.assert_called_once_with(mock_cycle)
-                assert isinstance(response, Response)
-                assert response.status_code == status.HTTP_200_OK
+        mock_serializer.assert_called_once_with(mock_cycle)
+        assert isinstance(response, Response)
+        assert response.status_code == status.HTTP_200_OK
 
     @pytest.mark.asyncio
     async def test_api_views_cycle_plain_view_get_nonexistent_cycle(self, mocker):
@@ -265,15 +261,15 @@ class TestApiViewsCyclePlainView:
         cycle_id = 999
 
         # Mock sync_to_async to return awaitable that returns None
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=None)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=None)
+        mock_sync_to_async.return_value = mock_db_call
 
-            response = await view.get(mock_request, cycle_id)
+        response = await view.get(mock_request, cycle_id)
 
-            assert isinstance(response, Response)
-            assert response.status_code == status.HTTP_404_NOT_FOUND
-            assert response.data == {"error": "Cycle not found"}
+        assert isinstance(response, Response)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.data == {"error": "Cycle not found"}
 
 
 class TestApiViewsCurrentCyclePlainView:
@@ -290,20 +286,20 @@ class TestApiViewsCurrentCyclePlainView:
         mock_cycle = mocker.MagicMock(spec=Cycle)
 
         # Mock sync_to_async to return awaitable
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=mock_cycle)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=mock_cycle)
+        mock_sync_to_async.return_value = mock_db_call
 
-            with patch("api.views.CycleSerializer") as mock_serializer:
-                mock_serializer_instance = mocker.MagicMock()
-                mock_serializer_instance.data = {"id": 1}
-                mock_serializer.return_value = mock_serializer_instance
+        mock_serializer_instance = mocker.MagicMock()
+        mock_serializer_instance.data = {"id": 1}
+        mock_serializer = mocker.patch("api.views.CycleSerializer")
+        mock_serializer.return_value = mock_serializer_instance
 
-                response = await view.get(mock_request)
+        response = await view.get(mock_request)
 
-                mock_serializer.assert_called_once_with(mock_cycle)
-                assert isinstance(response, Response)
-                assert response.status_code == status.HTTP_200_OK
+        mock_serializer.assert_called_once_with(mock_cycle)
+        assert isinstance(response, Response)
+        assert response.status_code == status.HTTP_200_OK
 
 
 class TestApiViewsContributionsView:
@@ -323,26 +319,26 @@ class TestApiViewsContributionsView:
         mock_queryset = mocker.MagicMock()
 
         # Mock sync_to_async calls to return awaitables
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_contributor_call = AsyncMock(return_value=mock_contributor)
-            mock_queryset_call = AsyncMock(return_value=mock_queryset)
-            mock_sync_to_async.side_effect = [mock_contributor_call, mock_queryset_call]
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_contributor_call = AsyncMock(return_value=mock_contributor)
+        mock_queryset_call = AsyncMock(return_value=mock_queryset)
+        mock_sync_to_async.side_effect = [mock_contributor_call, mock_queryset_call]
 
-            with patch("api.views.Contribution.objects") as mock_contribution_objects:
-                mock_contribution_objects.filter.return_value = mock_queryset
-                with patch(
-                    "api.views.contributions_response", new_callable=AsyncMock
-                ) as mock_response:
-                    mock_response.return_value = Response([{"id": 1}])
+        mock_contribution_objects = mocker.patch("api.views.Contribution.objects")
+        mock_contribution_objects.filter.return_value = mock_queryset
+        mock_response = mocker.patch(
+            "api.views.contributions_response", new_callable=AsyncMock
+        )
+        mock_response.return_value = Response([{"id": 1}])
 
-                    response = await view.get(mock_request)
+        response = await view.get(mock_request)
 
-                    mock_request.GET.get.assert_called_with("name")
-                    mock_contribution_objects.filter.assert_called_once_with(
-                        contributor=mock_contributor
-                    )
-                    mock_response.assert_called_once_with(mock_queryset)
-                    assert isinstance(response, Response)
+        mock_request.GET.get.assert_called_with("name")
+        mock_contribution_objects.filter.assert_called_once_with(
+            contributor=mock_contributor
+        )
+        mock_response.assert_called_once_with(mock_queryset)
+        assert isinstance(response, Response)
 
     @pytest.mark.asyncio
     async def test_api_views_contributions_view_get_without_username(self, mocker):
@@ -354,30 +350,30 @@ class TestApiViewsContributionsView:
         mock_queryset = mocker.MagicMock()
 
         # Mock sync_to_async to return awaitable
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=mock_queryset)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=mock_queryset)
+        mock_sync_to_async.return_value = mock_db_call
 
-            with patch("api.views.Contribution.objects") as mock_contribution_objects:
-                # Mock the chain: objects.order_by().__getitem__()
-                mock_order_by = mocker.MagicMock()
-                mock_order_by.__getitem__.return_value = mock_queryset
-                mock_contribution_objects.order_by.return_value = mock_order_by
+        mock_contribution_objects = mocker.patch("api.views.Contribution.objects")
+        # Mock the chain: objects.order_by().__getitem__()
+        mock_order_by = mocker.MagicMock()
+        mock_order_by.__getitem__.return_value = mock_queryset
+        mock_contribution_objects.order_by.return_value = mock_order_by
 
-                with patch(
-                    "api.views.contributions_response", new_callable=AsyncMock
-                ) as mock_response:
-                    mock_response.return_value = Response([{"id": 1}])
+        mock_response = mocker.patch(
+            "api.views.contributions_response", new_callable=AsyncMock
+        )
+        mock_response.return_value = Response([{"id": 1}])
 
-                    response = await view.get(mock_request)
+        response = await view.get(mock_request)
 
-                    mock_request.GET.get.assert_called_with("name")
-                    mock_contribution_objects.order_by.assert_called_once_with("-id")
-                    mock_order_by.__getitem__.assert_called_once_with(
-                        slice(None, 10)
-                    )  # CONTRIBUTIONS_TAIL_SIZE * 2 = 5 * 2 = 10
-                    mock_response.assert_called_once_with(mock_queryset)
-                    assert isinstance(response, Response)
+        mock_request.GET.get.assert_called_with("name")
+        mock_contribution_objects.order_by.assert_called_once_with("-id")
+        mock_order_by.__getitem__.assert_called_once_with(
+            slice(None, 10)
+        )  # CONTRIBUTIONS_TAIL_SIZE * 2 = 5 * 2 = 10
+        mock_response.assert_called_once_with(mock_queryset)
+        assert isinstance(response, Response)
 
 
 class TestApiViewsContributionsTailView:
@@ -394,29 +390,29 @@ class TestApiViewsContributionsTailView:
         mock_queryset = mocker.MagicMock()
 
         # Mock sync_to_async to return awaitable
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_db_call = AsyncMock(return_value=mock_queryset)
-            mock_sync_to_async.return_value = mock_db_call
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_db_call = AsyncMock(return_value=mock_queryset)
+        mock_sync_to_async.return_value = mock_db_call
 
-            with patch("api.views.Contribution.objects") as mock_contribution_objects:
-                # Mock the chain: objects.order_by().__getitem__()
-                mock_order_by = mocker.MagicMock()
-                mock_order_by.__getitem__.return_value = mock_queryset
-                mock_contribution_objects.order_by.return_value = mock_order_by
+        mock_contribution_objects = mocker.patch("api.views.Contribution.objects")
+        # Mock the chain: objects.order_by().__getitem__()
+        mock_order_by = mocker.MagicMock()
+        mock_order_by.__getitem__.return_value = mock_queryset
+        mock_contribution_objects.order_by.return_value = mock_order_by
 
-                with patch(
-                    "api.views.contributions_response", new_callable=AsyncMock
-                ) as mock_response:
-                    mock_response.return_value = Response([{"id": 1}])
+        mock_response = mocker.patch(
+            "api.views.contributions_response", new_callable=AsyncMock
+        )
+        mock_response.return_value = Response([{"id": 1}])
 
-                    response = await view.get(mock_request)
+        response = await view.get(mock_request)
 
-                    mock_contribution_objects.order_by.assert_called_once_with("-id")
-                    mock_order_by.__getitem__.assert_called_once_with(
-                        slice(None, 5)
-                    )  # CONTRIBUTIONS_TAIL_SIZE = 5
-                    mock_response.assert_called_once_with(mock_queryset)
-                    assert isinstance(response, Response)
+        mock_contribution_objects.order_by.assert_called_once_with("-id")
+        mock_order_by.__getitem__.assert_called_once_with(
+            slice(None, 5)
+        )  # CONTRIBUTIONS_TAIL_SIZE = 5
+        mock_response.assert_called_once_with(mock_queryset)
+        assert isinstance(response, Response)
 
 
 class TestApiViewsAddContributionView:
@@ -442,20 +438,20 @@ class TestApiViewsAddContributionView:
         }
 
         # Mock the sync_to_async wrapped function to return success
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            mock_serializer_data = {"id": 1, "contributor": 1, "cycle": 1}
-            async_mock = AsyncMock(return_value=(mock_serializer_data, None))
-            mock_sync_to_async.return_value = async_mock
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_serializer_data = {"id": 1, "contributor": 1, "cycle": 1}
+        async_mock = AsyncMock(return_value=(mock_serializer_data, None))
+        mock_sync_to_async.return_value = async_mock
 
-            response = await view.post(mock_request)
+        response = await view.post(mock_request)
 
-            # Verify sync_to_async was called with our request data
-            mock_sync_to_async.assert_called_once()
-            async_mock.assert_called_once_with(mock_request.data)
+        # Verify sync_to_async was called with our request data
+        mock_sync_to_async.assert_called_once()
+        async_mock.assert_called_once_with(mock_request.data)
 
-            # Verify response
-            assert response.status_code == status.HTTP_201_CREATED
-            assert response.data == mock_serializer_data
+        # Verify response
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data == mock_serializer_data
 
     @pytest.mark.asyncio
     async def test_api_views_add_contribution_view_post_validation_error(self, mocker):
@@ -477,15 +473,15 @@ class TestApiViewsAddContributionView:
         validation_errors = {"url": ["Invalid URL"]}
 
         # Mock the sync_to_async wrapped function to return errors
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            async_mock = AsyncMock(return_value=(None, validation_errors))
-            mock_sync_to_async.return_value = async_mock
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        async_mock = AsyncMock(return_value=(None, validation_errors))
+        mock_sync_to_async.return_value = async_mock
 
-            response = await view.post(mock_request)
+        response = await view.post(mock_request)
 
-            # Verify error response
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
-            assert response.data == validation_errors
+        # Verify error response
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data == validation_errors
 
     @pytest.mark.asyncio
     async def test_api_views_add_contribution_view_post_integration(self, mocker):
@@ -527,82 +523,62 @@ class TestApiViewsAddContributionView:
         mock_serializer.data = mock_serializer_data
 
         # Mock the actual database calls inside process_contribution
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            with patch("api.views.Contributor.objects") as mock_cntrs:
-                mock_cntrs.from_full_handle.return_value = mock_contributor
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_cntrs = mocker.patch("api.views.Contributor.objects")
+        mock_cntrs.from_full_handle.return_value = mock_contributor
+        mock_cycle_objs = mocker.patch("api.views.Cycle.objects")
+        mock_cycle_objs.latest.return_value = mock_cycle
+        mock_platform_objs = mocker.patch("api.views.SocialPlatform.objects")
+        mock_platform_objs.get.return_value = mock_platform
+        mock_get_object = mocker.patch("api.views.get_object_or_404")
+        mock_get_object.return_value = mock_reward_type
+        mock_reward_objs = mocker.patch("api.views.Reward.objects")
+        mock_reward_objs.filter.return_value = mock_rewards_queryset
+        mock_serializer_class = mocker.patch("api.views.ContributionSerializer")
+        mock_serializer_class.return_value = mock_serializer
+        mocker.patch("api.views.transaction.atomic")
 
-                with patch("api.views.Cycle.objects") as mock_cycle_objs:
-                    mock_cycle_objs.latest.return_value = mock_cycle
+        # Mock sync_to_async to call the actual
+        # function but in a sync context
+        def sync_wrapper(func):
+            # Instead of making it async,
+            # just call the function directly
+            async def async_func(*args, **kwargs):
+                return func(*args, **kwargs)
 
-                    with patch(
-                        "api.views.SocialPlatform.objects"
-                    ) as mock_platform_objs:
-                        mock_platform_objs.get.return_value = mock_platform
+            return async_func
 
-                        with patch("api.views.get_object_or_404") as mock_get_object:
-                            mock_get_object.return_value = mock_reward_type
+        mock_sync_to_async.side_effect = sync_wrapper
 
-                            with patch("api.views.Reward.objects") as mock_reward_objs:
-                                mock_reward_objs.filter.return_value = (
-                                    mock_rewards_queryset
-                                )
+        response = await view.post(mock_request)
 
-                                with patch(
-                                    "api.views.ContributionSerializer"
-                                ) as mock_serializer_class:
-                                    mock_serializer_class.return_value = mock_serializer
+        # Verify database calls with correct parsing
+        mock_cntrs.from_full_handle.assert_called_once_with("testuser")
+        mock_cycle_objs.latest.assert_called_once_with("start")
+        mock_platform_objs.get.assert_called_once_with(name="twitter")
+        mock_get_object.assert_called_once_with(
+            RewardType,
+            label="reward",
+            name="Test Reward",
+        )
+        mock_reward_objs.filter.assert_called_once_with(
+            type=mock_reward_type, level=2, active=True
+        )
+        mock_serializer_class.assert_called_once_with(
+            data={
+                "contributor": 1,
+                "cycle": 1,
+                "platform": 1,
+                "reward": 1,
+                "percentage": 1,
+                "url": "http://example.io/contribution",
+                "comment": "Test comment",
+                "confirmed": False,
+            }
+        )
 
-                                    with patch("api.views.transaction.atomic"):
-                                        # Mock sync_to_async to call the actual
-                                        # function but in a sync context
-                                        def sync_wrapper(func):
-                                            # Instead of making it async,
-                                            # just call the function directly
-                                            async def async_func(*args, **kwargs):
-                                                return func(*args, **kwargs)
-
-                                            return async_func
-
-                                        mock_sync_to_async.side_effect = sync_wrapper
-
-                                        response = await view.post(mock_request)
-
-                                        # Verify database calls with correct parsing
-                                        mock_cntrs.from_full_handle.assert_called_once_with(
-                                            "testuser"
-                                        )
-                                        mock_cycle_objs.latest.assert_called_once_with(
-                                            "start"
-                                        )
-                                        mock_platform_objs.get.assert_called_once_with(
-                                            name="twitter"
-                                        )
-                                        mock_get_object.assert_called_once_with(
-                                            RewardType,
-                                            label="reward",
-                                            name="Test Reward",
-                                        )
-                                        mock_reward_objs.filter.assert_called_once_with(
-                                            type=mock_reward_type, level=2, active=True
-                                        )
-                                        mock_serializer_class.assert_called_once_with(
-                                            data={
-                                                "contributor": 1,
-                                                "cycle": 1,
-                                                "platform": 1,
-                                                "reward": 1,
-                                                "percentage": 1,
-                                                "url": "http://example.io/contribution",
-                                                "comment": "Test comment",
-                                                "confirmed": False,
-                                            }
-                                        )
-
-                                        assert (
-                                            response.status_code
-                                            == status.HTTP_201_CREATED
-                                        )
-                                        assert response.data == mock_serializer_data
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data == mock_serializer_data
 
     @pytest.mark.asyncio
     async def test_api_views_add_contribution_view_post_type_parsing_edge_cases(
@@ -622,6 +598,26 @@ class TestApiViewsAddContributionView:
             ),
         ]
 
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mocker.patch("api.views.Contributor.objects")
+        mocker.patch("api.views.Cycle.objects")
+        mocker.patch("api.views.SocialPlatform.objects")
+        mock_get_object = mocker.patch("api.views.get_object_or_404")
+        mocker.patch("api.views.Reward.objects")
+        mock_serializer_class = mocker.patch("api.views.ContributionSerializer")
+        mock_serializer = mocker.MagicMock()
+        mock_serializer.is_valid.return_value = True
+        mock_serializer_class.return_value = mock_serializer
+        mocker.patch("api.views.transaction.atomic")
+
+        def sync_wrapper(func):
+            async def async_func(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            return async_func
+
+        mock_sync_to_async.side_effect = sync_wrapper
+
         for input_type, expected_label, expected_name in test_cases:
             mock_request = mocker.MagicMock()
             mock_request.data = {
@@ -633,45 +629,16 @@ class TestApiViewsAddContributionView:
                 "comment": "Test comment",
             }
 
-            with patch("api.views.sync_to_async") as mock_sync_to_async:
-                with patch("api.views.Contributor.objects"):
-                    with patch("api.views.Cycle.objects"):
-                        with patch("api.views.SocialPlatform.objects"):
-                            with patch(
-                                "api.views.get_object_or_404"
-                            ) as mock_get_object:
-                                with patch("api.views.Reward.objects"):
-                                    with patch(
-                                        "api.views.ContributionSerializer"
-                                    ) as mock_serializer_class:
-                                        mock_serializer = mocker.MagicMock()
-                                        mock_serializer.is_valid.return_value = True
-                                        mock_serializer_class.return_value = (
-                                            mock_serializer
-                                        )
+            await view.post(mock_request)
 
-                                        with patch("api.views.transaction.atomic"):
-
-                                            def sync_wrapper(func):
-                                                async def async_func(*args, **kwargs):
-                                                    return func(*args, **kwargs)
-
-                                                return async_func
-
-                                            mock_sync_to_async.side_effect = (
-                                                sync_wrapper
-                                            )
-
-                                            await view.post(mock_request)
-
-                                            # Verify type parsing for each test case
-                                            mock_get_object.assert_called_with(
-                                                RewardType,
-                                                label=expected_label,
-                                                name=expected_name,
-                                            )
-                                            # Reset the mock for next iteration
-                                            mock_get_object.reset_mock()
+            # Verify type parsing for each test case
+            mock_get_object.assert_called_with(
+                RewardType,
+                label=expected_label,
+                name=expected_name,
+            )
+            # Reset the mock for next iteration
+            mock_get_object.reset_mock()
 
     @pytest.mark.asyncio
     async def test_api_views_add_contribution_view_post_missing_level(self, mocker):
@@ -710,49 +677,35 @@ class TestApiViewsAddContributionView:
         mock_serializer.is_valid.return_value = True
         mock_serializer.data = mock_serializer_data
 
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            with patch("api.views.Contributor.objects") as mock_contributor_objects:
-                mock_contributor_objects.from_handle.return_value = mock_contributor
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_contributor_objects = mocker.patch("api.views.Contributor.objects")
+        mock_contributor_objects.from_handle.return_value = mock_contributor
+        mock_cycle_objects = mocker.patch("api.views.Cycle.objects")
+        mock_cycle_objects.latest.return_value = mock_cycle
+        mock_platform_objects = mocker.patch("api.views.SocialPlatform.objects")
+        mock_platform_objects.get.return_value = mock_platform
+        mock_get_object = mocker.patch("api.views.get_object_or_404")
+        mock_get_object.return_value = mock_reward_type
+        mock_reward_objects = mocker.patch("api.views.Reward.objects")
+        mock_reward_objects.filter.return_value = mock_rewards_queryset
+        mock_serializer_class = mocker.patch("api.views.ContributionSerializer")
+        mock_serializer_class.return_value = mock_serializer
+        mocker.patch("api.views.transaction.atomic")
 
-                with patch("api.views.Cycle.objects") as mock_cycle_objects:
-                    mock_cycle_objects.latest.return_value = mock_cycle
+        def sync_wrapper(func):
+            async def async_func(*args, **kwargs):
+                return func(*args, **kwargs)
 
-                    with patch(
-                        "api.views.SocialPlatform.objects"
-                    ) as mock_platform_objects:
-                        mock_platform_objects.get.return_value = mock_platform
+            return async_func
 
-                        with patch("api.views.get_object_or_404") as mock_get_object:
-                            mock_get_object.return_value = mock_reward_type
+        mock_sync_to_async.side_effect = sync_wrapper
 
-                            with patch(
-                                "api.views.Reward.objects"
-                            ) as mock_reward_objects:
-                                mock_reward_objects.filter.return_value = (
-                                    mock_rewards_queryset
-                                )
+        await view.post(mock_request)
 
-                                with patch(
-                                    "api.views.ContributionSerializer"
-                                ) as mock_serializer_class:
-                                    mock_serializer_class.return_value = mock_serializer
-
-                                    with patch("api.views.transaction.atomic"):
-
-                                        def sync_wrapper(func):
-                                            async def async_func(*args, **kwargs):
-                                                return func(*args, **kwargs)
-
-                                            return async_func
-
-                                        mock_sync_to_async.side_effect = sync_wrapper
-
-                                        await view.post(mock_request)
-
-                                        # Verify level defaults to 1 when missing
-                                        mock_reward_objects.filter.assert_called_once_with(
-                                            type=mock_reward_type, level=1, active=True
-                                        )
+        # Verify level defaults to 1 when missing
+        mock_reward_objects.filter.assert_called_once_with(
+            type=mock_reward_type, level=1, active=True
+        )
 
     @pytest.mark.asyncio
     async def test_api_views_add_contribution_view_post_serializer_invalid(
@@ -798,99 +751,76 @@ class TestApiViewsAddContributionView:
         }
 
         # Mock the actual database calls inside process_contribution
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            with patch("api.views.Contributor.objects") as mock_contributor_objects:
-                mock_contributor_objects.from_full_handle.return_value = mock_contributor
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_contributor_objects = mocker.patch("api.views.Contributor.objects")
+        mock_contributor_objects.from_full_handle.return_value = mock_contributor
+        mock_cycle_objects = mocker.patch("api.views.Cycle.objects")
+        mock_cycle_objects.latest.return_value = mock_cycle
+        mock_platform_objects = mocker.patch("api.views.SocialPlatform.objects")
+        mock_platform_objects.get.return_value = mock_platform
+        mock_get_object = mocker.patch("api.views.get_object_or_404")
+        mock_get_object.return_value = mock_reward_type
+        mock_reward_objs = mocker.patch("api.views.Reward.objects")
+        mock_reward_objs.filter.return_value = mock_rewards_queryset
+        mock_serializer_class = mocker.patch("api.views.ContributionSerializer")
+        mock_serializer_class.return_value = mock_serializer
+        mock_atomic = mocker.patch("api.views.transaction.atomic")
 
-                with patch("api.views.Cycle.objects") as mock_cycle_objects:
-                    mock_cycle_objects.latest.return_value = mock_cycle
+        # Mock sync_to_async to call the actual function but in a sync context
+        def sync_wrapper(func):
+            async def async_func(*args, **kwargs):
+                return func(*args, **kwargs)
 
-                    with patch(
-                        "api.views.SocialPlatform.objects"
-                    ) as mock_platform_objects:
-                        mock_platform_objects.get.return_value = mock_platform
+            return async_func
 
-                        with patch("api.views.get_object_or_404") as mock_get_object:
-                            mock_get_object.return_value = mock_reward_type
+        mock_sync_to_async.side_effect = sync_wrapper
 
-                            with patch("api.views.Reward.objects") as mock_reward_objs:
-                                mock_reward_objs.filter.return_value = (
-                                    mock_rewards_queryset
-                                )
+        response = await view.post(mock_request)
 
-                                with patch(
-                                    "api.views.ContributionSerializer"
-                                ) as mock_serializer_class:
-                                    mock_serializer_class.return_value = mock_serializer
+        # Verify database calls were made
+        mock_contributor_objects.from_full_handle.assert_called_once_with("testuser")
+        mock_cycle_objects.latest.assert_called_once_with("start")
+        mock_platform_objects.get.assert_called_once_with(name="twitter")
+        mock_get_object.assert_called_once_with(
+            RewardType,
+            label="reward",
+            name="Test Reward",
+        )
+        mock_reward_objs.filter.assert_called_once_with(
+            type=mock_reward_type, level=1, active=True
+        )
 
-                                    # Mock transaction.atomic to verify it's NOT called
-                                    with patch(
-                                        "api.views.transaction.atomic"
-                                    ) as mock_atomic:
-                                        # Mock sync_to_async to call the actual function but in a sync context
-                                        def sync_wrapper(func):
-                                            async def async_func(*args, **kwargs):
-                                                return func(*args, **kwargs)
+        # Verify serializer was called with correct data
+        mock_serializer_class.assert_called_once_with(
+            data={
+                "contributor": 1,
+                "cycle": 1,
+                "platform": 1,
+                "reward": 1,
+                "percentage": 1,
+                "url": "http://example.io/contribution",
+                "comment": "Test comment",
+                "confirmed": False,
+            }
+        )
 
-                                            return async_func
+        # Verify serializer validation was checked
+        mock_serializer.is_valid.assert_called_once()
 
-                                        mock_sync_to_async.side_effect = sync_wrapper
+        # Verify transaction.atomic
+        # was NOT entered because validation failed
+        mock_atomic.assert_not_called()
 
-                                        response = await view.post(mock_request)
+        # Verify serializer.save()
+        # was NOT called due to validation failure
+        mock_serializer.save.assert_not_called()
 
-                                        # Verify database calls were made
-                                        mock_contributor_objects.from_full_handle.assert_called_once_with(
-                                            "testuser"
-                                        )
-                                        mock_cycle_objects.latest.assert_called_once_with(
-                                            "start"
-                                        )
-                                        mock_platform_objects.get.assert_called_once_with(
-                                            name="twitter"
-                                        )
-                                        mock_get_object.assert_called_once_with(
-                                            RewardType,
-                                            label="reward",
-                                            name="Test Reward",
-                                        )
-                                        mock_reward_objs.filter.assert_called_once_with(
-                                            type=mock_reward_type, level=1, active=True
-                                        )
-
-                                        # Verify serializer was called with correct data
-                                        mock_serializer_class.assert_called_once_with(
-                                            data={
-                                                "contributor": 1,
-                                                "cycle": 1,
-                                                "platform": 1,
-                                                "reward": 1,
-                                                "percentage": 1,
-                                                "url": "http://example.io/contribution",
-                                                "comment": "Test comment",
-                                                "confirmed": False,
-                                            }
-                                        )
-
-                                        # Verify serializer validation was checked
-                                        mock_serializer.is_valid.assert_called_once()
-
-                                        # Verify transaction.atomic
-                                        # was NOT entered because validation failed
-                                        mock_atomic.assert_not_called()
-
-                                        # Verify serializer.save()
-                                        # was NOT called due to validation failure
-                                        mock_serializer.save.assert_not_called()
-
-                                        # Verify error response
-                                        assert (
-                                            response.status_code
-                                            == status.HTTP_400_BAD_REQUEST
-                                        )
-                                        assert response.data == {
-                                            "url": ["Enter a valid URL."],
-                                            "contributor": ["This field is required."],
-                                        }
+        # Verify error response
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data == {
+            "url": ["Enter a valid URL."],
+            "contributor": ["This field is required."],
+        }
 
     @pytest.mark.asyncio
     async def test_api_views_add_contribution_view_post_serializer_valid_with_txn(
@@ -913,46 +843,41 @@ class TestApiViewsAddContributionView:
         mock_serializer.is_valid.return_value = True
         mock_serializer.data = {"id": 1, "contributor": 1, "cycle": 1}
 
-        with patch("api.views.sync_to_async") as mock_sync_to_async:
-            with patch("api.views.Contributor.objects"):
-                with patch("api.views.Cycle.objects"):
-                    with patch("api.views.SocialPlatform.objects"):
-                        with patch("api.views.get_object_or_404"):
-                            with patch("api.views.Reward.objects"):
-                                with patch(
-                                    "api.views.ContributionSerializer"
-                                ) as mock_serializer_class:
-                                    mock_serializer_class.return_value = mock_serializer
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mocker.patch("api.views.Contributor.objects")
+        mocker.patch("api.views.Cycle.objects")
+        mocker.patch("api.views.SocialPlatform.objects")
+        mocker.patch("api.views.get_object_or_404")
+        mocker.patch("api.views.Reward.objects")
+        mock_serializer_class = mocker.patch("api.views.ContributionSerializer")
+        mock_serializer_class.return_value = mock_serializer
 
-                                    # Mock transaction.atomic as a context manager
-                                    mock_atomic_ctx = mocker.MagicMock()
-                                    with patch(
-                                        "api.views.transaction.atomic",
-                                        return_value=mock_atomic_ctx,
-                                    ):
+        # Mock transaction.atomic as a context manager
+        mock_atomic_ctx = mocker.MagicMock()
+        mocker.patch(
+            "api.views.transaction.atomic",
+            return_value=mock_atomic_ctx,
+        )
 
-                                        def sync_wrapper(func):
-                                            async def async_func(*args, **kwargs):
-                                                return func(*args, **kwargs)
+        def sync_wrapper(func):
+            async def async_func(*args, **kwargs):
+                return func(*args, **kwargs)
 
-                                            return async_func
+            return async_func
 
-                                        mock_sync_to_async.side_effect = sync_wrapper
+        mock_sync_to_async.side_effect = sync_wrapper
 
-                                        response = await view.post(mock_request)
+        response = await view.post(mock_request)
 
-                                        # Verify transaction.atomic context WAS
-                                        # entered because validation passed
-                                        # The context manager should be entered
-                                        # (__enter__) and exited (__exit__)
-                                        mock_atomic_ctx.__enter__.assert_called_once()
-                                        mock_atomic_ctx.__exit__.assert_called_once()
+        # Verify transaction.atomic context WAS
+        # entered because validation passed
+        # The context manager should be entered
+        # (__enter__) and exited (__exit__)
+        mock_atomic_ctx.__enter__.assert_called_once()
+        mock_atomic_ctx.__exit__.assert_called_once()
 
-                                        # Verify serializer.save() WAS called
-                                        mock_serializer.save.assert_called_once()
+        # Verify serializer.save() WAS called
+        mock_serializer.save.assert_called_once()
 
-                                        # Verify success response
-                                        assert (
-                                            response.status_code
-                                            == status.HTTP_201_CREATED
-                                        )
+        # Verify success response
+        assert response.status_code == status.HTTP_201_CREATED

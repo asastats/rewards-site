@@ -174,6 +174,7 @@ class TestTrackersBaseMentionTracker:
 
     # prepare_contribution_data
     def test_base_basementiontracker_prepare_contribution_data_success(self, mocker):
+        mocker.patch("trackers.base.get_env_variable", return_value="")
         mock_social_platform_prefixes = mocker.patch(
             "trackers.base.social_platform_prefixes"
         )
@@ -194,21 +195,52 @@ class TestTrackersBaseMentionTracker:
         }
         assert result == expected
 
+    def test_base_basementiontracker_prepare_contribution_data_excluded_contributor(
+        self, mocker
+    ):
+        mocker.patch(
+            "trackers.base.get_env_variable", return_value="excluded1,excluded2"
+        )
+        mock_social_platform_prefixes = mocker.patch(
+            "trackers.base.social_platform_prefixes"
+        )
+        mock_social_platform_prefixes.return_value = [("Testplatform", "TP_")]
+        instance = BaseMentionTracker("testplatform", lambda x: None)
+        parsed_message = {"title": "Test Title", "description": "Test Description"}
+        message_data = {
+            "contributor": "excluded2",
+            "contribution_url": "http://example.com",
+            "suggester": "testsuggester",
+        }
+        result = instance.prepare_contribution_data(parsed_message, message_data)
+        expected = {
+            "title": "Test Title",
+            "description": "Test Description",
+            "username": "TP_testsuggester",
+            "url": "http://example.com",
+            "platform": "Testplatform",
+        }
+        assert result == expected
+
     def test_base_basementiontracker_prepare_contribution_data_no_contributor(
         self, mocker
     ):
+        mocker.patch("trackers.base.get_env_variable", return_value="")
         mock_social_platform_prefixes = mocker.patch(
             "trackers.base.social_platform_prefixes"
         )
         mock_social_platform_prefixes.return_value = [("Testplatform", "TP_")]
         instance = BaseMentionTracker("testplatform123", lambda x: None)
         parsed_message = {"title": "Test Title", "description": "Test Description"}
-        message_data = {"contribution_url": "http://example.com"}  # No contributor
+        message_data = {
+            "contribution_url": "http://example.com",
+            "suggester": "test_suggester",
+        }  # No contributor
         result = instance.prepare_contribution_data(parsed_message, message_data)
         expected = {
             "title": "Test Title",
             "description": "Test Description",
-            "username": "TP_None",
+            "username": "TP_test_suggester",
             "url": "http://example.com",
             "platform": "Testplatform",
         }

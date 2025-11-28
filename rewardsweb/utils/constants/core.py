@@ -69,8 +69,8 @@ GITHUB_LABELS = (
 GITHUB_ISSUES_START_DATE = datetime.fromtimestamp(
     int(os.getenv("GITHUB_ISSUES_START_DATE", 1649980800)), tz=timezone.utc
 )
-excluded_contributors = os.getenv("GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", "")
-GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS = [
+excluded_contributors = os.getenv("EXCLUDED_CONTRIBUTORS", "")
+EXCLUDED_CONTRIBUTORS = [
     contributor.strip()
     for contributor in excluded_contributors.split(",")
     if excluded_contributors.split(",")[0]

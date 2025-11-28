@@ -563,7 +563,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
 
         # Mock empty contributors
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms - need at least one platform
         mock_platform = mocker.MagicMock()
@@ -649,7 +649,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform1 = mocker.MagicMock()
@@ -736,7 +736,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -787,7 +787,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -842,7 +842,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
 
         # Mock empty contributors (no existing contributors)
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -943,7 +943,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms - GitHub must be first for fallback
         mock_platform1 = mocker.MagicMock()
@@ -1032,7 +1032,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
 
         # Mock empty contributors (no existing contributors)
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -1119,7 +1119,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
 
         # Mock empty contributors
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -1199,7 +1199,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -1283,7 +1283,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -1342,7 +1342,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
             "utils.mappers.Contributor.objects.all",
             return_value=[mock_contributor1, mock_contributor2],
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -1430,7 +1430,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -1527,7 +1527,7 @@ class TestUtilsMappersMapClosedAddressedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -2115,9 +2115,7 @@ class TestUtilsMappersMapOpenIssues:
 
         # Patch the constant directly at the module where it's used
         excluded_contributor = "foobar"
-        mocker.patch(
-            "utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [excluded_contributor]
-        )
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [excluded_contributor])
 
         # Mock Contributor.objects.all() to return a contributor that should be excluded
         mocker.patch(
@@ -2456,7 +2454,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         # Mock minimal dependencies
         mocker.patch("utils.mappers._build_reward_mapping", return_value={})
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
         mocker.patch("utils.mappers.SocialPlatform.objects.all", return_value=[])
 
         result = _map_unprocessed_closed_archived_issues([mock_issue])
@@ -2483,7 +2481,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         # Mock minimal dependencies
         mocker.patch("utils.mappers._build_reward_mapping", return_value={})
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
         mocker.patch("utils.mappers.SocialPlatform.objects.all", return_value=[])
 
         result = _map_unprocessed_closed_archived_issues([mock_issue])
@@ -2510,7 +2508,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         # Mock minimal dependencies
         mocker.patch("utils.mappers._build_reward_mapping", return_value={})
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
         mocker.patch("utils.mappers.SocialPlatform.objects.all", return_value=[])
 
         # Mock Issue.objects.filter.exists() to return True (issue already exists)
@@ -2545,7 +2543,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         # Mock minimal dependencies
         mocker.patch("utils.mappers._build_reward_mapping", return_value={})
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
         mocker.patch("utils.mappers.SocialPlatform.objects.all", return_value=[])
 
         # Mock Issue.objects.filter.exists() to return False (issue doesn't exist)
@@ -2580,7 +2578,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         # Mock minimal dependencies
         mocker.patch("utils.mappers._build_reward_mapping", return_value={})
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
         mocker.patch("utils.mappers.SocialPlatform.objects.all", return_value=[])
 
         # Mock Issue.objects.filter.exists() to return False
@@ -2629,7 +2627,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -2694,7 +2692,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
 
         # Mock empty contributors
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -2781,7 +2779,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform1 = mocker.MagicMock()
@@ -2883,7 +2881,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform1 = mocker.MagicMock()
@@ -2992,7 +2990,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
         mocker.patch(
             "utils.mappers.Contributor.objects.all", return_value=[mock_contributor]
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform1 = mocker.MagicMock()
@@ -3084,7 +3082,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
 
         # Mock empty contributors
         mocker.patch("utils.mappers.Contributor.objects.all", return_value=[])
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()
@@ -3185,7 +3183,7 @@ class TestUtilsMappersMapUnprocessedClosedArchivedIssues:
             "utils.mappers.Contributor.objects.all",
             return_value=[mock_contributor1, mock_contributor2],
         )
-        mocker.patch("utils.mappers.GITHUB_ISSUES_EXCLUDED_CONTRIBUTORS", [])
+        mocker.patch("utils.mappers.EXCLUDED_CONTRIBUTORS", [])
 
         # Mock platforms
         mock_platform = mocker.MagicMock()

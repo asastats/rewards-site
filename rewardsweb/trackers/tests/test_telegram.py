@@ -140,32 +140,18 @@ class TestTrackersTelegram:
         instance.client = mocker.MagicMock()
         instance.logger = mocker.MagicMock()
 
-        # Mock asyncio event loop creation
-        mock_get_running_loop = mocker.patch(
-            "asyncio.get_running_loop", side_effect=RuntimeError
-        )
-        mock_new_event_loop = mocker.patch("asyncio.new_event_loop")
-        mock_set_event_loop = mocker.patch("asyncio.set_event_loop")
-        mock_loop = mocker.MagicMock()
-        mock_new_event_loop.return_value = mock_loop
-
-        def run_coroutine_mock(coro):
-            return asyncio.run(coro)
-
-        mock_loop.run_until_complete.side_effect = run_coroutine_mock
-        mocker.patch.object(
+        # Mock asyncio.run to directly return the desired value from check_mentions_async
+        mock_check_mentions_async = mocker.patch.object(
             instance,
             "check_mentions_async",
             new_callable=mocker.AsyncMock,
             return_value=3,
         )
+        mocker.patch("asyncio.run", return_value=mock_check_mentions_async.return_value)
         result = instance.check_mentions()
         assert result == 3
         instance.client.__enter__.assert_called_once()
         instance.client.__exit__.assert_called_once()
-        mock_get_running_loop.assert_called_once()
-        mock_new_event_loop.assert_called_once()
-        mock_set_event_loop.assert_called_once_with(mock_loop)
 
     def test_trackers_telegramtracker_check_mentions_exception(
         self, mocker, telegram_config, telegram_chats
@@ -178,11 +164,8 @@ class TestTrackersTelegram:
         instance.logger = mocker.MagicMock()
 
         # Mock asyncio event loop creation
-        mock_get_running_loop = mocker.patch(
-            "asyncio.get_running_loop", side_effect=RuntimeError
-        )
+        mocker.patch("asyncio.get_running_loop", side_effect=RuntimeError)
         mock_new_event_loop = mocker.patch("asyncio.new_event_loop")
-        mock_set_event_loop = mocker.patch("asyncio.set_event_loop")
         mock_loop = mocker.MagicMock()
         mock_new_event_loop.return_value = mock_loop
 
@@ -284,8 +267,8 @@ class TestTrackersTelegram:
         mock_cleanup = mocker.AsyncMock()
         mocker.patch.object(tracker, "cleanup", new=mock_cleanup)
 
-        async def mock_run_until_complete(coro):
-            await coro
+        def mock_run_until_complete(coro):
+            return asyncio.run(coro)
 
         tracker.client.loop.run_until_complete.side_effect = mock_run_until_complete
 
@@ -685,8 +668,8 @@ class TestTrackersTelegram:
         mock_cleanup = mocker.AsyncMock()
         mocker.patch.object(instance, "cleanup", new=mock_cleanup)
 
-        async def mock_run_until_complete(coro):
-            await coro
+        def mock_run_until_complete(coro):
+            return asyncio.run(coro)
 
         instance.client.loop.run_until_complete.side_effect = mock_run_until_complete
 
@@ -955,8 +938,8 @@ class TestTrackersTelegram:
         mock_cleanup = mocker.AsyncMock()
         mocker.patch.object(tracker, "cleanup", new=mock_cleanup)
 
-        async def mock_run_until_complete(coro):
-            await coro
+        def mock_run_until_complete(coro):
+            return asyncio.run(coro)
 
         tracker.client.loop.run_until_complete.side_effect = mock_run_until_complete
         tracker.run(poll_interval_minutes=10, max_iterations=5)

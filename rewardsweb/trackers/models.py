@@ -2,7 +2,6 @@
 
 from datetime import datetime, timezone
 
-from asgiref.sync import sync_to_async
 from django.db import models
 from django.db.models import Max
 from django.db.models.expressions import RawSQL
@@ -10,6 +9,19 @@ from django.db.models.expressions import RawSQL
 
 class MentionManager(models.Manager):
     """Social media mention's data manager."""
+
+    def _mention_by_url(self, url):
+        """Get a mention by its URL.
+
+        :param url: The URL to search for.
+        :type url: str
+        :return: mention instance or None
+        :rtype: :class:`Mention` or None
+        """
+        return self.filter(
+            models.Q(raw_data__suggestion_url=url)
+            | models.Q(raw_data__contribution_url=url)
+        ).first()
 
     def is_processed(self, item_id, platform_name):
         """Check if item has been processed.
@@ -22,24 +34,6 @@ class MentionManager(models.Manager):
         :rtype: bool
         """
         return self.filter(item_id=item_id, platform=platform_name).exists()
-
-    def mark_processed(self, item_id, platform_name, data):
-        """Mark item as processed in database.
-
-        :param item_id: unique identifier for the social media item
-        :type item_id: str
-        :param platform_name: name of the social media platform
-        :type platform_name: str
-        :param data: mention data dictionary
-        :type data: dict
-        :return: :class:`Mention`
-        """
-        return self.create(
-            item_id=item_id,
-            platform=platform_name,
-            suggester=data.get("suggester"),
-            raw_data=data,
-        )
 
     def last_processed_timestamp(self, platform_name):
         """Get the timestamp of the last processed mention for a platform.
@@ -60,18 +54,23 @@ class MentionManager(models.Manager):
         )["max_timestamp"]
         return max_timestamp
 
-    def _get_mention_by_url(self, url):
-        """Get a mention by its URL.
+    def mark_processed(self, item_id, platform_name, data):
+        """Mark item as processed in database.
 
-        :param url: The URL to search for.
-        :type url: str
-        :return: mention instance or None
-        :rtype: :class:`Mention` or None
+        :param item_id: unique identifier for the social media item
+        :type item_id: str
+        :param platform_name: name of the social media platform
+        :type platform_name: str
+        :param data: mention data dictionary
+        :type data: dict
+        :return: :class:`Mention`
         """
-        return self.filter(
-            models.Q(raw_data__suggestion_url=url)
-            | models.Q(raw_data__contribution_url=url)
-        ).first()
+        return self.create(
+            item_id=item_id,
+            platform=platform_name,
+            suggester=data.get("suggester"),
+            raw_data=data,
+        )
 
     def message_from_url(self, url):
         """Retrieve message content from provided `url`.
@@ -83,7 +82,7 @@ class MentionManager(models.Manager):
         :return: dictionary with message data
         :rtype: dict
         """
-        mention = self._get_mention_by_url(url)
+        mention = self._mention_by_url(url)
 
         if mention:
             timestamp = mention.raw_data.get("timestamp")
@@ -128,7 +127,6 @@ class Mention(models.Model):
 class MentionLogManager(models.Manager):
     """Social media mention log's data manager."""
 
-    @sync_to_async
     def log_action(self, platform_name, action, details=""):
         """Log platform actions to database.
 

@@ -589,7 +589,7 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
         instance = TwitterTracker(lambda x: None, twitter_config)
-        mock_check_mentions = mocker.patch.object(
+        mocker.patch.object(
             instance, "check_mentions", new=mocker.MagicMock(return_value=5)
         )
         mocker.patch("time.sleep", side_effect=StopIteration)

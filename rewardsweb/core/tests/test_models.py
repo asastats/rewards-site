@@ -1764,7 +1764,7 @@ class TestContributorModelMethods:
         """Test optimized_contribution_data when prefetched_contributions exists."""
         contributor = setup_data["contributor"]
         contributions = setup_data["contributions"]
-        rewards = setup_data["rewards"]
+        setup_data["rewards"]
 
         # Get all contributions for this contributor to simulate prefetch
         all_contributions = list(contributor.contribution_set.all())

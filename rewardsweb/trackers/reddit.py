@@ -1,11 +1,9 @@
 """Module containing class for tracking mentions on Reddit."""
 
-import asyncio
 import time
 from datetime import datetime
 
 import praw
-from asgiref.sync import sync_to_async
 
 from trackers.base import BaseMentionTracker
 
@@ -116,7 +114,7 @@ class RedditTracker(BaseMentionTracker):
         }
         return data
 
-    async def check_mentions(self):
+    def check_mentions(self):
         """Check for new mentions across all tracked subreddits.
 
         :var mention_count: number of new mentions found
@@ -142,39 +140,39 @@ class RedditTracker(BaseMentionTracker):
                 subreddit = self.reddit.subreddit(subreddit_name)
 
                 # Check comments for username mentions
-                async for comment in self.subreddit_comments_async(subreddit, limit=25):
+                for comment in subreddit.comments(limit=25):
                     if (
                         self.bot_username
                         and f"u/{self.bot_username}" in comment.body.lower()
-                        and not await sync_to_async(self.is_processed)(comment.id)
+                        and not self.is_processed(comment.id)
                     ):
 
                         data = self.extract_mention_data(comment)
-                        if await self.process_mention(
+                        if self.process_mention(
                             comment.id, data, f"u/{self.bot_username}"
                         ):
                             mention_count += 1
 
                 # Check submissions for username mentions
-                async for submission in self.subreddit_new_async(subreddit, limit=10):
+                for submission in subreddit.new(limit=10):
                     if (
                         self.bot_username
                         and f"u/{self.bot_username}" in submission.title.lower()
-                        and not await sync_to_async(self.is_processed)(submission.id)
+                        and not self.is_processed(submission.id)
                     ):
 
                         data = self.extract_mention_data(submission)
-                        if await self.process_mention(
+                        if self.process_mention(
                             submission.id, data, f"u/{self.bot_username}"
                         ):
                             mention_count += 1
 
                 # Small delay between subreddit checks
-                await asyncio.sleep(1)
+                time.sleep(1)
 
             except Exception as e:
                 self.logger.error(f"Error checking r/{subreddit_name}: {e}")
-                await self.log_action(
+                self.log_action(
                     "subreddit_check_error",
                     f"Subreddit: {subreddit_name}, Error: {str(e)}",
                 )
@@ -192,21 +190,7 @@ class RedditTracker(BaseMentionTracker):
                             (``None`` for infinite loop)
         :type max_iterations: int or None
         """
-        # To run the async check_mentions in a sync method, we need an event loop
-        async def _run_async_check_mentions():
-            return await self.check_mentions()
-
         super().run(
             poll_interval_minutes=poll_interval_minutes,
             max_iterations=max_iterations,
-            check_mentions_callable=_run_async_check_mentions,
         )
-
-    # Helper async iterators for praw
-    @sync_to_async
-    def subreddit_comments_async(self, subreddit, limit):
-        return list(subreddit.comments(limit=limit))
-
-    @sync_to_async
-    def subreddit_new_async(self, subreddit, limit):
-        return list(subreddit.new(limit=limit))

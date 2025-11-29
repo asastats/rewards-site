@@ -6,11 +6,6 @@ import pytest
 from trackers.reddit import RedditTracker
 
 
-async def async_iterator_mock(data):
-    for item in data:
-        yield item
-
-
 @pytest.mark.django_db
 class TestTrackersReddit:
     """Testing class for :class:`trackers.reddit.RedditTracker`."""
@@ -111,8 +106,7 @@ class TestTrackersReddit:
         assert result["content"] == "Test submission body"
 
     # check_mentions
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_finds_comments(
+    def test_trackers_reddittracker_check_mentions_finds_comments(
         self, mocker, reddit_config, reddit_subreddits
     ):
         # Mock praw.Reddit to prevent actual API calls
@@ -129,7 +123,7 @@ class TestTrackersReddit:
         mock_comment.body = "Hello u/test_bot, check this out!"
         mock_comment.id = "comment123"
         # Only return comments for one subreddit
-        mock_subreddit.comments.return_value = async_iterator_mock([mock_comment])
+        mock_subreddit.comments.return_value = [mock_comment]
         mock_subreddit.new.return_value = []  # No submissions
         mock_process_mention = mocker.patch.object(instance, "process_mention")
         mock_process_mention.return_value = True
@@ -137,12 +131,11 @@ class TestTrackersReddit:
         mock_is_processed.return_value = False
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         assert result == 1
         mock_process_mention.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_finds_submissions(
+    def test_trackers_reddittracker_check_mentions_finds_submissions(
         self, mocker, reddit_config, reddit_subreddits
     ):
         # Mock praw.Reddit to prevent actual API calls
@@ -158,19 +151,18 @@ class TestTrackersReddit:
         mock_submission.title = "u/test_bot what do you think?"
         mock_submission.id = "submission123"
         mock_subreddit.comments.return_value = []  # No comments
-        mock_subreddit.new.return_value = async_iterator_mock([mock_submission])
+        mock_subreddit.new.return_value = [mock_submission]
         mock_process_mention = mocker.patch.object(instance, "process_mention")
         mock_process_mention.return_value = True
         mock_is_processed = mocker.patch.object(instance, "is_processed")
         mock_is_processed.return_value = False
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         assert result == 1
         mock_process_mention.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_skips_processed(
+    def test_trackers_reddittracker_check_mentions_skips_processed(
         self, mocker, reddit_config, reddit_subreddits
     ):
         # Mock praw.Reddit to prevent actual API calls
@@ -185,19 +177,18 @@ class TestTrackersReddit:
         mock_comment = mocker.MagicMock()
         mock_comment.body = "Hello u/test_bot!"
         mock_comment.id = "comment123"
-        mock_subreddit.comments.return_value = async_iterator_mock([mock_comment])
-        mock_subreddit.new.return_value = async_iterator_mock([])
+        mock_subreddit.comments.return_value = [mock_comment]
+        mock_subreddit.new.return_value = []
         mock_process_mention = mocker.patch.object(instance, "process_mention")
         mock_is_processed = mocker.patch.object(instance, "is_processed")
         mock_is_processed.return_value = True  # Already processed
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         assert result == 0
         mock_process_mention.assert_not_called()
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_handles_exception(
+    def test_trackers_reddittracker_check_mentions_handles_exception(
         self, mocker, reddit_config, reddit_subreddits
     ):
         # Mock praw.Reddit to prevent actual API calls
@@ -211,7 +202,7 @@ class TestTrackersReddit:
         mock_log_action = mocker.patch.object(instance, "log_action")
         # Mock the logger.error method
         mock_logger_error = mocker.patch.object(instance.logger, "error")
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         assert result == 0
         # Should be called once for each subreddit (2 subreddits in the fixture)
         assert mock_logger_error.call_count == 2
@@ -291,8 +282,7 @@ class TestTrackersReddit:
         assert result["contribution_url"] == "https://reddit.com/r/test/comments/122"
         assert result["contributor"] == "parent_author"
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_process_mention_true(
+    def test_trackers_reddittracker_check_mentions_process_mention_true(
         self, mocker, reddit_config, reddit_subreddits
     ):
         """Test check_mentions when process_mention returns True."""
@@ -308,21 +298,20 @@ class TestTrackersReddit:
         mock_comment = mocker.MagicMock()
         mock_comment.body = "Hello u/test_bot!"
         mock_comment.id = "comment123"
-        mock_subreddit.comments.return_value = async_iterator_mock([mock_comment])
-        mock_subreddit.new.return_value = async_iterator_mock([])
+        mock_subreddit.comments.return_value = [mock_comment]
+        mock_subreddit.new.return_value = []
         mock_process_mention = mocker.patch.object(instance, "process_mention")
         mock_process_mention.return_value = True  # process_mention returns True
         mock_is_processed = mocker.patch.object(instance, "is_processed")
         mock_is_processed.return_value = False
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         # Verify mention_count was incremented when process_mention returned True
         assert result == 1
         mock_process_mention.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_submission_condition_true(
+    def test_trackers_reddittracker_check_mentions_submission_condition_true(
         self, mocker, reddit_config, reddit_subreddits
     ):
         """Test check_mentions submission condition with bot_username and mention in title."""
@@ -339,21 +328,20 @@ class TestTrackersReddit:
         mock_submission = mocker.MagicMock()
         mock_submission.title = "u/test_bot what do you think?"  # Contains bot username
         mock_submission.id = "submission123"
-        mock_subreddit.comments.return_value = async_iterator_mock([])
-        mock_subreddit.new.return_value = async_iterator_mock([mock_submission])
+        mock_subreddit.comments.return_value = []
+        mock_subreddit.new.return_value = [mock_submission]
         mock_process_mention = mocker.patch.object(instance, "process_mention")
         mock_process_mention.return_value = True
         mock_is_processed = mocker.patch.object(instance, "is_processed")
         mock_is_processed.return_value = False  # Not processed
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         # Verify submission condition was met and processed
         assert result == 1
         mock_process_mention.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_submission_process_true(
+    def test_trackers_reddittracker_check_mentions_submission_process_true(
         self, mocker, reddit_config, reddit_subreddits
     ):
         """Test check_mentions when submission process_mention returns True."""
@@ -369,15 +357,15 @@ class TestTrackersReddit:
         mock_submission = mocker.MagicMock()
         mock_submission.title = "u/test_bot help please"
         mock_submission.id = "submission123"
-        mock_subreddit.comments.return_value = async_iterator_mock([])
-        mock_subreddit.new.return_value = async_iterator_mock([mock_submission])
+        mock_subreddit.comments.return_value = []
+        mock_subreddit.new.return_value = [mock_submission]
         mock_process_mention = mocker.patch.object(instance, "process_mention")
         mock_process_mention.return_value = True  # process_mention returns True
         mock_is_processed = mocker.patch.object(instance, "is_processed")
         mock_is_processed.return_value = False
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         # Verify mention_count was incremented when process_mention returned True
         assert result == 1
         mock_process_mention.assert_called_once()
@@ -406,8 +394,7 @@ class TestTrackersReddit:
         # Verify logger.info was called for mentions_found > 0
         mock_logger_info.assert_any_call("Found 3 new mentions")
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_comment_process_mention_false(
+    def test_trackers_reddittracker_check_mentions_comment_process_mention_false(
         self, mocker, reddit_config, reddit_subreddits
     ):
         """Test check_mentions when process_mention returns False for comment."""
@@ -431,13 +418,12 @@ class TestTrackersReddit:
         mock_is_processed.return_value = False
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         # Should return 0 because process_mention returned False
         assert result == 0
         mock_process_mention.assert_called_once()  # Was called but returned False
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_submission_condition_not_met(
+    def test_trackers_reddittracker_check_mentions_submission_condition_not_met(
         self, mocker, reddit_config, reddit_subreddits
     ):
         """Test check_mentions when submission condition is not met (already processed)."""
@@ -460,14 +446,13 @@ class TestTrackersReddit:
         mock_is_processed.return_value = True  # Already processed
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         # Should find 0 mentions because submission is already processed
         assert result == 0
         mock_process_mention.assert_not_called()  # Should not be called
         mock_is_processed.assert_called_once_with("submission123")
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_submission_process_mention_false(
+    def test_trackers_reddittracker_check_mentions_submission_process_mention_false(
         self, mocker, reddit_config, reddit_subreddits
     ):
         """Test check_mentions when process_mention returns False for submission."""
@@ -491,13 +476,12 @@ class TestTrackersReddit:
         mock_is_processed.return_value = False
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         # Should return 0 because process_mention returned False
         assert result == 0
         mock_process_mention.assert_called_once()  # Was called but returned False
 
-    @pytest.mark.asyncio
-    async def test_trackers_reddittracker_check_mentions_comment_condition_not_met(
+    def test_trackers_reddittracker_check_mentions_comment_condition_not_met(
         self, mocker, reddit_config, reddit_subreddits
     ):
         """Test check_mentions when comment condition is not met (already processed)."""
@@ -520,7 +504,7 @@ class TestTrackersReddit:
         mock_is_processed.return_value = True  # Already processed
         # Track only one subreddit for this test
         instance.tracked_subreddits = ["python"]
-        result = await instance.check_mentions()
+        result = instance.check_mentions()
         # Should find 0 mentions because comment is already processed
         assert result == 0
         mock_process_mention.assert_not_called()  # Should not be called

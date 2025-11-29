@@ -5,6 +5,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 import requests
+from asgiref.sync import sync_to_async
 
 from trackers.base import BaseMentionTracker
 from trackers.models import Mention
@@ -190,8 +191,6 @@ class TwitterapiioTracker(BaseMentionTracker):
             cursor = data.get("next_cursor", "")
             if not data.get("has_next_page") or not cursor:
                 break
-
-
 
     def extract_mention_data(self, mention):
         """Extract relevant data from a mention tweet.

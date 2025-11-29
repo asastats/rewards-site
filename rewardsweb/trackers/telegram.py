@@ -47,7 +47,7 @@ class TelegramTracker(BaseMentionTracker):
 
     async def _post_init_setup(self, chats_collection):
         """Perform asynchronous setup tasks after initialization."""
-        await self.log_action("initialized", f"Tracking {len(chats_collection)} chats")
+        self.log_action("initialized", f"Tracking {len(chats_collection)} chats")
 
     async def cleanup(self):
         """Perform graceful cleanup of the Telegram client."""
@@ -251,7 +251,7 @@ class TelegramTracker(BaseMentionTracker):
                 ):
 
                     data = await self.extract_mention_data(message)
-                    if await self.process_mention(
+                    if await self.process_mention_async(
                         f"telegram_{chat.id}_{message.id}",
                         data,
                         f"@{self.bot_username}",
@@ -260,7 +260,7 @@ class TelegramTracker(BaseMentionTracker):
 
         except Exception as e:
             self.logger.error(f"Error checking chat {chat_identifier}: {e}")
-            await self.log_action(
+            self.log_action(
                 "chat_check_error", f"Chat: {chat_identifier}, Error: {str(e)}"
             )
 
@@ -320,13 +320,16 @@ class TelegramTracker(BaseMentionTracker):
 
         except Exception as e:
             self.logger.error(f"Error in Telegram mention check: {e}")
-            asyncio.run(self.log_action("telegram_check_error", f"Error: {str(e)}"))
+            self.log_action("telegram_check_error", f"Error: {str(e)}")
             return 0
 
     async def is_processed_async(self, item_id):
         return await sync_to_async(self.is_processed)(item_id)
 
-    async def run(self, poll_interval_minutes=30, max_iterations=None):
+    async def process_mention_async(self, item_id, data, username):
+        return await sync_to_async(self.process_mention)(item_id, data, username)
+
+    def run(self, poll_interval_minutes=30, max_iterations=None):
         """Run Telegram mentions tracker.
 
         Ensures the Telegram client is available before starting. When valid,
@@ -342,16 +345,18 @@ class TelegramTracker(BaseMentionTracker):
             self.logger.error("Cannot start Telegram tracker - client not available")
             return
 
-        # Connect client if not already connected
-        if not self.client.is_connected():
-            await self.client.start()
+        with self.client:
+            # Connect client if not already connected
+            if not self.client.is_connected():
+                self.client.connect()
 
-        await self._post_init_setup(self.tracked_chats)
-
-        try:
-            await sync_to_async(super().run)(
-                poll_interval_minutes=poll_interval_minutes,
-                max_iterations=max_iterations,
+            self.client.loop.run_until_complete(
+                self._post_init_setup(self.tracked_chats)
             )
-        finally:
-            await self.cleanup()
+            try:
+                super().run(
+                    poll_interval_minutes=poll_interval_minutes,
+                    max_iterations=max_iterations,
+                )
+            finally:
+                self.client.loop.run_until_complete(self.cleanup())

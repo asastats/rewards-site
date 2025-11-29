@@ -539,12 +539,15 @@ class TestTrackersTwitter:
         mock_response.data = [mock_tweet]
         mock_response.includes = {"users": []}
         instance.client.get_users_mentions.return_value = mock_response
-        mock_is_processed = mocker.patch.object(instance, "is_processed")
-        mock_is_processed.return_value = False
-        mock_process_mention = mocker.patch.object(instance, "process_mention")
-        mock_process_mention.return_value = False
+        mock_is_processed = mocker.patch.object(
+            instance, "is_processed", return_value=False
+        )
+        mock_process_mention = mocker.patch.object(
+            instance, "process_mention", new=mocker.MagicMock(return_value=False)
+        )
         result = instance.check_mentions()
         assert result == 0
+        mock_is_processed.assert_called_once()
         mock_process_mention.assert_called_once()
 
     def test_trackers_twittertracker_run_mentions_found_logging(
@@ -557,8 +560,9 @@ class TestTrackersTwitter:
         mock_user.data = mock_user_data
         mock_client.return_value.get_me.return_value = mock_user
         instance = TwitterTracker(lambda x: None, twitter_config)
-        mock_check_mentions = mocker.patch.object(instance, "check_mentions")
-        mock_check_mentions.return_value = 5
+        mock_check_mentions = mocker.patch.object(
+            instance, "check_mentions", new=mocker.MagicMock(return_value=5)
+        )
         mocker.patch("time.sleep", side_effect=StopIteration)
         mock_logger_info = mocker.patch.object(instance.logger, "info")
         try:

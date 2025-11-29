@@ -87,11 +87,8 @@ class MentionManager(models.Manager):
 
         if mention:
             timestamp = mention.raw_data.get("timestamp")
-            if timestamp:
-                dt_object = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-                timestamp_str = dt_object.isoformat()
-            else:
-                timestamp_str = ""
+            dt_object = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+            timestamp_str = dt_object.isoformat()
             return {
                 "success": True,
                 "content": mention.raw_data.get("content", ""),

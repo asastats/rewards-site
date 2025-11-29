@@ -138,13 +138,24 @@ class TestTrackersTelegram:
         instance.logger = mocker.MagicMock()
 
         # Mock asyncio event loop creation
-        mock_get_running_loop = mocker.patch("asyncio.get_running_loop", side_effect=RuntimeError)
+        mock_get_running_loop = mocker.patch(
+            "asyncio.get_running_loop", side_effect=RuntimeError
+        )
         mock_new_event_loop = mocker.patch("asyncio.new_event_loop")
         mock_set_event_loop = mocker.patch("asyncio.set_event_loop")
         mock_loop = mocker.MagicMock()
         mock_new_event_loop.return_value = mock_loop
 
-        mock_loop.run_until_complete.return_value = 3
+        def run_coroutine_mock(coro):
+            return asyncio.run(coro)
+
+        mock_loop.run_until_complete.side_effect = run_coroutine_mock
+        mocker.patch.object(
+            instance,
+            "check_mentions_async",
+            new_callable=mocker.AsyncMock,
+            return_value=3,
+        )
         result = instance.check_mentions()
         assert result == 3
         instance.client.__enter__.assert_called_once()
@@ -164,7 +175,9 @@ class TestTrackersTelegram:
         instance.logger = mocker.MagicMock()
 
         # Mock asyncio event loop creation
-        mock_get_running_loop = mocker.patch("asyncio.get_running_loop", side_effect=RuntimeError)
+        mock_get_running_loop = mocker.patch(
+            "asyncio.get_running_loop", side_effect=RuntimeError
+        )
         mock_new_event_loop = mocker.patch("asyncio.new_event_loop")
         mock_set_event_loop = mocker.patch("asyncio.set_event_loop")
         mock_loop = mocker.MagicMock()
@@ -172,6 +185,18 @@ class TestTrackersTelegram:
 
         instance.client.__enter__.side_effect = Exception("Connection error")
         mock_log_action = mocker.patch.object(instance, "log_action")
+        mocker.patch.object(
+            instance,
+            "check_mentions_async",
+            new_callable=mocker.AsyncMock,
+            side_effect=Exception("Connection error"),
+        )
+
+        def run_coroutine_mock(coro):
+            return asyncio.run(coro)
+
+        mock_loop.run_until_complete.side_effect = run_coroutine_mock
+
         result = instance.check_mentions()
         assert result == 0
         instance.logger.error.assert_called_with(
@@ -180,9 +205,6 @@ class TestTrackersTelegram:
         mock_log_action.assert_called_with(
             "telegram_check_error", "Error: Connection error"
         )
-        mock_get_running_loop.assert_called_once()
-        mock_new_event_loop.assert_called_once()
-        mock_set_event_loop.assert_called_once_with(mock_loop)
 
     def test_trackers_telegramtracker_get_chat_entity_success(
         self, mocker, telegram_config, telegram_chats
@@ -233,7 +255,7 @@ class TestTrackersTelegram:
         # Mock cleanup to ensure it's not called
         mock_cleanup = mocker.patch.object(instance, "cleanup")
         # Run should return early
-        instance.run(poll_interval_minutes=30, max_iterations=1)
+        instance.run()
         # Should log error and return early
         instance.logger.error.assert_called_with(
             "Cannot start Telegram tracker - client not available"
@@ -245,11 +267,25 @@ class TestTrackersTelegram:
         self, mocker, telegram_config, telegram_chats
     ):
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mock_log_action = mocker.patch.object(TelegramTracker, "log_action")
         # Patch BaseMentionTracker.run so no real loop runs
-        mocked_base_run = mocker.patch("trackers.twitter.BaseMentionTracker.run")
+        mocked_base_run = mocker.patch("trackers.base.BaseMentionTracker.run")
         # Create instance (MessageParser.parse mocked out)
         tracker = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
+        tracker.client = mocker.MagicMock()
+        tracker.client.is_connected.return_value = False
+        tracker.client.connect.return_value = None
+
+        mock_post_init_setup = mocker.AsyncMock()
+        mocker.patch.object(tracker, "_post_init_setup", new=mock_post_init_setup)
+        mock_cleanup = mocker.AsyncMock()
+        mocker.patch.object(tracker, "cleanup", new=mock_cleanup)
+
+        async def mock_run_until_complete(coro):
+            await coro
+
+        tracker.client.loop.run_until_complete.side_effect = mock_run_until_complete
+
         # Call the wrapper
         tracker.run(poll_interval_minutes=10, max_iterations=5)
         # Ensure BaseMentionTracker.run was called once with correct args
@@ -257,6 +293,10 @@ class TestTrackersTelegram:
             poll_interval_minutes=10,
             max_iterations=5,
         )
+        tracker.client.is_connected.assert_called_once()
+        tracker.client.connect.assert_called_once()
+        mock_post_init_setup.assert_called_once_with(telegram_chats)
+        mock_cleanup.assert_called_once()
 
     # # _check_chat_mentions
     @pytest.mark.asyncio
@@ -300,9 +340,9 @@ class TestTrackersTelegram:
             instance, "extract_mention_data", return_value={}
         )
         mock_process_mention = mocker.patch.object(
-            instance, "process_mention", return_value=True
+            instance, "process_mention_async", return_value=True
         )
-        mocker.patch.object(instance, "is_processed", return_value=False)
+        mocker.patch.object(instance, "is_processed_async", return_value=False)
         # Test successful message processing
         result = await instance._check_chat_mentions("test_chat")
         assert result == 1
@@ -358,8 +398,12 @@ class TestTrackersTelegram:
             yield mock_message
 
         instance.client.iter_messages = mock_iter_messages
-        mock_process_mention = mocker.patch.object(instance, "process_mention")
-        mock_is_processed = mocker.patch.object(instance, "is_processed")
+        mock_process_mention = mocker.patch.object(
+            instance, "process_mention_async", new_callable=mocker.AsyncMock
+        )
+        mock_is_processed = mocker.patch.object(
+            instance, "is_processed_async", new_callable=mocker.AsyncMock
+        )
         result = await instance._check_chat_mentions("test_chat")
         # Should return 0 because condition not met
         assert result == 0
@@ -388,10 +432,10 @@ class TestTrackersTelegram:
             yield mock_message
 
         instance.client.iter_messages = mock_iter_messages
-        mock_process_mention = mocker.patch.object(instance, "process_mention")
+        mock_process_mention = mocker.patch.object(instance, "process_mention_async")
         # Message is already processed
         mock_is_processed = mocker.patch.object(
-            instance, "is_processed", return_value=True
+            instance, "is_processed_async", return_value=True
         )
         result = await instance._check_chat_mentions("test_chat")
         # Should return 0 because already processed
@@ -421,9 +465,9 @@ class TestTrackersTelegram:
         instance.client.iter_messages = mock_iter_messages
         # process_mention returns False
         mock_process_mention = mocker.patch.object(
-            instance, "process_mention", return_value=False
+            instance, "process_mention_async", return_value=False
         )
-        mocker.patch.object(instance, "is_processed", return_value=False)
+        mocker.patch.object(instance, "is_processed_async", return_value=False)
         result = await instance._check_chat_mentions("test_chat")
         # Should return 0 because process_mention returned False
         assert result == 0
@@ -457,7 +501,9 @@ class TestTrackersTelegram:
 
         mocker.patch("asyncio.sleep", side_effect=mock_sleep)
         # Mock _check_chat_mentions to return different counts for different chats
-        mock_check_chat = mocker.patch.object(instance, "_check_chat_mentions")
+        mock_check_chat = mocker.patch.object(
+            instance, "_check_chat_mentions", new_callable=mocker.AsyncMock
+        )
         mock_check_chat.side_effect = [2, 1]  # Different counts for 2 chats
         result = asyncio.run(instance.check_mentions_async())
         # Should return total mentions (2 + 1 = 3)
@@ -484,6 +530,12 @@ class TestTrackersTelegram:
             sleep_calls.append(delay)
 
         mocker.patch("asyncio.sleep", side_effect=mock_sleep)
+        mocker.patch.object(
+            instance,
+            "_check_chat_mentions",
+            new_callable=mocker.AsyncMock,
+            return_value=0,
+        )
         result = asyncio.run(instance.check_mentions_async())
         # Should return 0 when no chats to track
         assert result == 0
@@ -506,7 +558,12 @@ class TestTrackersTelegram:
             sleep_calls.append(delay)
 
         mocker.patch("asyncio.sleep", side_effect=mock_sleep)
-        mocker.patch.object(instance, "_check_chat_mentions", return_value=3)
+        mocker.patch.object(
+            instance,
+            "_check_chat_mentions",
+            new_callable=mocker.AsyncMock,
+            return_value=3,
+        )
         result = asyncio.run(instance.check_mentions_async())
         # Should return mentions from single chat
         assert result == 3
@@ -530,7 +587,9 @@ class TestTrackersTelegram:
             sleep_calls.append(delay)
 
         mocker.patch("asyncio.sleep", side_effect=mock_sleep)
-        mock_check_chat = mocker.patch.object(instance, "_check_chat_mentions")
+        mock_check_chat = mocker.patch.object(
+            instance, "_check_chat_mentions", new_callable=mocker.AsyncMock
+        )
         mock_check_chat.side_effect = [1, 2, 3]  # Different counts for 3 chats
         result = asyncio.run(instance.check_mentions_async())
         # Should return total mentions (1 + 2 + 3 = 6)
@@ -562,8 +621,12 @@ class TestTrackersTelegram:
             yield mock_message
 
         instance.client.iter_messages = mock_iter_messages
-        mock_process_mention = mocker.patch.object(instance, "process_mention")
-        mock_is_processed = mocker.patch.object(instance, "is_processed")
+        mock_process_mention = mocker.patch.object(
+            instance, "process_mention_async", new_callable=mocker.AsyncMock
+        )
+        mock_is_processed = mocker.patch.object(
+            instance, "is_processed_async", new_callable=mocker.AsyncMock
+        )
         result = asyncio.run(instance._check_chat_mentions("test_chat"))
         # Should return 0 when bot_username is empty
         assert result == 0
@@ -590,8 +653,12 @@ class TestTrackersTelegram:
             yield mock_message
 
         instance.client.iter_messages = mock_iter_messages
-        mock_process_mention = mocker.patch.object(instance, "process_mention")
-        mock_is_processed = mocker.patch.object(instance, "is_processed")
+        mock_process_mention = mocker.patch.object(
+            instance, "process_mention_async", new_callable=mocker.AsyncMock
+        )
+        mock_is_processed = mocker.patch.object(
+            instance, "is_processed_async", new_callable=mocker.AsyncMock
+        )
         result = asyncio.run(instance._check_chat_mentions("test_chat"))
         # Should return 0 when message has no text
         assert result == 0
@@ -606,9 +673,24 @@ class TestTrackersTelegram:
         mocker.patch("trackers.telegram.TelegramClient")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         instance.logger = mocker.MagicMock()
+        instance.client = mocker.MagicMock()
+        instance.client.is_connected.return_value = False
+        instance.client.connect.return_value = None
+
+        mock_post_init_setup = mocker.AsyncMock()
+        mocker.patch.object(instance, "_post_init_setup", new=mock_post_init_setup)
+        mock_cleanup = mocker.AsyncMock()
+        mocker.patch.object(instance, "cleanup", new=mock_cleanup)
+
+        async def mock_run_until_complete(coro):
+            await coro
+
+        instance.client.loop.run_until_complete.side_effect = mock_run_until_complete
+
         # Mock check_mentions to return positive number
         mocker.patch.object(instance, "check_mentions", return_value=5)
         mocker.patch("time.sleep", side_effect=StopIteration)
+
         # Run one iteration
         try:
             instance.run(poll_interval_minutes=0.1, max_iterations=1)
@@ -616,6 +698,10 @@ class TestTrackersTelegram:
             pass
         # Should log that mentions were found
         instance.logger.info.assert_any_call("Found 5 new mentions")
+        instance.client.is_connected.assert_called_once()
+        instance.client.connect.assert_called_once()
+        mock_post_init_setup.assert_called_once_with(telegram_chats)
+        mock_cleanup.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_trackers_telegramtracker_get_sender_info_success(

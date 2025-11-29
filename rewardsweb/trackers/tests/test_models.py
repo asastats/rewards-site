@@ -68,8 +68,12 @@ class TestTrackersModelsMentionLogManager:
     @pytest.mark.asyncio
     async def test_trackers_models_mentionlogmanager_log_action(self):
         """Test log_action method."""
-        await MentionLog.objects.log_action("test_platform", "test_action", "test_details")
-        log = await sync_to_async(MentionLog.objects.first)() # Use sync_to_async for synchronous query
+        await MentionLog.objects.log_action(
+            "test_platform", "test_action", "test_details"
+        )
+        log = await sync_to_async(
+            MentionLog.objects.first
+        )()  # Use sync_to_async for synchronous query
         assert log.platform == "test_platform"
         assert log.action == "test_action"
         assert log.details == "test_details"

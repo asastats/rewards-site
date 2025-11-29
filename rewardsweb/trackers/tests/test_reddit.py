@@ -1,11 +1,13 @@
 """Testing module for :py:mod:`trackers.reddit` module."""
 
 import praw
+import pytest
 
 from trackers.reddit import RedditTracker
 
 
-class TestTrackesReddit:
+@pytest.mark.django_db
+class TestTrackersReddit:
     """Testing class for :class:`trackers.reddit.RedditTracker`."""
 
     # __init__
@@ -43,7 +45,7 @@ class TestTrackesReddit:
         assert instance.bot_username is None
 
     # extract_mention_data
-    def test_trackers_reddittracker_extract_comment_data(
+    def test_trackers_reddittracker_extract_comment_data_functionality_for_ccomment(
         self, mocker, reddit_config, reddit_subreddits
     ):
         # Mock praw.Reddit to prevent actual API calls
@@ -66,6 +68,7 @@ class TestTrackesReddit:
         mock_parent_author.name = "parent_user"
         mock_parent_comment.author = mock_parent_author
         mock_parent_comment.permalink = "/r/test/comments/122"
+        mock_parent_comment.body = "This is the parent comment."
         mock_comment.parent.return_value = mock_parent_comment
         result = instance._extract_comment_data(mock_comment)
         assert result["suggester"] == "test_user"
@@ -75,6 +78,43 @@ class TestTrackesReddit:
         assert result["type"] == "comment"
         assert result["subreddit"] == "test"
         assert result["content"] == "Test comment body"
+        assert result["contribution"] == "This is the parent comment."
+
+    def test_trackers_reddittracker_extract_comment_data_functionality_for_submission(
+        self, mocker, reddit_config, reddit_subreddits
+    ):
+        # Mock praw.Reddit to prevent actual API calls
+        mocker.patch("trackers.reddit.praw.Reddit")
+        # Create instance
+        instance = RedditTracker(lambda x: None, reddit_config, reddit_subreddits)
+        mock_comment = mocker.MagicMock(spec=praw.models.Comment)
+        mock_author = mocker.MagicMock()
+        mock_author.name = "test_user"
+        mock_comment.author = mock_author
+        mock_comment.permalink = "/r/test/comments/123"
+        mock_comment.body = "Test comment body"
+        mock_comment.created_utc = 1609459200  # 2021-01-01
+        mock_comment.id = "comment123"
+        mock_subreddit = mocker.MagicMock()
+        mock_subreddit.display_name = "test"
+        mock_comment.subreddit = mock_subreddit
+        mock_parent_submission = mocker.MagicMock(spec=praw.models.Submission)
+        mock_parent_author = mocker.MagicMock()
+        mock_parent_author.name = "parent_user"
+        mock_parent_submission.author = mock_parent_author
+        mock_parent_submission.permalink = "/r/test/comments/122"
+        mock_parent_submission.body = "This is the parent comment."
+        mock_parent_submission.selftext = "Post text"
+        mock_comment.parent.return_value = mock_parent_submission
+        result = instance._extract_comment_data(mock_comment)
+        assert result["suggester"] == "test_user"
+        assert result["suggestion_url"] == "https://reddit.com/r/test/comments/123"
+        assert result["contribution_url"] == "https://reddit.com/r/test/comments/122"
+        assert result["contributor"] == "parent_user"
+        assert result["type"] == "comment"
+        assert result["subreddit"] == "test"
+        assert result["content"] == "Test comment body"
+        assert result["contribution"] == "Post text"
 
     def test_trackers_reddittracker_extract_submission_data(
         self, mocker, reddit_config, reddit_subreddits
@@ -88,7 +128,8 @@ class TestTrackesReddit:
         mock_author.name = "test_user"
         mock_submission.author = mock_author
         mock_submission.permalink = "/r/test/comments/123"
-        mock_submission.body = "Test submission body"
+        mock_submission.title = "Test submission title"
+        mock_submission.selftext = "Test submission selftext"
         mock_submission.created_utc = 1609459200
         mock_submission.id = "submission123"
         mock_subreddit = mocker.MagicMock()
@@ -101,7 +142,8 @@ class TestTrackesReddit:
         assert result["contributor"] == "test_user"
         assert result["type"] == "submission"
         assert result["subreddit"] == "test"
-        assert result["content"] == "Test submission body"
+        assert result["content"] == "Test submission title"
+        assert result["contribution"] == "Test submission selftext"
 
     # check_mentions
     def test_trackers_reddittracker_check_mentions_finds_comments(
@@ -274,11 +316,13 @@ class TestTrackesReddit:
         mock_parent_author.name = "parent_author"
         mock_parent_submission.author = mock_parent_author
         mock_parent_submission.permalink = "/r/test/comments/122"
+        mock_parent_submission.selftext = "This is the parent submission."
         mock_comment.parent.return_value = mock_parent_submission
         result = instance._extract_comment_data(mock_comment)
         # Verify else branch was taken (parent is Submission)
         assert result["contribution_url"] == "https://reddit.com/r/test/comments/122"
         assert result["contributor"] == "parent_author"
+        assert result["contribution"] == "This is the parent submission."
 
     def test_trackers_reddittracker_check_mentions_process_mention_true(
         self, mocker, reddit_config, reddit_subreddits

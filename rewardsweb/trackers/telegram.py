@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime
 
+from asgiref.sync import sync_to_async
 from telethon import TelegramClient
 
 from trackers.base import BaseMentionTracker
@@ -43,7 +44,16 @@ class TelegramTracker(BaseMentionTracker):
         self.logger.info(
             f"Telegram tracker initialized for {len(chats_collection)} chats"
         )
+
+    async def _post_init_setup(self, chats_collection):
+        """Perform asynchronous setup tasks after initialization."""
         self.log_action("initialized", f"Tracking {len(chats_collection)} chats")
+
+    async def cleanup(self):
+        """Perform graceful cleanup of the Telegram client."""
+        if self.client and self.client.is_connected():
+            self.logger.info("Disconnecting Telegram client")
+            await self.client.disconnect()
 
     async def _get_chat_entity(self, chat_identifier):
         """Get chat entity from identifier.
@@ -97,7 +107,7 @@ class TelegramTracker(BaseMentionTracker):
         :type replied_message: :class:`telethon.tl.types.Message` or None
         :var replied_sender: sender information of the replied message
         :type replied_sender: dict
-        :return: dictionary with replied message information
+        :return: dictionary with replied message information, including its text
         :rtype: dict
         """
         if not message.reply_to_msg_id:
@@ -111,7 +121,11 @@ class TelegramTracker(BaseMentionTracker):
             # when condition isn't met
             if replied_message:
                 replied_sender = await self._get_sender_info(replied_message)
-                return {"message_id": replied_message.id, "sender_info": replied_sender}
+                return {
+                    "message_id": replied_message.id,
+                    "sender_info": replied_sender,
+                    "text": replied_message.text or "",
+                }
         except Exception as e:
             self.logger.debug(f"Error getting replied message info: {e}")
 
@@ -136,28 +150,27 @@ class TelegramTracker(BaseMentionTracker):
             return f"chat_{chat.id}_msg_{message_id}"
 
     async def extract_mention_data(self, message):
-        """Extract standardized data from Telegram message.
+        """Extract standardized data from a Telegram message.
 
-        :param message: Telegram message object
+        This method processes a Telegram message to extract structured information
+        about the suggester, the suggestion, and any replied-to contribution.
+
+        :param message: The Telegram message object to be processed.
         :type message: :class:`telethon.tl.types.Message`
-        :var chat: chat where message was sent
-        :type chat: :class:`telethon.tl.types.Chat` or :class:`telethon.tl.types.Channel`
-        :var chat_title: title of the chat/channel
-        :type chat_title: str
-        :var sender_info: information about the message sender
-        :type sender_info: dict
-        :var suggestion_url: URL for the current message
-        :type suggestion_url: str
-        :var replied_info: information about replied message if applicable
-        :type replied_info: dict or None
-        :var contribution_url: URL for the contribution (replied message or current message)
-        :type contribution_url: str
-        :var contributor_info: information about the contributor
-        :type contributor_info: dict
-        :var data: extracted mention data dictionary
-        :type data: dict
-        :return: standardized mention data
+        :return: A dictionary containing standardized mention data.
         :rtype: dict
+        :var chat: The chat where the message was sent.
+        :type chat: :class:`telethon.tl.types.Chat` or :class:`telethon.tl.types.Channel`
+        :var sender_info: Information about the message sender.
+        :type sender_info: dict
+        :var replied_info: Information about the replied-to message, if any.
+        :type replied_info: dict or None
+        :var contribution_url: The URL of the contribution.
+        :type contribution_url: str
+        :var contributor_info: Information about the contributor.
+        :type contributor_info: dict
+        :var contribution: The text of the contribution.
+        :type contribution: str
         """
         chat = message.chat
         chat_title = getattr(chat, "title", "Private Chat")
@@ -176,9 +189,11 @@ class TelegramTracker(BaseMentionTracker):
                 chat, replied_info["message_id"]
             )
             contributor_info = replied_info["sender_info"]
+            contribution = replied_info["text"]
         else:
             contribution_url = suggestion_url
             contributor_info = sender_info
+            contribution = ""
 
         data = {
             "suggester": sender_info["user_id"],
@@ -194,6 +209,7 @@ class TelegramTracker(BaseMentionTracker):
             "chat_id": chat.id,
             "chat_username": getattr(chat, "username", None),
             "content": message.text if message.text else "",
+            "contribution": contribution,
             "timestamp": (
                 message.date.isoformat()
                 if hasattr(message, "date")
@@ -235,11 +251,13 @@ class TelegramTracker(BaseMentionTracker):
                 if (
                     self.bot_username
                     and self.bot_username in (message.text or "").lower()
-                    and not self.is_processed(f"telegram_{chat.id}_{message.id}")
+                    and not await self.is_processed_async(
+                        f"telegram_{chat.id}_{message.id}"
+                    )
                 ):
 
                     data = await self.extract_mention_data(message)
-                    if self.process_mention(
+                    if await self.process_mention_async(
                         f"telegram_{chat.id}_{message.id}",
                         data,
                         f"@{self.bot_username}",
@@ -296,7 +314,13 @@ class TelegramTracker(BaseMentionTracker):
         try:
             # Start the client and run the check
             with self.client:
-                loop = asyncio.get_event_loop()
+                # Ensure an event loop is running for async operations
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
                 mention_count = loop.run_until_complete(self.check_mentions_async())
                 return mention_count
 
@@ -304,6 +328,12 @@ class TelegramTracker(BaseMentionTracker):
             self.logger.error(f"Error in Telegram mention check: {e}")
             self.log_action("telegram_check_error", f"Error: {str(e)}")
             return 0
+
+    async def is_processed_async(self, item_id):
+        return await sync_to_async(self.is_processed)(item_id)
+
+    async def process_mention_async(self, item_id, data, username):
+        return await sync_to_async(self.process_mention)(item_id, data, username)
 
     def run(self, poll_interval_minutes=30, max_iterations=None):
         """Run Telegram mentions tracker.
@@ -321,7 +351,18 @@ class TelegramTracker(BaseMentionTracker):
             self.logger.error("Cannot start Telegram tracker - client not available")
             return
 
-        super().run(
-            poll_interval_minutes=poll_interval_minutes,
-            max_iterations=max_iterations,
-        )
+        with self.client:
+            # Connect client if not already connected
+            if not self.client.is_connected():
+                self.client.connect()
+
+            self.client.loop.run_until_complete(
+                self._post_init_setup(self.tracked_chats)
+            )
+            try:
+                super().run(
+                    poll_interval_minutes=poll_interval_minutes,
+                    max_iterations=max_iterations,
+                )
+            finally:
+                self.client.loop.run_until_complete(self.cleanup())

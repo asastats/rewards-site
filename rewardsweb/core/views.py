@@ -46,8 +46,8 @@ from core.models import (
     Issue,
     IssueStatus,
 )
-from issues.issues import IssueProvider, issue_data_for_contribution
-from updaters.updaters import UpdateProvider
+from issues.main import IssueProvider, issue_data_for_contribution
+from updaters.main import UpdateProvider
 from utils.constants.core import (
     ALGORAND_WALLETS,
     ISSUE_CREATION_LABEL_CHOICES,

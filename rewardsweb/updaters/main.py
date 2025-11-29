@@ -1,4 +1,4 @@
-"""Module containing main functions for updaters management."""
+"""Module containing main class for updaters management."""
 
 from updaters.discord import DiscordUpdater
 from updaters.reddit import RedditUpdater

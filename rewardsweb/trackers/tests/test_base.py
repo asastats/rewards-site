@@ -11,13 +11,13 @@ import trackers.base
 from trackers.base import BaseMentionTracker
 
 
+@pytest.mark.django_db
 class TestTrackersBaseMentionTracker:
     """Testing class for :class:`trackers.base.BaseMentionTracker` class."""
 
     # __init__
     def test_base_basementiontracker_init_success(self, mocker):
         mock_setup_logging = mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mock_setup_database = mocker.patch.object(BaseMentionTracker, "setup_database")
 
         def callback(data):
             pass
@@ -26,16 +26,6 @@ class TestTrackersBaseMentionTracker:
         assert instance.platform_name == "test_platform"
         assert instance.parse_message_callback == callback
         mock_setup_logging.assert_called_once()
-        mock_setup_database.assert_called_once()
-
-    # setup_database
-    def test_base_basementiontracker_setup_database_success(self, mocker):
-        mock_database_manager = mocker.patch("trackers.base.MentionDatabaseManager")
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        mock_database_manager.reset_mock()
-        instance.setup_database()
-        mock_database_manager.assert_called_once()
-        assert instance.db == mock_database_manager.return_value
 
     # setup_logging
     def test_base_basementiontracker_setup_logging_creates_directory(self, mocker):
@@ -75,33 +65,43 @@ class TestTrackersBaseMentionTracker:
 
     # is_processed
     def test_base_basementiontracker_is_processed_true(self, mocker):
+        mocker.patch.object(BaseMentionTracker, "setup_logging")
+        mock_is_processed_orm = mocker.patch(
+            "trackers.models.Mention.objects.is_processed"
+        )
+        mock_is_processed_orm.return_value = True
         instance = BaseMentionTracker("test_platform", lambda x: None)
-        mock_db = mocker.MagicMock()
-        mock_db.is_processed.return_value = True
-        instance.db = mock_db
         result = instance.is_processed("test_item_id")
         assert result is True
-        mock_db.is_processed.assert_called_once_with("test_item_id", "test_platform")
+        mock_is_processed_orm.assert_called_once_with("test_item_id", "test_platform")
 
     def test_base_basementiontracker_is_processed_false(self, mocker):
+        mocker.patch.object(BaseMentionTracker, "setup_logging")
+        mock_is_processed_orm = mocker.patch(
+            "trackers.models.Mention.objects.is_processed"
+        )
+        mock_is_processed_orm.return_value = False
         instance = BaseMentionTracker("test_platform", lambda x: None)
-        mock_db = mocker.MagicMock()
-        mock_db.is_processed.return_value = False
-        instance.db = mock_db
         result = instance.is_processed("test_item_id")
         assert result is False
+        mock_is_processed_orm.assert_called_once_with("test_item_id", "test_platform")
 
     # mark_processed
-    def test_base_basementiontracker_mark_processed_success(self, mocker):
+    @pytest.mark.asyncio
+    async def test_base_basementiontracker_mark_processed_success(self, mocker):
+        mocker.patch.object(BaseMentionTracker, "setup_logging")
+        mock_mark_processed_orm = mocker.AsyncMock(return_value=None)
+        mocker.patch(
+            "trackers.models.Mention.objects.mark_processed",
+            new=mock_mark_processed_orm,
+        )
         instance = BaseMentionTracker("test_platform", lambda x: None)
-        mock_db = mocker.MagicMock()
-        instance.db = mock_db
         test_data = {
             "suggester": "test_user",
             "subreddit": "test_subreddit",
         }
         instance.mark_processed("test_item_id", test_data)
-        mock_db.mark_processed.assert_called_once_with(
+        mock_mark_processed_orm.assert_called_once_with(
             "test_item_id", "test_platform", test_data
         )
 
@@ -124,8 +124,12 @@ class TestTrackersBaseMentionTracker:
         mock_post_new_contribution = mocker.patch.object(
             BaseMentionTracker, "post_new_contribution"
         )
-        mock_mark_processed = mocker.patch.object(BaseMentionTracker, "mark_processed")
-        mock_log_action = mocker.patch.object(BaseMentionTracker, "log_action")
+        mock_mark_processed = mocker.MagicMock(return_value=None)
+        mocker.patch.object(
+            BaseMentionTracker, "mark_processed", new=mock_mark_processed
+        )
+        mock_log_action = mocker.MagicMock(return_value=None)
+        mocker.patch.object(BaseMentionTracker, "log_action", new=mock_log_action)
         mock_logger = mocker.MagicMock()
         mock_callback = mocker.MagicMock(return_value={"parsed": "data"})
         instance = BaseMentionTracker("test_platform", mock_callback)
@@ -149,7 +153,8 @@ class TestTrackersBaseMentionTracker:
         mock_is_processed = mocker.patch.object(BaseMentionTracker, "is_processed")
         mock_is_processed.return_value = False
         mock_logger = mocker.MagicMock()
-        mock_log_action = mocker.patch.object(BaseMentionTracker, "log_action")
+        mock_log_action = mocker.MagicMock(return_value=None)
+        mocker.patch.object(BaseMentionTracker, "log_action", new=mock_log_action)
         mock_callback = mocker.MagicMock(side_effect=Exception("Test error"))
         instance = BaseMentionTracker("test_platform", mock_callback)
         instance.logger = mock_logger
@@ -164,11 +169,14 @@ class TestTrackersBaseMentionTracker:
 
     # log_action
     def test_base_basementiontracker_log_action_success(self, mocker):
+        mocker.patch.object(BaseMentionTracker, "setup_logging")
+        mock_log_action_orm = mocker.MagicMock(return_value=None)
+        mocker.patch(
+            "trackers.models.MentionLog.objects.log_action", new=mock_log_action_orm
+        )
         instance = BaseMentionTracker("test_platform", lambda x: None)
-        mock_db = mocker.MagicMock()
-        instance.db = mock_db
         instance.log_action("test_action", "test_details")
-        mock_db.log_action.assert_called_once_with(
+        mock_log_action_orm.assert_called_once_with(
             "test_platform", "test_action", "test_details"
         )
 
@@ -355,7 +363,7 @@ class TestTrackersBaseMentionTracker:
     def test_base_basementiontracker_exit_gracefully_sets_flag_and_logs(self, mocker):
         """Test that _exit_gracefully sets exit_signal=True and logs the event."""
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         instance.logger = mocker.MagicMock()
         instance.exit_signal = False
@@ -369,7 +377,7 @@ class TestTrackersBaseMentionTracker:
     def test_base_basementiontracker_register_signal_handlers(self, mocker):
         """Test that _register_signal_handlers binds SIGINT and SIGTERM."""
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         mock_signal = mocker.patch("signal.signal")
         instance._register_signal_handlers()
@@ -383,7 +391,7 @@ class TestTrackersBaseMentionTracker:
     ):
         """Test interruptible sleep exits early when exit_signal is set."""
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         mock_sleep = mocker.patch("time.sleep")
 
@@ -399,7 +407,7 @@ class TestTrackersBaseMentionTracker:
     def test_base_basementiontracker_interruptible_sleep_normal_exit(self, mocker):
         """Test interruptible sleep normal exit."""
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         mock_sleep = mocker.patch("time.sleep")
         instance._interruptible_sleep(5)
@@ -409,7 +417,7 @@ class TestTrackersBaseMentionTracker:
     # check_mentions
     def test_base_basementiontracker_check_mentions_not_implemented(self, mocker):
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         with pytest.raises(NotImplementedError):
             instance.check_mentions()
@@ -419,7 +427,7 @@ class TestTrackersBaseMentionTracker:
         """Test successful run loop with multiple iterations."""
         # Prevent real setup side effects
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         instance.logger = mocker.MagicMock()
         # Mock helpers
@@ -429,20 +437,19 @@ class TestTrackersBaseMentionTracker:
         mock_check_mentions = mocker.patch.object(instance, "check_mentions")
         mock_check_mentions.return_value = 0  # no mentions found
         mock_sleep = mocker.patch.object(instance, "_interruptible_sleep")
-        mock_log_action = mocker.patch.object(instance, "log_action")
-        mock_cleanup = mocker.patch.object(instance, "cleanup")
+        mock_log_action = mocker.MagicMock(return_value=None)
+        mocker.patch.object(instance, "log_action", new=mock_log_action)
         # Run for exactly 2 iterations
         instance.run(poll_interval_minutes=0.1, max_iterations=2)
         assert mock_register_signals.call_count == 1
         assert mock_check_mentions.call_count == 2
         assert mock_sleep.call_count == 2
         mock_log_action.assert_any_call("started", "Poll interval: 0.1 minutes")
-        mock_cleanup.assert_called_once()
 
     def test_base_basementiontracker_run_keyboard_interrupt(self, mocker):
         """Test run loop handling of KeyboardInterrupt during sleep."""
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         instance.logger = mocker.MagicMock()
         mocker.patch.object(instance, "_register_signal_handlers")
@@ -450,7 +457,8 @@ class TestTrackersBaseMentionTracker:
         mock_check_mentions.return_value = 0
         mock_sleep = mocker.patch.object(instance, "_interruptible_sleep")
         mock_sleep.side_effect = KeyboardInterrupt
-        mock_log_action = mocker.patch.object(instance, "log_action")
+        mock_log_action = mocker.MagicMock(return_value=None)
+        mocker.patch.object(instance, "log_action", new=mock_log_action)
         instance.run(poll_interval_minutes=30, max_iterations=5)
         instance.logger.info.assert_called_with("test_platform tracker stopped by user")
         mock_log_action.assert_called_with("stopped", "User interrupt")
@@ -458,27 +466,27 @@ class TestTrackersBaseMentionTracker:
     def test_base_basementiontracker_run_exception(self, mocker):
         """Test run loop logging and re-raising unexpected exceptions."""
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
+
         instance = BaseMentionTracker("test_platform", lambda x: None)
         instance.logger = mocker.MagicMock()
         mocker.patch.object(instance, "_register_signal_handlers")
         mock_check_mentions = mocker.patch.object(instance, "check_mentions")
         mock_check_mentions.side_effect = Exception("Test error")
-        mock_log_action = mocker.patch.object(instance, "log_action")
-        mock_cleanup = mocker.patch.object(instance, "cleanup")
+        mock_log_action = mocker.MagicMock(return_value=None)
+        mocker.patch.object(instance, "log_action", new=mock_log_action)
         with pytest.raises(Exception, match="Test error"):
             instance.run(poll_interval_minutes=30, max_iterations=1)
         instance.logger.error.assert_called_with(
             "test_platform tracker error: Test error"
         )
         mock_log_action.assert_called_with("error", "Tracker error: Test error")
-        mock_cleanup.assert_called_once()
 
     def test_base_basementiontracker_run_mentions_found_logging(self, mocker):
         """Test run loop logging when mentions are found."""
         mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
-        mocker.patch.object(BaseMentionTracker, "log_action")
+
+        mock_log_action = mocker.MagicMock(return_value=None)
+        mocker.patch.object(BaseMentionTracker, "log_action", new=mock_log_action)
         instance = BaseMentionTracker("test_platform", lambda x: None)
         instance.logger = mocker.MagicMock()
         mocker.patch.object(instance, "_register_signal_handlers")
@@ -491,20 +499,3 @@ class TestTrackersBaseMentionTracker:
         mock_sleep.assert_called_once()
         # Verify logger.info was called for mentions_found > 0
         instance.logger.info.assert_any_call("Found 3 new mentions")
-
-    # cleanup
-    def test_base_basementiontracker_cleanup_with_db(self, mocker):
-        mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        mock_db = mocker.MagicMock()
-        instance.db = mock_db
-        instance.cleanup()
-        mock_db.cleanup.assert_called_once()
-
-    def test_base_basementiontracker_cleanup_no_db(self, mocker):
-        mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocker.patch.object(BaseMentionTracker, "setup_database")
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        # Should not raise an exception
-        instance.cleanup()

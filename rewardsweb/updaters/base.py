@@ -1,10 +1,10 @@
-"""Base classes for updaters."""
+"""Base classes for updating social media messages."""
 
 from abc import ABC, abstractmethod
 
 
 class BaseUpdater(ABC):
-    """Base class for updaters."""
+    """Base class for all social media message updaters."""
 
     @abstractmethod
     def add_reaction_to_message(self, url, reaction_name):

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     "walletauth.apps.WalletauthConfig",
     "rewards.apps.RewardsConfig",
+    "trackers.apps.TrackersConfig",
     "template_partials",
     "django.contrib.admin",
     "django.contrib.auth",

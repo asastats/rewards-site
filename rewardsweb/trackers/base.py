@@ -10,7 +10,7 @@ from pathlib import Path
 import requests
 
 from trackers.config import REWARDS_API_BASE_URL
-from trackers.database import MentionDatabaseManager
+from trackers.models import Mention, MentionLog
 from utils.helpers import get_env_variable, social_platform_prefixes
 
 
@@ -19,8 +19,6 @@ class BaseMentionTracker:
 
     :var BaseMentionTracker.logger: logger instance for this platform
     :type BaseMentionTracker.logger: :class:`logging.Logger`
-    :var BaseMentionTracker.db: database manager instance
-    :type BaseMentionTracker.db: :class:`trackers.database.MentionDatabaseManager`
     :var BaseMentionTracker.exit_signal: flag indicating requested graceful shutdown
     :type BaseMentionTracker.exit_signal: bool
     """
@@ -37,13 +35,8 @@ class BaseMentionTracker:
         self.parse_message_callback = parse_message_callback
         self.exit_signal = False
         self.setup_logging()
-        self.setup_database()
 
     # # setup
-    def setup_database(self):
-        """Setup database manager."""
-        self.db = MentionDatabaseManager()
-
     def setup_logging(self):
         """Setup common logging configuration.
 
@@ -120,7 +113,7 @@ class BaseMentionTracker:
         :return: True if item has been processed, False otherwise
         :rtype: bool
         """
-        return self.db.is_processed(item_id, self.platform_name)
+        return Mention.objects.is_processed(item_id, self.platform_name)
 
     def mark_processed(self, item_id, data):
         """Mark item as processed in database.
@@ -130,7 +123,7 @@ class BaseMentionTracker:
         :param data: mention data dictionary
         :type data: dict
         """
-        self.db.mark_processed(item_id, self.platform_name, data)
+        Mention.objects.mark_processed(item_id, self.platform_name, data)
 
     def process_mention(self, item_id, data, username):
         """Common mention processing logic.
@@ -180,7 +173,7 @@ class BaseMentionTracker:
         :param details: additional details about the action
         :type details: str
         """
-        self.db.log_action(self.platform_name, action, details)
+        MentionLog.objects.log_action(self.platform_name, action, details)
 
     def prepare_contribution_data(self, parsed_message, message_data):
         """Prepare contribution data for POST request from provided arguments.
@@ -254,14 +247,6 @@ class BaseMentionTracker:
         except requests.exceptions.RequestException as e:
             raise Exception(f"API request failed: {e}")
 
-    def cleanup(self):
-        """Cleanup resources.
-
-        Closes database connection if it exists.
-        """
-        if hasattr(self, "db"):
-            self.db.cleanup()
-
     def run(self, poll_interval_minutes=30, max_iterations=None):
         """Main run loop for synchronous mention trackers.
 
@@ -281,7 +266,7 @@ class BaseMentionTracker:
         :type max_iterations: int or None
         :var iteration: current iteration count
         :type iteration: int
-        :var mentions_found: number of mentions found in current poll
+        :var mentions_found: number of new mentions found in current poll
         :type mentions_found: int
         """
         self._register_signal_handlers()
@@ -324,6 +309,3 @@ class BaseMentionTracker:
             self.logger.error(f"{self.platform_name} tracker error: {e}")
             self.log_action("error", f"Tracker error: {str(e)}")
             raise
-
-        finally:
-            self.cleanup()

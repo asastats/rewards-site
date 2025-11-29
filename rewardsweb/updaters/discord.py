@@ -167,7 +167,7 @@ class DiscordUpdater(BaseUpdater):
             message_data = response.json()
             return {
                 "success": True,
-                "content": message_data.get("content", ""),
+                "contribution": message_data.get("content", ""),
                 "author": message_data.get("author", {}).get("username", "Unknown"),
                 "timestamp": message_data.get("timestamp", ""),
                 "channel_id": channel_id,

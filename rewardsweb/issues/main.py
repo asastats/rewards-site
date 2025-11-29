@@ -7,7 +7,7 @@ from django.conf import settings
 
 from core.models import Contributor
 from issues.providers import BitbucketProvider, GithubProvider, GitlabProvider
-from updaters.updaters import UpdateProvider
+from updaters.main import UpdateProvider
 
 ISSUE_TRACKER_PROVIDERS_REGISTRY = {
     "github": GithubProvider,
@@ -118,7 +118,7 @@ def _prepare_issue_body_from_contribution(contribution, profile):
             f"By {contributor} on {timestamp} in [{contribution.platform.name.title()}]"
             f"({contribution.url}): // su: {str(profile)}\n"
         )
-        for line in message.get("content").split("\n"):
+        for line in message.get("contribution").split("\n"):
             issue_body += f"> {line}\n"
 
     return issue_body

@@ -5,8 +5,10 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 import requests
+from asgiref.sync import sync_to_async
 
 from trackers.base import BaseMentionTracker
+from trackers.models import Mention
 
 TWITTERAPIIO_BASE_URL = "https://api.twitterapi.io/twitter"
 
@@ -190,16 +192,6 @@ class TwitterapiioTracker(BaseMentionTracker):
             if not data.get("has_next_page") or not cursor:
                 break
 
-    def is_processed(self, tweet_id):
-        """Check if a tweet has already been processed.
-
-        :param tweet_id: The ID of the tweet to check.
-        :type tweet_id: str
-        :return: True if the tweet has been processed, False otherwise.
-        :rtype: bool
-        """
-        return self.db.is_processed(tweet_id, self.platform_name)
-
     def extract_mention_data(self, mention):
         """Extract relevant data from a mention tweet.
 
@@ -207,15 +199,25 @@ class TwitterapiioTracker(BaseMentionTracker):
         :type mention: dict
         :return: A dictionary containing standardized mention data.
         :rtype: dict
+        :var tweet_id: The ID of the mention tweet.
+        :type tweet_id: str
+        :var parent_tweet_url: The URL of the parent tweet, if it exists.
+        :type parent_tweet_url: str
+        :var contributor_handle: The Twitter handle of the contributor.
+        :type contributor_handle: str
+        :var contribution: The text content of the parent tweet.
+        :type contribution: str
         """
         tweet_id = mention["id"]
         parent_tweet_url = ""
         contributor_handle = mention["author"]["userName"]
+        contribution = ""
 
         if "parent_tweet" in mention:
             parent = mention["parent_tweet"]
             parent_tweet_url = f"https://twitter.com/i/web/status/{parent['id']}"
             contributor_handle = parent["author"]["userName"]
+            contribution = parent["text"]
 
         return {
             "suggester": mention["author"]["userName"],
@@ -225,6 +227,7 @@ class TwitterapiioTracker(BaseMentionTracker):
             "contributor": contributor_handle,
             "type": "tweet",
             "content": mention["text"],
+            "contribution": contribution,
             "timestamp": self._twitter_created_at_to_unix(mention["createdAt"]),
             "item_id": tweet_id,
         }
@@ -252,7 +255,7 @@ class TwitterapiioTracker(BaseMentionTracker):
         :var data: Standardized mention data prepared for processing.
         :type data: dict
         """
-        last_timestamp = self.db.last_processed_timestamp(self.platform_name)
+        last_timestamp = Mention.objects.last_processed_timestamp(self.platform_name)
         if not last_timestamp:
             self.logger.info(
                 "No previous timestamp found. Fetching all available mentions."

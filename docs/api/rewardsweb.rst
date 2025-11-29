@@ -232,10 +232,10 @@
   :show-inheritance:
 
 
-:mod:`issues.issues` -- Main issue tracker class and public functions
----------------------------------------------------------------------
+:mod:`issues.main` -- Main issue tracker class and public functions
+-------------------------------------------------------------------
 
-.. automodule:: issues.issues
+.. automodule:: issues.main
   :members:
   :undoc-members:
   :show-inheritance:
@@ -504,6 +504,78 @@
   :show-inheritance:
 
 
+:mod:`updaters` -- Social media messages updating package
+*********************************************************
+
+.. automodule:: updaters
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`updaters.base` -- Module containing base class for all social media updaters
+----------------------------------------------------------------------------------
+
+.. automodule:: updaters.base
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`updaters.discord` -- Module for updating Discord comments
+---------------------------------------------------------------
+
+.. automodule:: updaters.discord
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`updaters.main` -- Module containing main updating class and updaters regiustry
+------------------------------------------------------------------------------------
+
+.. automodule:: updaters.main
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`updaters.reddit` -- Module for updating Reddit comments
+-------------------------------------------------------------
+
+.. automodule:: updaters.reddit
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`updaters.telegram` -- Module for updating Telegram messages
+-----------------------------------------------------------------
+
+.. automodule:: updaters.telegram
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`updaters.twitter` -- Module for updating comments on X/Twitter
+--------------------------------------------------------------------
+
+.. automodule:: updaters.twitter
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`updaters.tests` -- Unit-tests package for updaters package
+----------------------------------------------------------------
+
+.. automodule:: updaters.tests
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
 :mod:`utils` -- Package with various website's utility functions and constants
 ******************************************************************************
 
@@ -526,15 +598,6 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: utils.constants.core
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-
-:mod:`utils.bot` -- Website's utility functions for manipulating the Discord bot
---------------------------------------------------------------------------------
-
-.. automodule:: utils.bot
   :members:
   :undoc-members:
   :show-inheritance:

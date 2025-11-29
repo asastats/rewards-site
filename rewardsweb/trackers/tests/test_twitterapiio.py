@@ -2,7 +2,6 @@
 
 import json
 import logging
-from unittest.mock import MagicMock, call
 
 import pytest
 import requests
@@ -10,6 +9,7 @@ import requests
 from trackers.twitterapiio import TwitterapiioTracker
 
 
+@pytest.mark.django_db
 class TestTrackersTwitterApiIOTracker:
     """Testing class for :class:`trackers.twitterapiio.TwitterapiioTracker`."""
 
@@ -18,7 +18,7 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test successful initialization of TwitterapiioTracker."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         instance = TwitterapiioTracker(lambda x: None, twitterapiio_config)
         assert instance.api_key == twitterapiio_config["api_key"]
         assert instance.target_handle == twitterapiio_config["target_handle"]
@@ -36,9 +36,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_tweets_by_ids with a successful API response."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "status": "success",
@@ -54,7 +54,7 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_tweets_by_ids with no tweet IDs."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         tweets = tracker._get_tweets_by_ids([])
@@ -65,9 +65,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_tweets_by_ids with an API error."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"status": "error", "message": "API Error"}
         mock_requests_get.return_value = mock_response
@@ -79,7 +79,7 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_tweets_by_ids with a request exception."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mocker.patch("requests.get", side_effect=requests.exceptions.RequestException)
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         tweets = tracker._get_tweets_by_ids(["123"])
@@ -89,9 +89,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_tweets_by_ids with a JSON decode error."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.side_effect = ValueError
         mock_requests_get.return_value = mock_response
@@ -104,9 +104,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with multiple pages."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response_page1 = MagicMock()
+        mock_response_page1 = mocker.MagicMock()
         mock_response_page1.status_code = 200
         mock_response_page1.json.return_value = {
             "status": "success",
@@ -114,7 +114,7 @@ class TestTrackersTwitterApiIOTracker:
             "has_next_page": True,
             "next_cursor": "cursor123",
         }
-        mock_response_page2 = MagicMock()
+        mock_response_page2 = mocker.MagicMock()
         mock_response_page2.status_code = 200
         mock_response_page2.json.return_value = {
             "status": "success",
@@ -132,9 +132,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with multiple pages."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response_page1 = MagicMock()
+        mock_response_page1 = mocker.MagicMock()
         mock_response_page1.status_code = 200
         mock_response_page1.json.return_value = {
             "status": "success",
@@ -142,7 +142,7 @@ class TestTrackersTwitterApiIOTracker:
             "has_next_page": True,
             "next_cursor": "cursor123",
         }
-        mock_response_page2 = MagicMock()
+        mock_response_page2 = mocker.MagicMock()
         mock_response_page2.status_code = 200
         mock_response_page2.json.return_value = {
             "status": "success",
@@ -160,9 +160,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions when there is no next cursor."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "status": "success",
@@ -189,9 +189,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions when there is no next cursor."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "status": "success",
@@ -208,7 +208,7 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with a reply, but parent tweet is not found."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mocker.patch.object(tracker, "_get_tweets_by_ids", return_value={"456": "789"})
         mentions_data = [
@@ -219,7 +219,7 @@ class TestTrackersTwitterApiIOTracker:
             }
         ]
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "status": "success",
@@ -235,7 +235,7 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with a reply, but parent tweet is not found."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mocker.patch.object(tracker, "_get_tweets_by_ids", return_value={})
         mentions_data = [
@@ -246,7 +246,7 @@ class TestTrackersTwitterApiIOTracker:
             }
         ]
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "status": "success",
@@ -262,9 +262,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with an API error."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"status": "error", "message": "API Error"}
         mock_requests_get.return_value = mock_response
@@ -272,24 +272,12 @@ class TestTrackersTwitterApiIOTracker:
         mentions = list(tracker._get_all_mentions())
         assert len(mentions) == 0
 
-    # # is_processed
-    def test_trackers_twitterapiiotracker_is_processed(
-        self, mocker, twitterapiio_config
-    ):
-        """Test is_processed method."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
-        mock_db = MagicMock()
-        tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
-        tracker.db = mock_db
-        tracker.is_processed("123")
-        mock_db.is_processed.assert_called_once_with("123", tracker.platform_name)
-
     # # extract_mention_data
     def test_trackers_twitterapiiotracker_extract_mention_data_simple(
         self, mocker, twitterapiio_config
     ):
         """Test extract_mention_data with a simple mention."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mention = {
             "id": "123",
@@ -302,30 +290,40 @@ class TestTrackersTwitterApiIOTracker:
         assert data["item_id"] == "123"
         assert data["contributor"] == "testuser"
         assert data["contribution_url"] == "https://twitter.com/i/web/status/123"
+        assert data["contribution"] == ""
 
     def test_trackers_twitterapiiotracker_extract_mention_data_with_parent(
         self, mocker, twitterapiio_config
     ):
         """Test extract_mention_data with a mention that has a parent tweet."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mention = {
             "id": "123",
             "text": "Test mention",
             "author": {"userName": "testuser"},
             "createdAt": "Sat Nov 22 04:28:58 +0000 2025",
-            "parent_tweet": {"id": "456", "author": {"userName": "parentuser"}},
+            "parent_tweet": {
+                "id": "456",
+                "author": {"userName": "parentuser"},
+                "text": "This is the parent tweet.",
+            },
         }
         data = tracker.extract_mention_data(mention)
         assert data["contributor"] == "parentuser"
         assert data["contribution_url"] == "https://twitter.com/i/web/status/456"
+        assert data["contribution"] == "This is the parent tweet."
 
     # # check_mentions
     def test_trackers_twitterapiiotracker_check_mentions_no_new_mentions(
         self, mocker, twitterapiio_config
     ):
         """Test check_mentions when there are no new mentions."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
+        mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=None),
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mocker.patch.object(tracker, "_get_all_mentions", return_value=[])
         mentions_found = tracker.check_mentions()
@@ -335,15 +333,23 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test check_mentions when there are new mentions."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
+        mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=None),
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mentions_data = [{"id": "123"}]
         mocker.patch.object(tracker, "_get_all_mentions", return_value=mentions_data)
-        mocker.patch.object(tracker, "is_processed", return_value=False)
+        mocker.patch.object(
+            tracker, "is_processed", new=mocker.MagicMock(return_value=False)
+        )
         mocker.patch.object(
             tracker, "extract_mention_data", return_value={"data": "data"}
         )
-        mocker.patch.object(tracker, "process_mention", return_value=True)
+        mocker.patch.object(
+            tracker, "process_mention", new=mocker.MagicMock(return_value=True)
+        )
         mentions_found = tracker.check_mentions()
         assert mentions_found == 1
         tracker.is_processed.assert_called_once_with("123")
@@ -356,15 +362,22 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test check_mentions when there are new mentions."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+        mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=None),
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mentions_data = [{"id": "123"}]
         mocker.patch.object(tracker, "_get_all_mentions", return_value=mentions_data)
-        mocker.patch.object(tracker, "is_processed", return_value=False)
+        mocker.patch.object(
+            tracker, "is_processed", new=mocker.MagicMock(return_value=False)
+        )
         mocker.patch.object(
             tracker, "extract_mention_data", return_value={"data": "data"}
         )
-        mocker.patch.object(tracker, "process_mention", return_value=False)
+        mocker.patch.object(
+            tracker, "process_mention", new=mocker.MagicMock(return_value=False)
+        )
         mentions_found = tracker.check_mentions()
         assert mentions_found == 0
         tracker.is_processed.assert_called_once_with("123")
@@ -377,11 +390,16 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test check_mentions with mentions that have already been processed."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+        mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=None),
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mentions_data = [{"id": "123"}]
         mocker.patch.object(tracker, "_get_all_mentions", return_value=mentions_data)
-        mocker.patch.object(tracker, "is_processed", return_value=True)
+        mocker.patch.object(
+            tracker, "is_processed", new=mocker.MagicMock(return_value=True)
+        )
         mock_extract = mocker.patch.object(tracker, "extract_mention_data")
         mock_process = mocker.patch.object(tracker, "process_mention")
         mentions_found = tracker.check_mentions()
@@ -394,43 +412,33 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test check_mentions with an exception during mention retrieval."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+        mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=None),
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mocker.patch.object(
             tracker, "_get_all_mentions", side_effect=Exception("API error")
         )
-        mock_log_action = mocker.patch.object(tracker, "log_action")
+        mock_log_action = mocker.patch.object(
+            tracker, "log_action", new=mocker.MagicMock()
+        )
         mentions_found = tracker.check_mentions()
         assert mentions_found == 0
         mock_log_action.assert_has_calls(
             [
-                call("mentions_check_error", "Error: API error"),
-                call("mentions_checked", "Found 0 new mentions"),
+                mocker.call("mentions_check_error", "Error: API error"),
+                mocker.call("mentions_checked", "Found 0 new mentions"),
             ]
-        )
-
-    # # run
-    def test_trackers_twitterapiiotracker_run_wrapper_calls_base_run(
-        self, mocker, twitterapiio_config
-    ):
-        """Test that the run method calls the base class's run method."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
-        mocked_base_run = mocker.patch("trackers.base.BaseMentionTracker.run")
-        tracker = TwitterapiioTracker(
-            parse_message_callback=lambda x: x, config=twitterapiio_config
-        )
-        tracker.run(poll_interval_minutes=10, max_iterations=5)
-        mocked_base_run.assert_called_once_with(
-            poll_interval_minutes=10, max_iterations=5
         )
 
     def test_trackers_twitterapiiotracker_get_all_mentions_json_decode_error(
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with a JSON decode error."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         # Create a mock response object directly
-        mock_response_obj = MagicMock(status_code=200)
+        mock_response_obj = mocker.MagicMock(status_code=200)
         mock_response_obj.json.side_effect = json.JSONDecodeError(
             "Expecting value", "char 0", 0
         )
@@ -444,9 +452,9 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with an API error status."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"status": "error", "message": "API Error"}
         mock_requests_get.return_value = mock_response
@@ -458,7 +466,7 @@ class TestTrackersTwitterApiIOTracker:
         self, mocker, twitterapiio_config
     ):
         """Test _get_all_mentions with chunking of parent tweet IDs."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         tracker.batch_size = 2
         mock_get_tweets = mocker.patch.object(
@@ -470,7 +478,7 @@ class TestTrackersTwitterApiIOTracker:
             {"id": "3", "isReply": True, "inReplyToId": "103"},
         ]
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "status": "success",
@@ -483,62 +491,84 @@ class TestTrackersTwitterApiIOTracker:
         mock_get_tweets.assert_any_call(["101", "102"])
         mock_get_tweets.assert_any_call(["103"])
 
+    def test_trackers_twitterapiiotracker_check_mentions_last_timestamp(
+        self, mocker, twitterapiio_config
+    ):
+        last_timestamp = 12349
+        mock_last_processed = mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=last_timestamp),
+        )
+        tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
+        mocker.patch.object(tracker, "_get_all_mentions", return_value=[])
+        tracker.check_mentions()
+        tracker._get_all_mentions.assert_called_with(since_time=12350)
+        mock_last_processed.assert_called_once_with(tracker.platform_name)
+
     def test_trackers_twitterapiiotracker_check_mentions_no_last_timestamp(
         self, mocker, twitterapiio_config
     ):
-        """Test check_mentions when no last timestamp is found."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
-        mock_db = MagicMock()
-        mock_db.last_processed_timestamp.return_value = None
+        mock_last_processed = mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=None),
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
-        tracker.db = mock_db
         mocker.patch.object(tracker, "_get_all_mentions", return_value=[])
         tracker.check_mentions()
         tracker._get_all_mentions.assert_called_with(since_time=None)
+        mock_last_processed.assert_called_once_with(tracker.platform_name)
 
     def test_trackers_twitterapiiotracker_run_mentions_found_logging(
         self, mocker, twitterapiio_config
     ):
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_logger_info = mocker.patch.object(logging.Logger, "info")
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
-        mocker.patch.object(tracker, "check_mentions", return_value=5)
+        mocker.patch.object(
+            tracker, "check_mentions", new=mocker.MagicMock(return_value=5)
+        )
         mocker.patch.object(tracker, "_interruptible_sleep")
         tracker.run(max_iterations=1)
         assert any(
-            "Found 5 new mentions" in call.args[0]
-            for call in mock_logger_info.call_args_list
+            "Found 5 new mentions" in c.args[0] for c in mock_logger_info.call_args_list
         )
 
     def test_trackers_twitterapiiotracker_run_keyboard_interrupt(
         self, mocker, twitterapiio_config
     ):
         """Test that run method handles KeyboardInterrupt gracefully."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_tracker_logger_info = mocker.patch.object(logging.Logger, "info")
-        mock_tracker_log_action = mocker.patch.object(TwitterapiioTracker, "log_action")
-        mock_cleanup = mocker.patch.object(TwitterapiioTracker, "cleanup")
+        mock_tracker_log_action = mocker.patch.object(
+            TwitterapiioTracker, "log_action", new=mocker.MagicMock()
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
-        mocker.patch.object(tracker, "check_mentions", side_effect=KeyboardInterrupt)
+        mocker.patch.object(
+            tracker,
+            "check_mentions",
+            new=mocker.MagicMock(side_effect=KeyboardInterrupt),
+        )
         tracker.run(max_iterations=1)
         mock_tracker_logger_info.assert_any_call(
             f"{tracker.platform_name} tracker stopped by user"
         )
         mock_tracker_log_action.assert_any_call("stopped", "User interrupt")
-        mock_cleanup.assert_called_once()
 
     def test_trackers_twitterapiiotracker_run_exception(
         self, mocker, twitterapiio_config
     ):
         """Test that run method handles a generic Exception."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_logger_error = mocker.patch.object(logging.Logger, "error")
-        mock_log_action = mocker.patch.object(TwitterapiioTracker, "log_action")
-        mock_cleanup = mocker.patch.object(TwitterapiioTracker, "cleanup")
+        mock_log_action = mocker.patch.object(
+            TwitterapiioTracker, "log_action", new=mocker.MagicMock()
+        )
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         # Simulate an exception during check_mentions
         mocker.patch.object(
-            tracker, "check_mentions", side_effect=ValueError("Simulated error")
+            tracker,
+            "check_mentions",
+            new=mocker.MagicMock(side_effect=ValueError("Simulated error")),
         )
         with pytest.raises(ValueError, match="Simulated error"):
             tracker.run(max_iterations=1)
@@ -546,15 +576,14 @@ class TestTrackersTwitterApiIOTracker:
             f"{tracker.platform_name} tracker error: Simulated error"
         )
         mock_log_action.assert_any_call("error", "Tracker error: Simulated error")
-        mock_cleanup.assert_called_once()
 
     def test_trackers_twitterapiiotracker_get_tweets_by_ids_value_error(
         self, mocker, twitterapiio_config
     ):
         """Test _get_tweets_by_ids with a ValueError during JSON decoding."""
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_requests_get = mocker.patch("requests.get")
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.status_code = 200
         mock_response.json.side_effect = ValueError("decoding failed")
         mock_requests_get.return_value = mock_response
@@ -569,13 +598,14 @@ class TestTrackersTwitterApiIOTracker:
     def test_trackers_twitterapiiotracker_run_no_new_mentions_logging(
         self, mocker, twitterapiio_config
     ):
-        mocker.patch("trackers.base.MentionDatabaseManager")
+
         mock_logger_info = mocker.patch.object(logging.Logger, "info")
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
-        mocker.patch.object(tracker, "check_mentions", return_value=0)
+        mocker.patch.object(
+            tracker, "check_mentions", new=mocker.MagicMock(return_value=0)
+        )
         mocker.patch.object(tracker, "_interruptible_sleep")
         tracker.run(max_iterations=1)
         assert not any(
-            "Found 0 new mentions" in call.args[0]
-            for call in mock_logger_info.call_args_list
+            "Found 0 new mentions" in c.args[0] for c in mock_logger_info.call_args_list
         )

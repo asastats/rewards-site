@@ -285,7 +285,7 @@ class TestUpdatersDiscordDiscordupdater:
             returned = self.updater.message_from_url(url)
             assert returned == {
                 "success": True,
-                "content": "",
+                "contribution": "",
                 "author": "Unknown",
                 "timestamp": "",
                 "channel_id": channel_id,
@@ -316,7 +316,7 @@ class TestUpdatersDiscordDiscordupdater:
             returned = self.updater.message_from_url(url)
             assert returned == {
                 "success": True,
-                "content": "message content",
+                "contribution": "message content",
                 "author": "Author",
                 "timestamp": "message timestamp",
                 "channel_id": channel_id,

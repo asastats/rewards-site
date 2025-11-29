@@ -33,6 +33,7 @@ class TestTrackersTwitter:
         mock_tweet_data = mocker.MagicMock()
         mock_tweet_data.id = "original_tweet_123"
         mock_tweet_data.author_id = "original_user_id"
+        mock_tweet_data.text = "This is the original tweet."
         mock_user = mocker.MagicMock()
         mock_user.id = "original_user_id"
         mock_user.username = "original_user"
@@ -41,11 +42,14 @@ class TestTrackersTwitter:
         mock_response.data = mock_tweet_data
         mock_response.includes = mock_includes
         instance.client.get_tweet.return_value = mock_response
-        contribution_url, contributor = instance._get_original_tweet_info(
+        contribution_url, contributor, contribution = instance._get_original_tweet_info(
             "ref_tweet_123"
         )
-        assert contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
+        assert (
+            contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
+        )
         assert contributor == "original_user"
+        assert contribution == "This is the original tweet."
         instance.client.get_tweet.assert_called_once_with(
             "ref_tweet_123",
             tweet_fields=["created_at", "author_id", "text"],
@@ -60,11 +64,12 @@ class TestTrackersTwitter:
         mock_response = mocker.MagicMock()
         mock_response.data = None
         instance.client.get_tweet.return_value = mock_response
-        contribution_url, contributor = instance._get_original_tweet_info(
+        contribution_url, contributor, contribution = instance._get_original_tweet_info(
             "ref_tweet_123"
         )
         assert contribution_url == ""
         assert contributor == ""
+        assert contribution == ""
 
     def test_trackers_twittertracker_get_original_tweet_info_no_users(
         self, mocker, twitter_config
@@ -74,15 +79,21 @@ class TestTrackersTwitter:
         mock_tweet_data = mocker.MagicMock()
         mock_tweet_data.id = "original_tweet_123"
         mock_tweet_data.author_id = "original_user_id"
+        mock_tweet_data.text = "Original tweet text."
         mock_response = mocker.MagicMock()
         mock_response.data = mock_tweet_data
         mock_response.includes = {}
         instance.client.get_tweet.return_value = mock_response
-        contribution_url, contributor = instance._get_original_tweet_info(
-            "ref_tweet_123"
+        (
+            contribution_url,
+            contributor,
+            contribution,
+        ) = instance._get_original_tweet_info("ref_tweet_123")
+        assert (
+            contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
         )
-        assert contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
         assert contributor == ""
+        assert contribution == "Original tweet text."
 
     def test_trackers_twittertracker_get_original_tweet_info_user_not_found(
         self, mocker, twitter_config
@@ -92,6 +103,7 @@ class TestTrackersTwitter:
         mock_tweet_data = mocker.MagicMock()
         mock_tweet_data.id = "original_tweet_123"
         mock_tweet_data.author_id = "different_user_id"  # Different from included user
+        mock_tweet_data.text = "Another tweet."
         mock_user = mocker.MagicMock()
         mock_user.id = "some_other_user_id"
         mock_user.username = "other_user"
@@ -100,11 +112,16 @@ class TestTrackersTwitter:
         mock_response.data = mock_tweet_data
         mock_response.includes = mock_includes
         instance.client.get_tweet.return_value = mock_response
-        contribution_url, contributor = instance._get_original_tweet_info(
-            "ref_tweet_123"
+        (
+            contribution_url,
+            contributor,
+            contribution,
+        ) = instance._get_original_tweet_info("ref_tweet_123")
+        assert (
+            contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
         )
-        assert contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
         assert contributor == ""  # Author not found in users
+        assert contribution == "Another tweet."
 
     def test_trackers_twittertracker_get_original_tweet_info_exception(
         self, mocker, twitter_config
@@ -113,11 +130,14 @@ class TestTrackersTwitter:
         instance = TwitterTracker(lambda x: None, twitter_config)
         instance.logger = mocker.MagicMock()
         instance.client.get_tweet.side_effect = Exception("API error")
-        contribution_url, contributor = instance._get_original_tweet_info(
-            "ref_tweet_123"
-        )
+        (
+            contribution_url,
+            contributor,
+            contribution,
+        ) = instance._get_original_tweet_info("ref_tweet_123")
         assert contribution_url == ""
         assert contributor == ""
+        assert contribution == ""
         instance.logger.warning.assert_called_once_with(
             "Failed to get original tweet ref_tweet_123: API error"
         )
@@ -139,13 +159,17 @@ class TestTrackersTwitter:
         mock_get_original_info.return_value = (
             "https://twitter.com/i/web/status/original_123",
             "original_user",
+            "Original tweet text.",
         )
         user_map = {"user123": "test_user"}
-        contribution_url, contributor = instance._extract_reply_mention_data(
-            mock_tweet, user_map
-        )
+        (
+            contribution_url,
+            contributor,
+            contribution,
+        ) = instance._extract_reply_mention_data(mock_tweet, user_map)
         assert contribution_url == "https://twitter.com/i/web/status/original_123"
         assert contributor == "original_user"
+        assert contribution == "Original tweet text."
         mock_get_original_info.assert_called_once_with("ref_tweet_123")
 
     def test_trackers_twittertracker_extract_reply_mention_data_no_referenced_tweets(
@@ -156,11 +180,14 @@ class TestTrackersTwitter:
         mock_tweet = mocker.MagicMock()
         mock_tweet.referenced_tweets = None
         user_map = {"user123": "test_user"}
-        contribution_url, contributor = instance._extract_reply_mention_data(
-            mock_tweet, user_map
-        )
+        (
+            contribution_url,
+            contributor,
+            contribution,
+        ) = instance._extract_reply_mention_data(mock_tweet, user_map)
         assert contribution_url == ""
         assert contributor == ""
+        assert contribution == ""
 
     def test_trackers_twittertracker_extract_reply_mention_data_no_reply_type(
         self, mocker, twitter_config
@@ -176,11 +203,14 @@ class TestTrackersTwitter:
             instance, "_get_original_tweet_info"
         )
         user_map = {"user123": "test_user"}
-        contribution_url, contributor = instance._extract_reply_mention_data(
-            mock_tweet, user_map
-        )
+        (
+            contribution_url,
+            contributor,
+            contribution,
+        ) = instance._extract_reply_mention_data(mock_tweet, user_map)
         assert contribution_url == ""
         assert contributor == ""
+        assert contribution == ""
         mock_get_original_info.assert_not_called()
 
     # _get_content
@@ -283,6 +313,7 @@ class TestTrackersTwitter:
         mock_extract_reply_data.return_value = (
             "https://twitter.com/i/web/status/original_123",
             "original_user",
+            "This is the contribution.",
         )
         user_map = {"user123": "suggester_user"}
         result = instance.extract_mention_data(mock_tweet, user_map)
@@ -295,6 +326,7 @@ class TestTrackersTwitter:
         assert result["contributor"] == "original_user"
         assert result["type"] == "tweet"
         assert result["content"] == "Hello @test_bot!"
+        assert result["contribution"] == "This is the contribution."
         assert result["item_id"] == "tweet123"
 
     def test_trackers_twittertracker_extract_mention_data_no_reply(
@@ -310,7 +342,7 @@ class TestTrackersTwitter:
         mock_extract_reply_data = mocker.patch.object(
             instance, "_extract_reply_mention_data"
         )
-        mock_extract_reply_data.return_value = ("", "")  # No reply data
+        mock_extract_reply_data.return_value = ("", "", "")  # No reply data
         user_map = {"user123": "suggester_user"}
         result = instance.extract_mention_data(mock_tweet, user_map)
         assert result["suggester"] == "suggester_user"
@@ -333,10 +365,12 @@ class TestTrackersTwitter:
         mock_extract_reply_data.return_value = (
             "https://twitter.com/i/web/status/original_123",
             "",
+            "Original tweet text.",
         )  # No contributor
         user_map = {"user123": "suggester_user"}
         result = instance.extract_mention_data(mock_tweet, user_map)
         assert result["contributor"] == "suggester_user"  # Falls back to suggester
+        assert result["contribution"] == "Original tweet text."
 
     def test_trackers_twittertracker_extract_mention_data_no_suggester_in_user_map(
         self, mocker, twitter_config
@@ -351,7 +385,7 @@ class TestTrackersTwitter:
         mock_extract_reply_data = mocker.patch.object(
             instance, "_extract_reply_mention_data"
         )
-        mock_extract_reply_data.return_value = ("", "")
+        mock_extract_reply_data.return_value = ("", "", "")
         user_map = {"user123": "suggester_user"}  # unknown_user not in map
         result = instance.extract_mention_data(mock_tweet, user_map)
         assert result["suggester"] == ""
@@ -370,12 +404,13 @@ class TestTrackersTwitter:
         mock_extract_reply_data = mocker.patch.object(
             instance, "_extract_reply_mention_data"
         )
-        mock_extract_reply_data.return_value = ("", "")
+        mock_extract_reply_data.return_value = ("", "", "")
         user_map = {"user123": "suggester_user"}
         result = instance.extract_mention_data(mock_tweet, user_map)
         assert result["content"] == ""
         assert "timestamp" in result  # Should use current timestamp
         assert result["suggester"] == "suggester_user"
+        assert result["contribution"] == ""
 
     # # run
     def test_trackers_twittertracker_run_wrapper_calls_base_run(

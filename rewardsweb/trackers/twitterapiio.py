@@ -199,15 +199,25 @@ class TwitterapiioTracker(BaseMentionTracker):
         :type mention: dict
         :return: A dictionary containing standardized mention data.
         :rtype: dict
+        :var tweet_id: The ID of the mention tweet.
+        :type tweet_id: str
+        :var parent_tweet_url: The URL of the parent tweet, if it exists.
+        :type parent_tweet_url: str
+        :var contributor_handle: The Twitter handle of the contributor.
+        :type contributor_handle: str
+        :var contribution: The text content of the parent tweet.
+        :type contribution: str
         """
         tweet_id = mention["id"]
         parent_tweet_url = ""
         contributor_handle = mention["author"]["userName"]
+        contribution = ""
 
         if "parent_tweet" in mention:
             parent = mention["parent_tweet"]
             parent_tweet_url = f"https://twitter.com/i/web/status/{parent['id']}"
             contributor_handle = parent["author"]["userName"]
+            contribution = parent["text"]
 
         return {
             "suggester": mention["author"]["userName"],
@@ -217,6 +227,7 @@ class TwitterapiioTracker(BaseMentionTracker):
             "contributor": contributor_handle,
             "type": "tweet",
             "content": mention["text"],
+            "contribution": contribution,
             "timestamp": self._twitter_created_at_to_unix(mention["createdAt"]),
             "item_id": tweet_id,
         }

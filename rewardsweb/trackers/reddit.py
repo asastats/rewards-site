@@ -66,18 +66,27 @@ class RedditTracker(BaseMentionTracker):
             return self._extract_submission_data(item)
 
     def _extract_comment_data(self, comment):
-        """Extract data from Reddit comment.
+        """Extract data from a Reddit comment.
 
-        :param comment: Reddit comment object
+        This method standardizes the data from a Reddit comment, including information
+        about the suggester, the suggestion itself, and the parent contribution.
+
+        :param comment: The Reddit comment object from which to extract data.
         :type comment: :class:`praw.models.Comment`
-        :var data: extracted data dictionary
-        :type data: dict
-        :var parent: parent of the comment (comment or submission)
-        :type parent: :class:`praw.models.Comment` or :class:`praw.models.Submission`
-        :return: standardized mention data
+        :return: A dictionary with standardized mention data.
         :rtype: dict
+        :var parent: The parent of the comment, which can be another comment or a submission.
+        :type parent: :class:`praw.models.Comment` or :class:`praw.models.Submission`
+        :var contribution: The text content of the parent contribution.
+        :type contribution: str
         """
         parent = comment.parent()
+        contribution = ""
+        contribution = (
+            parent.selftext
+            if isinstance(parent, praw.models.Submission)
+            else parent.body
+        )
         data = {
             "suggester": comment.author.name if comment.author else "[deleted]",
             "suggestion_url": f"https://reddit.com{comment.permalink}",
@@ -86,19 +95,21 @@ class RedditTracker(BaseMentionTracker):
             "type": "comment",
             "subreddit": comment.subreddit.display_name,
             "content": comment.body if comment.body else "",
+            "contribution": contribution,
             "timestamp": datetime.fromtimestamp(comment.created_utc).isoformat(),
             "item_id": comment.id,
         }
         return data
 
     def _extract_submission_data(self, submission):
-        """Extract data from Reddit submission.
+        """Extract data from a Reddit submission.
 
-        :param submission: Reddit submission object
+        This method standardizes the data from a Reddit submission, treating the
+        submission itself as both the suggestion and the contribution.
+
+        :param submission: The Reddit submission object to extract data from.
         :type submission: :class:`praw.models.Submission`
-        :var data: extracted data dictionary
-        :type data: dict
-        :return: standardized mention data
+        :return: A dictionary with standardized mention data.
         :rtype: dict
         """
         data = {
@@ -108,7 +119,8 @@ class RedditTracker(BaseMentionTracker):
             "contributor": submission.author.name if submission.author else "[deleted]",
             "type": "submission",
             "subreddit": submission.subreddit.display_name,
-            "content": submission.body,
+            "content": submission.title,
+            "contribution": submission.selftext,
             "timestamp": datetime.fromtimestamp(submission.created_utc).isoformat(),
             "item_id": submission.id,
         }

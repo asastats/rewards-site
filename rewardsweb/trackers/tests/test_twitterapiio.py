@@ -290,6 +290,7 @@ class TestTrackersTwitterApiIOTracker:
         assert data["item_id"] == "123"
         assert data["contributor"] == "testuser"
         assert data["contribution_url"] == "https://twitter.com/i/web/status/123"
+        assert data["contribution"] == ""
 
     def test_trackers_twitterapiiotracker_extract_mention_data_with_parent(
         self, mocker, twitterapiio_config
@@ -302,11 +303,16 @@ class TestTrackersTwitterApiIOTracker:
             "text": "Test mention",
             "author": {"userName": "testuser"},
             "createdAt": "Sat Nov 22 04:28:58 +0000 2025",
-            "parent_tweet": {"id": "456", "author": {"userName": "parentuser"}},
+            "parent_tweet": {
+                "id": "456",
+                "author": {"userName": "parentuser"},
+                "text": "This is the parent tweet.",
+            },
         }
         data = tracker.extract_mention_data(mention)
         assert data["contributor"] == "parentuser"
         assert data["contribution_url"] == "https://twitter.com/i/web/status/456"
+        assert data["contribution"] == "This is the parent tweet."
 
     # # check_mentions
     def test_trackers_twitterapiiotracker_check_mentions_no_new_mentions(

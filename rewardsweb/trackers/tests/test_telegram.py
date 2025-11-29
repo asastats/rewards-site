@@ -50,6 +50,7 @@ class TestTrackersTelegram:
                 "username": "replieduser",
                 "display_name": "Replied User",
             },
+            "text": "This is the original message.",
         }
         mocker.patch.object(
             instance, "_get_replied_message_info", return_value=mock_replied_info
@@ -75,6 +76,7 @@ class TestTrackersTelegram:
         assert result["telegram_chat"] == "Test Group"
         assert result["chat_username"] == "testgroup"
         assert result["content"] == "Hello @test_bot!"
+        assert result["contribution"] == "This is the original message."
 
     @pytest.mark.asyncio
     async def test_trackers_telegramtracker_extract_mention_data_no_reply(
@@ -107,6 +109,7 @@ class TestTrackersTelegram:
         assert result["contribution_url"] == "chat_67890_msg_100"
         assert result["contributor"] == 12345
         assert result["contributor_username"] == "testuser"
+        assert result["contribution"] == ""
 
     # check_mentions
     def test_trackers_telegramtracker_check_mentions_no_client(
@@ -267,7 +270,7 @@ class TestTrackersTelegram:
         self, mocker, telegram_config, telegram_chats
     ):
         mocker.patch("trackers.telegram.TelegramClient")
-        mock_log_action = mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action")
         # Patch BaseMentionTracker.run so no real loop runs
         mocked_base_run = mocker.patch("trackers.base.BaseMentionTracker.run")
         # Create instance (MessageParser.parse mocked out)
@@ -772,6 +775,7 @@ class TestTrackersTelegram:
         mock_message.chat_id = 123
         mock_replied_message = mocker.MagicMock()
         mock_replied_message.id = 99
+        mock_replied_message.text = "This is the original message."
         # Mock get_messages
         instance.client.get_messages = mocker.AsyncMock(
             return_value=mock_replied_message
@@ -786,6 +790,7 @@ class TestTrackersTelegram:
         result = await instance._get_replied_message_info(mock_message)
         assert result["message_id"] == 99
         assert result["sender_info"] == mock_sender_info
+        assert result["text"] == "This is the original message."
         instance.client.get_messages.assert_called_once_with(123, ids=99)
 
     @pytest.mark.asyncio
@@ -864,3 +869,102 @@ class TestTrackersTelegram:
         mock_chat.username = None
         result = instance._generate_message_url(mock_chat, 100)
         assert result == "chat_12345_msg_100"
+
+    @pytest.mark.asyncio
+    async def test_trackers_telegramtracker_post_init_setup(
+        self, mocker, telegram_config, telegram_chats
+    ):
+        """Test _post_init_setup method."""
+        mocker.patch("trackers.telegram.TelegramClient")
+        instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
+        mock_log_action = mocker.patch.object(instance, "log_action")
+        await instance._post_init_setup(telegram_chats)
+        mock_log_action.assert_called_once_with(
+            "initialized", f"Tracking {len(telegram_chats)} chats"
+        )
+
+    @pytest.mark.asyncio
+    async def test_trackers_telegramtracker_cleanup_connected(
+        self, mocker, telegram_config, telegram_chats
+    ):
+        """Test cleanup method when client is connected."""
+        mocker.patch("trackers.telegram.TelegramClient")
+        instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
+        instance.client = mocker.MagicMock()
+        instance.client.is_connected.return_value = True
+        instance.client.disconnect = mocker.AsyncMock()
+        instance.logger = mocker.MagicMock()
+        await instance.cleanup()
+        instance.client.disconnect.assert_called_once()
+        instance.logger.info.assert_called_with("Disconnecting Telegram client")
+
+    @pytest.mark.asyncio
+    async def test_trackers_telegramtracker_cleanup_not_connected(
+        self, mocker, telegram_config, telegram_chats
+    ):
+        """Test cleanup method when client is not connected."""
+        mocker.patch("trackers.telegram.TelegramClient")
+        instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
+        instance.client = mocker.MagicMock()
+        instance.client.is_connected.return_value = False
+        instance.client.disconnect = mocker.AsyncMock()
+        await instance.cleanup()
+        instance.client.disconnect.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_trackers_telegramtracker_is_processed_async(
+        self, mocker, telegram_config, telegram_chats
+    ):
+        """Test is_processed_async method."""
+        mocker.patch("trackers.telegram.TelegramClient")
+        instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
+        mock_is_processed = mocker.patch.object(
+            instance, "is_processed", return_value=True
+        )
+        result = await instance.is_processed_async("some_id")
+        assert result is True
+        mock_is_processed.assert_called_once_with("some_id")
+
+    @pytest.mark.asyncio
+    async def test_trackers_telegramtracker_process_mention_async(
+        self, mocker, telegram_config, telegram_chats
+    ):
+        """Test process_mention_async method."""
+        mocker.patch("trackers.telegram.TelegramClient")
+        instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
+        mock_process_mention = mocker.patch.object(
+            instance, "process_mention", return_value=True
+        )
+        result = await instance.process_mention_async("some_id", {}, "user")
+        assert result is True
+        mock_process_mention.assert_called_once_with("some_id", {}, "user")
+
+    def test_trackers_telegramtracker_run_wrapper_calls_base_run_connected(
+        self, mocker, telegram_config, telegram_chats
+    ):
+        """Test run method when client is already connected."""
+        mocker.patch("trackers.telegram.TelegramClient")
+        mocker.patch.object(TelegramTracker, "log_action")
+        mocked_base_run = mocker.patch("trackers.base.BaseMentionTracker.run")
+        tracker = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
+        tracker.client = mocker.MagicMock()
+        tracker.client.is_connected.return_value = True  # Client is connected
+        tracker.client.connect.return_value = None
+        mock_post_init_setup = mocker.AsyncMock()
+        mocker.patch.object(tracker, "_post_init_setup", new=mock_post_init_setup)
+        mock_cleanup = mocker.AsyncMock()
+        mocker.patch.object(tracker, "cleanup", new=mock_cleanup)
+
+        async def mock_run_until_complete(coro):
+            await coro
+
+        tracker.client.loop.run_until_complete.side_effect = mock_run_until_complete
+        tracker.run(poll_interval_minutes=10, max_iterations=5)
+        mocked_base_run.assert_called_once_with(
+            poll_interval_minutes=10,
+            max_iterations=5,
+        )
+        tracker.client.is_connected.assert_called_once()
+        tracker.client.connect.assert_not_called()  # Should not be called
+        mock_post_init_setup.assert_called_once_with(telegram_chats)
+        mock_cleanup.assert_called_once()

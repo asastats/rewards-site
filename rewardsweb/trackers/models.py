@@ -92,6 +92,7 @@ class MentionManager(models.Manager):
             return {
                 "success": True,
                 "content": mention.raw_data.get("content", ""),
+                "contribution": mention.raw_data.get("contribution", ""),
                 "author": mention.raw_data.get("contributor", "Unknown"),
                 "timestamp": timestamp_str,
                 "message_id": mention.item_id,

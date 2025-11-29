@@ -52,11 +52,13 @@ class TwitterTracker(BaseMentionTracker):
         :type contribution_url: str
         :var contributor: username of the original tweet author
         :type contributor: str
+        :var contribution: text of the original tweet
+        :type contribution: str
         :var original_user_map: mapping of user IDs to user objects
         :type original_user_map: dict
         :var author: user object of the original tweet author
         :type author: :class:`tweepy.models.User`
-        :return: tuple of (contribution_url, contributor_username)
+        :return: tuple of (contribution_url, contributor_username, contribution)
         :rtype: tuple
         """
         try:
@@ -67,11 +69,12 @@ class TwitterTracker(BaseMentionTracker):
             )
 
             if not original_tweet.data:
-                return "", ""
+                return "", "", ""
 
             contribution_url = (
                 f"https://twitter.com/i/web/status/{original_tweet.data.id}"
             )
+            contribution = original_tweet.data.text or ""
 
             contributor = ""
             if original_tweet.includes and "users" in original_tweet.includes:
@@ -80,13 +83,13 @@ class TwitterTracker(BaseMentionTracker):
                 author_id = original_tweet.data.author_id
                 contributor = original_user_map.get(author_id, "")
 
-            return contribution_url, contributor
+            return contribution_url, contributor, contribution
 
         except Exception as e:
             self.logger.warning(
                 f"Failed to get original tweet {referenced_tweet_id}: {e}"
             )
-            return "", ""
+            return "", "", ""
 
     def _extract_reply_mention_data(self, tweet, user_map):
         """Extract data for reply mentions.
@@ -99,22 +102,26 @@ class TwitterTracker(BaseMentionTracker):
         :type contribution_url: str
         :var contributor: username of the contributor
         :type contributor: str
+        :var contribution: text of the original tweet
+        :type contribution: str
         :var ref: referenced tweet object
         :type ref: :class:`tweepy.models.ReferencedTweet`
-        :return: tuple of (contribution_url, contributor)
+        :return: tuple of (contribution_url, contributor, contribution)
         :rtype: tuple
         """
-        contribution_url, contributor = "", ""
+        contribution_url, contributor, contribution = "", "", ""
 
         if tweet.referenced_tweets:
             for ref in tweet.referenced_tweets:
                 if ref.type == "replied_to":
-                    contribution_url, contributor = self._get_original_tweet_info(
-                        ref.id
-                    )
+                    (
+                        contribution_url,
+                        contributor,
+                        contribution,
+                    ) = self._get_original_tweet_info(ref.id)
                     break
 
-        return contribution_url, contributor
+        return contribution_url, contributor, contribution
 
     def _get_content(self, tweet):
         """Safely get content preview from tweet text.
@@ -155,6 +162,8 @@ class TwitterTracker(BaseMentionTracker):
         :type contribution_url: str
         :var contributor: username of the contributor
         :type contributor: str
+        :var contribution: text of the original tweet
+        :type contribution: str
         :var suggestion_url: URL to the suggestion tweet
         :type suggestion_url: str
         :var data: extracted data dictionary
@@ -166,7 +175,7 @@ class TwitterTracker(BaseMentionTracker):
         suggester_username = user_map.get(tweet.author_id, "")
 
         # Handle reply mentions
-        contribution_url, contributor = self._extract_reply_mention_data(
+        contribution_url, contributor, contribution = self._extract_reply_mention_data(
             tweet, user_map
         )
 
@@ -184,6 +193,7 @@ class TwitterTracker(BaseMentionTracker):
             "contributor": contributor or suggester_username,
             "type": "tweet",
             "content": self._get_content(tweet),
+            "contribution": contribution,
             "timestamp": self._get_timestamp(tweet),
             "item_id": tweet.id,
         }

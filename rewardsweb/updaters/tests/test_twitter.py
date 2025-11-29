@@ -1,7 +1,5 @@
 """Testing module for :py:mod:`updaters.twitter` module."""
 
-import pytest
-
 from updaters.twitter import TwitterUpdater
 
 

@@ -1,7 +1,5 @@
 """Testing module for :py:mod:`updaters.telegram` module."""
 
-import pytest
-
 from updaters.telegram import TelegramUpdater
 
 

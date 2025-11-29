@@ -1,7 +1,5 @@
 """Testing module for :py:mod:`updaters.reddit` module."""
 
-import pytest
-
 from updaters.reddit import RedditUpdater
 
 

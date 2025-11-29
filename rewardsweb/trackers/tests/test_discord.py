@@ -1288,6 +1288,7 @@ class TestDiscordTracker:
         mock_replied.author.id = 555555555555555555
         mock_replied.author.name = "replied_user"
         mock_replied.author.display_name = "Replied User"
+        mock_replied.content = "This is the replied message content."
 
         mock_message.reference = mock.MagicMock()
         mock_message.reference.resolved = mock_replied
@@ -1299,6 +1300,7 @@ class TestDiscordTracker:
         assert result["contribution_url"] == mock_replied.jump_url
         assert result["discord_guild"] == "Test Guild"
         assert result["discord_channel"] == "test-channel"
+        assert result["contribution"] == "This is the replied message content."
 
     @pytest.mark.asyncio
     async def test_trackers_discord_extract_mention_data_no_reply(
@@ -1313,12 +1315,14 @@ class TestDiscordTracker:
         )
 
         mock_message.reference = None
+        mock_message.content = "This is a standalone message."
 
         result = await instance.extract_mention_data(mock_message)
 
         assert result["suggester"] == mock_message.author.id
         assert result["contributor"] == mock_message.author.id
         assert result["contribution_url"] == mock_message.jump_url
+        assert result["contribution"] == "This is a standalone message."
 
     @pytest.mark.asyncio
     async def test_trackers_discord_extract_mention_data_reply_no_jump_url(
@@ -1337,17 +1341,21 @@ class TestDiscordTracker:
         mock_replied.author.id = 555555555555555555
         mock_replied.author.name = "replied_user"
         mock_replied.author.display_name = "Replied User"
+        mock_replied.content = "This is the replied message."
+
         # Remove jump_url attribute
         del mock_replied.jump_url
 
         mock_message.reference = mock.MagicMock()
         mock_message.reference.resolved = mock_replied
+        mock_message.content = "This is the original message."
 
         result = await instance.extract_mention_data(mock_message)
 
         # Should fall back to current message URL
         assert result["contribution_url"] == mock_message.jump_url
         assert result["contributor"] == mock_message.author.id
+        assert result["contribution"] == "This is the original message."
 
     @pytest.mark.asyncio
     async def test_trackers_discord_extract_mention_data_empty_content(
@@ -1362,10 +1370,12 @@ class TestDiscordTracker:
         )
 
         mock_message.content = None
+        mock_message.reference = None
 
         result = await instance.extract_mention_data(mock_message)
 
         assert result["content"] == ""
+        assert result["contribution"] == ""
 
     # Channel history checking tests
     def test_trackers_discord_is_rate_limited_true(

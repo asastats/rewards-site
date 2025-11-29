@@ -92,6 +92,7 @@ class TestTrackersModelsMentionManagerMessageFromUrl:
             "suggestion_url": "https://twitter.com/status/1",
             "contribution_url": "https://twitter.com/contrib/1",
             "content": "Tweet content 1",
+            "contribution": "Contribution tweet content 1",
             "timestamp": 1678886400,
             "contributor": "userA",
         }
@@ -102,6 +103,7 @@ class TestTrackersModelsMentionManagerMessageFromUrl:
             "suggestion_url": "https://reddit.com/post/2",
             "contribution_url": "https://reddit.com/comment/2",
             "content": "Reddit content 2",
+            "contribution": "Reddit contribution content 2",
             "timestamp": 1678886500,
             "contributor": "userB",
         }
@@ -116,6 +118,7 @@ class TestTrackersModelsMentionManagerMessageFromUrl:
         message = Mention.objects.message_from_url(url)
         assert message["success"] is True
         assert message["content"] == "Tweet content 1"
+        assert message["contribution"] == "Contribution tweet content 1"
         assert message["author"] == "userA"
         assert message["message_id"] == "1"
 
@@ -127,6 +130,7 @@ class TestTrackersModelsMentionManagerMessageFromUrl:
         message = Mention.objects.message_from_url(url)
         assert message["success"] is True
         assert message["content"] == "Reddit content 2"
+        assert message["contribution"] == "Reddit contribution content 2"
         assert message["author"] == "userB"
         assert message["message_id"] == "2"
 

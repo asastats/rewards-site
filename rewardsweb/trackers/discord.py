@@ -568,9 +568,13 @@ class DiscordTracker(BaseMentionTracker):
         if referenced_message and hasattr(referenced_message, "jump_url"):
             contribution_url = referenced_message.jump_url
             contributor = referenced_message.author
+            contribution = (
+                referenced_message.content if referenced_message.content else ""
+            )
         else:
             contribution_url = message_url
             contributor = author
+            contribution = message.content if message.content else ""
 
         data = {
             "suggester": author.id,
@@ -587,6 +591,7 @@ class DiscordTracker(BaseMentionTracker):
             "channel_id": message.channel.id,
             "guild_id": message.guild.id,
             "content": message.content if message.content else "",
+            "contribution": contribution,
             "timestamp": message.created_at.isoformat(),
             "item_id": f"discord_{message.guild.id}_{message.channel.id}_{message.id}",
         }

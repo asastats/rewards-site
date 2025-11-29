@@ -8,17 +8,17 @@ from updaters.reddit import RedditUpdater
 class TestUpdatersRedditRedditUpdater:
     """Testing class for :py:mod:`updaters.reddit.RedditUpdater` class."""
 
-    def test_updaters_reddit_redditupdater_add_reaction_to_message_for_not_implemented(
+    def test_updaters_reddit_redditupdater_add_reaction_to_message_functionality(
         self,
     ):
-        with pytest.raises(NotImplementedError):
-            RedditUpdater().add_reaction_to_message("some_url", "some_reaction")
+        assert (
+            RedditUpdater().add_reaction_to_message("some_url", "some_reaction") is None
+        )
 
-    def test_updaters_reddit_redditupdater_add_reply_to_message_for_not_implemented(
+    def test_updaters_reddit_redditupdater_add_reply_to_message_functionality(
         self,
     ):
-        with pytest.raises(NotImplementedError):
-            RedditUpdater().add_reply_to_message("some_url", "some_text")
+        assert RedditUpdater().add_reply_to_message("some_url", "some_text") is None
 
     def test_updaters_reddit_redditupdater_message_from_url_for_no_message_found(
         self, mocker

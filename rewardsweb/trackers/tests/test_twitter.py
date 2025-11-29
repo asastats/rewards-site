@@ -45,9 +45,7 @@ class TestTrackersTwitter:
         contribution_url, contributor, contribution = instance._get_original_tweet_info(
             "ref_tweet_123"
         )
-        assert (
-            contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
-        )
+        assert contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
         assert contributor == "original_user"
         assert contribution == "This is the original tweet."
         instance.client.get_tweet.assert_called_once_with(
@@ -89,9 +87,7 @@ class TestTrackersTwitter:
             contributor,
             contribution,
         ) = instance._get_original_tweet_info("ref_tweet_123")
-        assert (
-            contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
-        )
+        assert contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
         assert contributor == ""
         assert contribution == "Original tweet text."
 
@@ -117,9 +113,7 @@ class TestTrackersTwitter:
             contributor,
             contribution,
         ) = instance._get_original_tweet_info("ref_tweet_123")
-        assert (
-            contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
-        )
+        assert contribution_url == "https://twitter.com/i/web/status/original_tweet_123"
         assert contributor == ""  # Author not found in users
         assert contribution == "Another tweet."
 

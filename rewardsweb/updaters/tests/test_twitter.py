@@ -8,17 +8,18 @@ from updaters.twitter import TwitterUpdater
 class TestUpdatersTwitterTwitterUpdater:
     """Testing class for :py:mod:`updaters.twitter.TwitterUpdater` class."""
 
-    def test_updaters_twitter_twitterupdater_add_reaction_to_message_for_not_implemented(
+    def test_updaters_twitter_twitterupdater_add_reaction_to_message_functionality(
         self,
     ):
-        with pytest.raises(NotImplementedError):
+        assert (
             TwitterUpdater().add_reaction_to_message("some_url", "some_reaction")
+            is None
+        )
 
-    def test_updaters_twitter_twitterupdater_add_reply_to_message_for_not_implemented(
+    def test_updaters_twitter_twitterupdater_add_reply_to_message_functionality(
         self,
     ):
-        with pytest.raises(NotImplementedError):
-            TwitterUpdater().add_reply_to_message("some_url", "some_text")
+        assert TwitterUpdater().add_reply_to_message("some_url", "some_text") is None
 
     def test_updaters_twitter_twitterupdater_message_from_url_functionality(
         self, mocker

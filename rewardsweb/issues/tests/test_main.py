@@ -137,7 +137,7 @@ class TestIssuesMainPrepareFunctions:
             "success": True,
             "author": "testuser",
             "timestamp": "2023-10-15T14:30:00.000000+00:00",
-            "content": "This is a test message\nwith multiple lines",
+            "contribution": "This is a test message\nwith multiple lines",
         }
 
         mocked_message_from_url = mocker.patch(

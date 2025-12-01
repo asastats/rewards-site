@@ -23,6 +23,10 @@ Environment variables should not be stored in the repository, so `.env` files mu
 > [!NOTE]
 > If the `ADMIN_*_MNEMONIC` variable is not set in `rewardsweb/rewards/.env`, the system will treat the logged-in superuser as the admin. You will then need to assign the admin's public address to that superuser.
 
+## Quick Start
+
+Please check the [setup section](https://rewards-suite.readthedocs.io/en/latest/development.html#setup) in the documentation.
+
 ## Goals
 
 - Stimulate community engagement

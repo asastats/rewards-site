@@ -3,7 +3,7 @@
 
 # Class: AddAllocationsComponent
 
-Defined in: [src/AddAllocationsComponent.ts:17](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L17)
+Defined in: [src/AddAllocationsComponent.ts:17](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L17)
 
 Component for managing and adding reward allocations to multiple addresses.
 
@@ -24,7 +24,7 @@ addAllocationsComponent.bind(document.getElementById('add-allocations-container'
 
 > **new AddAllocationsComponent**(`rewardsClient`, `walletManager`): `AddAllocationsComponent`
 
-Defined in: [src/AddAllocationsComponent.ts:31](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L31)
+Defined in: [src/AddAllocationsComponent.ts:31](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L31)
 
 Creates an instance of AddAllocationsComponent.
 
@@ -52,7 +52,7 @@ The wallet manager for account and network state
 
 > `private` **addresses**: `string`[] = `[]`
 
-Defined in: [src/AddAllocationsComponent.ts:21](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L21)
+Defined in: [src/AddAllocationsComponent.ts:21](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L21)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [src/AddAllocationsComponent.ts:21](https://github.com/ipaleka/rewar
 
 > `private` **amounts**: `number`[] = `[]`
 
-Defined in: [src/AddAllocationsComponent.ts:22](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L22)
+Defined in: [src/AddAllocationsComponent.ts:22](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L22)
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: [src/AddAllocationsComponent.ts:22](https://github.com/ipaleka/rewar
 
 > `private` **decimals**: `number` = `6`
 
-Defined in: [src/AddAllocationsComponent.ts:23](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L23)
+Defined in: [src/AddAllocationsComponent.ts:23](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L23)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [src/AddAllocationsComponent.ts:23](https://github.com/ipaleka/rewar
 
 > `private` **element**: `HTMLElement` \| `null` = `null`
 
-Defined in: [src/AddAllocationsComponent.ts:18](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L18)
+Defined in: [src/AddAllocationsComponent.ts:18](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L18)
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: [src/AddAllocationsComponent.ts:18](https://github.com/ipaleka/rewar
 
 > `private` **rewardsClient**: [`RewardsClient`](../../RewardsClient/classes/RewardsClient.md)
 
-Defined in: [src/AddAllocationsComponent.ts:19](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L19)
+Defined in: [src/AddAllocationsComponent.ts:19](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L19)
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: [src/AddAllocationsComponent.ts:19](https://github.com/ipaleka/rewar
 
 > `private` **walletManager**: `WalletManager`
 
-Defined in: [src/AddAllocationsComponent.ts:20](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L20)
+Defined in: [src/AddAllocationsComponent.ts:20](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L20)
 
 ## Methods
 
@@ -100,7 +100,7 @@ Defined in: [src/AddAllocationsComponent.ts:20](https://github.com/ipaleka/rewar
 
 > `private` **addEventListeners**(): `void`
 
-Defined in: [src/AddAllocationsComponent.ts:114](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L114)
+Defined in: [src/AddAllocationsComponent.ts:114](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L114)
 
 Adds event listeners for user interactions.
 
@@ -117,7 +117,7 @@ internal state from textarea inputs before submission.
 
 > **bind**(`element`): `void`
 
-Defined in: [src/AddAllocationsComponent.ts:42](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L42)
+Defined in: [src/AddAllocationsComponent.ts:42](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L42)
 
 Binds the component to a DOM element and initializes event listeners.
 
@@ -139,7 +139,7 @@ The HTML element to bind the component to
 
 > **destroy**(): `void`
 
-Defined in: [src/AddAllocationsComponent.ts:132](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L132)
+Defined in: [src/AddAllocationsComponent.ts:132](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L132)
 
 Cleans up the component.
 
@@ -155,7 +155,7 @@ Currently no specific cleanup needed, but provided for interface consistency.
 
 > `private` **fetchAllocationsData**(): `Promise`\<`void`\>
 
-Defined in: [src/AddAllocationsComponent.ts:61](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L61)
+Defined in: [src/AddAllocationsComponent.ts:61](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L61)
 
 Fetches allocation data from the backend API for the active account.
 
@@ -172,7 +172,7 @@ Handles errors by displaying alerts to the user.
 
 > `private` **handleAddAllocations**(): `Promise`\<`void`\>
 
-Defined in: [src/AddAllocationsComponent.ts:91](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L91)
+Defined in: [src/AddAllocationsComponent.ts:91](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L91)
 
 Handles the add allocations transaction submission.
 

@@ -3,7 +3,7 @@
 
 # Class: ReclaimAllocationsComponent
 
-Defined in: [src/ReclaimAllocationsComponent.ts:17](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L17)
+Defined in: [src/ReclaimAllocationsComponent.ts:17](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L17)
 
 Component for managing and reclaiming allocated rewards.
 
@@ -24,7 +24,7 @@ reclaimComponent.bind(document.getElementById('reclaim-allocations-container'))
 
 > **new ReclaimAllocationsComponent**(`rewardsClient`, `walletManager`): `ReclaimAllocationsComponent`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:29](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L29)
+Defined in: [src/ReclaimAllocationsComponent.ts:29](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L29)
 
 Creates an instance of ReclaimAllocationsComponent.
 
@@ -52,7 +52,7 @@ The wallet manager for account and network state
 
 > `private` **element**: `HTMLElement` \| `null` = `null`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:18](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L18)
+Defined in: [src/ReclaimAllocationsComponent.ts:18](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L18)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [src/ReclaimAllocationsComponent.ts:18](https://github.com/ipaleka/r
 
 > `private` **reclaimableAddresses**: `string`[] = `[]`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:21](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L21)
+Defined in: [src/ReclaimAllocationsComponent.ts:21](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L21)
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: [src/ReclaimAllocationsComponent.ts:21](https://github.com/ipaleka/r
 
 > `private` **rewardsClient**: [`RewardsClient`](../../RewardsClient/classes/RewardsClient.md)
 
-Defined in: [src/ReclaimAllocationsComponent.ts:19](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L19)
+Defined in: [src/ReclaimAllocationsComponent.ts:19](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L19)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [src/ReclaimAllocationsComponent.ts:19](https://github.com/ipaleka/r
 
 > `private` **walletManager**: `WalletManager`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:20](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L20)
+Defined in: [src/ReclaimAllocationsComponent.ts:20](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L20)
 
 ## Methods
 
@@ -84,7 +84,7 @@ Defined in: [src/ReclaimAllocationsComponent.ts:20](https://github.com/ipaleka/r
 
 > `private` **addEventListeners**(): `void`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:134](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L134)
+Defined in: [src/ReclaimAllocationsComponent.ts:134](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L134)
 
 Adds event listeners for reclaim button clicks.
 
@@ -101,7 +101,7 @@ and triggers the reclaim process for the corresponding address.
 
 > **bind**(`element`): `void`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:40](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L40)
+Defined in: [src/ReclaimAllocationsComponent.ts:40](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L40)
 
 Binds the component to a DOM element and initializes event listeners.
 
@@ -123,7 +123,7 @@ The HTML element to bind the component to
 
 > **destroy**(): `void`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:165](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L165)
+Defined in: [src/ReclaimAllocationsComponent.ts:165](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L165)
 
 Cleans up the component.
 
@@ -139,7 +139,7 @@ Currently no specific cleanup needed, but provided for interface consistency.
 
 > `private` **fetchReclaimAllocationsData**(): `Promise`\<`void`\>
 
-Defined in: [src/ReclaimAllocationsComponent.ts:59](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L59)
+Defined in: [src/ReclaimAllocationsComponent.ts:59](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L59)
 
 Fetches reclaimable allocation data from the backend API.
 
@@ -156,7 +156,7 @@ Updates the internal state with the results.
 
 > **getReclaimableAddresses**(): `string`[]
 
-Defined in: [src/ReclaimAllocationsComponent.ts:156](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L156)
+Defined in: [src/ReclaimAllocationsComponent.ts:156](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L156)
 
 Gets the current list of reclaimable addresses.
 
@@ -172,7 +172,7 @@ Array of reclaimable addresses
 
 > `private` **handleReclaimAllocation**(`address`): `Promise`\<`void`\>
 
-Defined in: [src/ReclaimAllocationsComponent.ts:101](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L101)
+Defined in: [src/ReclaimAllocationsComponent.ts:101](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L101)
 
 Handles reclaim transaction submission for a specific address.
 
@@ -197,7 +197,7 @@ The address to reclaim allocations from
 
 > `private` **handleReclaimError**(`address`, `error`): `void`
 
-Defined in: [src/ReclaimAllocationsComponent.ts:87](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L87)
+Defined in: [src/ReclaimAllocationsComponent.ts:87](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/ReclaimAllocationsComponent.ts#L87)
 
 Handles errors during reclaim operations.
 

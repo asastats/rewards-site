@@ -24,7 +24,7 @@ Create Python virtual environment:
 Set some environment variables upon activation:
 
 .. code-block:: bash
-  :caption: /home/ipaleka/dev/venvs/rewards/bin/activate
+  :caption: /home/username/dev/venvs/rewards/bin/activate
 
   export DJANGO_SETTINGS_MODULE=rewardsweb.settings.development
 
@@ -41,14 +41,15 @@ Adding an alias can be useful:
 .. code-block:: bash
   :caption: ~/.bashrc
 
-  alias 'rwds'='cd /home/ipaleka/dev/rewards_site/rewardsweb;source /home/ipaleka/dev/venvs/rewards/bin/activate'
+  alias 'rwds'='cd /home/username/dev/rewards-suite/rewardsweb;source /home/username/dev/venvs/rewards/bin/activate'
 
 
 Initial packages installation:
 
 .. code-block:: bash
 
-  (rewards) ipaleka@debian:~/dev/rewards_site/rewardsweb$ pip install -r requirements/development.txt
+  (rewards) debian:~/dev/rewards-suite/rewardsweb$ pip install -r requirements/development.txt
+  (rewards) debian:~/dev/rewards-suite/rewardsweb$ pip install -r requirements/contract.txt
 
 
 Run development server
@@ -145,8 +146,8 @@ Run all tests:
 
 .. code-block:: bash
 
-  cd /home/ipaleka/dev/rewards_site/rewardsweb
-  source /home/ipaleka/dev/venvs/rewards/bin/activate
+  cd /home/username/dev/rewards-suite/rewardsweb
+  source /home/username/dev/venvs/rewards/bin/activate
   python -m pytest -v  # or just pytest -v
 
 

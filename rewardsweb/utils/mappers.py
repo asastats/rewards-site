@@ -778,8 +778,6 @@ def _map_open_issues(github_issues):
     # Fetch existing rewards mapping
     reward_mapping = _build_reward_mapping()
 
-    # TODO: check why ipaleka is added among contributors during import
-
     # Fetch all contributors and create info mapping
     contributors = {
         contributor.info: contributor.id

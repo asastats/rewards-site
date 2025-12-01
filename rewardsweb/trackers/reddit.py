@@ -38,7 +38,6 @@ class RedditTracker(BaseMentionTracker):
             username=config.get("username"),
             password=config.get("password"),
         )
-
         self.bot_username = (
             self.reddit.user.me().name.lower() if config.get("username") else None
         )
@@ -158,7 +157,6 @@ class RedditTracker(BaseMentionTracker):
                         and f"u/{self.bot_username}" in comment.body.lower()
                         and not self.is_processed(comment.id)
                     ):
-
                         data = self.extract_mention_data(comment)
                         if self.process_mention(
                             comment.id, data, f"u/{self.bot_username}"

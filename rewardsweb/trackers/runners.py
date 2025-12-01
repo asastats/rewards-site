@@ -103,13 +103,3 @@ def run_twitterapiio_tracker():
         parse_message_callback=MessageParser().parse, config=config
     )
     tracker.run(poll_interval_minutes=config.get("poll_interval"))
-
-
-# if __name__ == "__main__":
-
-#     from pathlib import Path
-
-#     from dotenv import load_dotenv
-
-#     load_dotenv(load_dotenv(Path(__file__).parent.parent / ".env"))
-#     run_twitterapiio_tracker()

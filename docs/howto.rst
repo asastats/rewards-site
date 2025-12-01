@@ -93,7 +93,7 @@ To create a new OAuth consumer (which will give you the "Key" and "Secret" for y
 GitHub bot
 ----------
 
-Create rewards-bot as a GitHub App and then install it under your organization settings page.
+Create rewards-bot as a GitHub App and then install it under your organization's settings page.
 
 Assign created app's token to GITHUB_BOT_TOKEN constant in `rewardsweb/.env` file.
 

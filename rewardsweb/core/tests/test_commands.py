@@ -227,3 +227,33 @@ class TestMigrateCommand:
             )
             mock_parent_sync.assert_called_once_with(connection, ["test_app"])
             assert result == mock_parent_sync.return_value
+
+
+class TestRunTrackerCommand:
+    """Testing class for management command
+
+    :py:mod:`core.management.commands.run_tracker`."""
+
+    def test_run_tracker_command_output_for_wrong_provider(self):
+        with mock.patch(
+            "django.core.management.base.OutputWrapper.write"
+        ) as output_log:
+            call_command("run_tracker", provider="foobar")
+            output_log.assert_called_once_with("Invalid providr name: foobar")
+
+    @pytest.mark.parametrize(
+        "provider",
+        ["discord", "reddit", "telegram", "twitter", "twitterapiio"],
+    )
+    def test_run_tracker_command_output_functionality(self, provider, mocker):
+        mocked_run = mocker.patch(
+            f"core.management.commands.run_tracker.runners.run_{provider}_tracker"
+        )
+        with mock.patch(
+            "django.core.management.base.OutputWrapper.write"
+        ) as output_log:
+            call_command("run_tracker", provider=provider)
+            output_log.assert_called_once_with(
+                f"{provider.capitalize()} tracker exited"
+            )
+        mocked_run.assert_called_once_with()

@@ -3,6 +3,10 @@
 import os
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 ADDRESS_LEN = 58
 
 MISSING_ENVIRONMENT_VARIABLE_ERROR = "Environment variable is not set"

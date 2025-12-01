@@ -3,7 +3,7 @@
 
 # Class: RewardsClient
 
-Defined in: [src/RewardsClient.ts:27](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L27)
+Defined in: [src/RewardsClient.ts:27](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L27)
 
 Client for interacting with the Rewards smart contract and backend API.
 
@@ -25,7 +25,7 @@ await rewardsClient.addAllocations(addresses, amounts)
 
 > **new RewardsClient**(`manager`): `RewardsClient`
 
-Defined in: [src/RewardsClient.ts:39](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L39)
+Defined in: [src/RewardsClient.ts:39](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L39)
 
 Creates an instance of RewardsClient.
 
@@ -47,7 +47,7 @@ The wallet manager for network and account management
 
 > `private` **algodClient**: `AlgodClient`
 
-Defined in: [src/RewardsClient.ts:29](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L29)
+Defined in: [src/RewardsClient.ts:29](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L29)
 
 ***
 
@@ -55,7 +55,7 @@ Defined in: [src/RewardsClient.ts:29](https://github.com/ipaleka/rewards-suite/b
 
 > `private` **contract**: `ABIContract`
 
-Defined in: [src/RewardsClient.ts:30](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L30)
+Defined in: [src/RewardsClient.ts:30](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L30)
 
 ***
 
@@ -63,7 +63,7 @@ Defined in: [src/RewardsClient.ts:30](https://github.com/ipaleka/rewards-suite/b
 
 > `private` **manager**: `WalletManager`
 
-Defined in: [src/RewardsClient.ts:28](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L28)
+Defined in: [src/RewardsClient.ts:28](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L28)
 
 ***
 
@@ -71,7 +71,7 @@ Defined in: [src/RewardsClient.ts:28](https://github.com/ipaleka/rewards-suite/b
 
 > `private` **rewardsAppIds**: `object`
 
-Defined in: [src/RewardsClient.ts:31](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L31)
+Defined in: [src/RewardsClient.ts:31](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L31)
 
 #### betanet?
 
@@ -99,7 +99,7 @@ Defined in: [src/RewardsClient.ts:31](https://github.com/ipaleka/rewards-suite/b
 
 > **addAllocations**(`addresses`, `amounts`, `decimals`): `Promise`\<\{ \}\>
 
-Defined in: [src/RewardsClient.ts:101](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L101)
+Defined in: [src/RewardsClient.ts:101](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L101)
 
 Adds allocations to multiple addresses with specified amounts.
 
@@ -140,7 +140,7 @@ When no active account, arrays are empty, or arrays length mismatch
 
 > `private` **boxNameFromAddress**(`address`): `Uint8Array`
 
-Defined in: [src/RewardsClient.ts:82](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L82)
+Defined in: [src/RewardsClient.ts:82](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L82)
 
 #### Parameters
 
@@ -158,7 +158,7 @@ Defined in: [src/RewardsClient.ts:82](https://github.com/ipaleka/rewards-suite/b
 
 > **claimRewards**(): `Promise`\<`string`\>
 
-Defined in: [src/RewardsClient.ts:283](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L283)
+Defined in: [src/RewardsClient.ts:283](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L283)
 
 Claims available rewards for the active account.
 
@@ -182,7 +182,7 @@ When no active account, app ID not configured, or token_id not found
 
 > **fetchAddAllocationsData**(`address`): `Promise`\<\{ `addresses`: `string`[]; `amounts`: `number`[]; \}\>
 
-Defined in: [src/RewardsClient.ts:464](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L464)
+Defined in: [src/RewardsClient.ts:464](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L464)
 
 Fetches add allocations data for an address from the backend API.
 
@@ -210,7 +210,7 @@ When the API request fails
 
 > **fetchReclaimAllocationsData**(`address`): `Promise`\<\{ `addresses`: `string`[]; \}\>
 
-Defined in: [src/RewardsClient.ts:494](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L494)
+Defined in: [src/RewardsClient.ts:494](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L494)
 
 Fetches reclaimable allocations data for an address from the backend API.
 
@@ -238,7 +238,7 @@ When the API request fails
 
 > `private` **getCsrfToken**(): `string`
 
-Defined in: [src/RewardsClient.ts:57](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L57)
+Defined in: [src/RewardsClient.ts:57](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L57)
 
 Retrieves the CSRF token from cookies or form input for API requests.
 
@@ -254,7 +254,7 @@ The CSRF token as a string
 
 > `private` **getHeaders**(): `object`
 
-Defined in: [src/RewardsClient.ts:77](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L77)
+Defined in: [src/RewardsClient.ts:77](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L77)
 
 Gets the headers for API requests including CSRF token.
 
@@ -278,7 +278,7 @@ Headers object for fetch requests
 
 > **notifyAllocationsSuccessful**(`addresses`, `txIDs`): `Promise`\<\{ `success`: `boolean`; \}\>
 
-Defined in: [src/RewardsClient.ts:373](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L373)
+Defined in: [src/RewardsClient.ts:373](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L373)
 
 Notifies the backend about successful add allocations transactions
 
@@ -306,7 +306,7 @@ The transaction IDs from the add alolocations operation
 
 > **notifyClaimSuccessful**(`address`, `txID`): `Promise`\<\{ `success`: `boolean`; \}\>
 
-Defined in: [src/RewardsClient.ts:402](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L402)
+Defined in: [src/RewardsClient.ts:402](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L402)
 
 Notifies the backend about successful claim transaction
 
@@ -334,7 +334,7 @@ The transaction ID from the claim operation
 
 > **notifyReclaimSuccessful**(`address`, `txID`): `Promise`\<`void`\>
 
-Defined in: [src/RewardsClient.ts:428](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L428)
+Defined in: [src/RewardsClient.ts:428](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L428)
 
 Notifies the backend about successful reclaim allocation transactions
 
@@ -362,7 +362,7 @@ The transaction ID from the reclaim operation
 
 > **reclaimAllocation**(`userAddress`): `Promise`\<`string`\>
 
-Defined in: [src/RewardsClient.ts:203](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L203)
+Defined in: [src/RewardsClient.ts:203](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L203)
 
 Reclaims an allocation from a specific user address.
 

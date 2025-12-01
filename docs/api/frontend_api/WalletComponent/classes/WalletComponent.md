@@ -3,7 +3,7 @@
 
 # Class: WalletComponent
 
-Defined in: [src/WalletComponent.ts:22](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L22)
+Defined in: [src/WalletComponent.ts:22](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L22)
 
 Component for managing individual wallet connections and interactions.
 
@@ -24,7 +24,7 @@ walletComponent.bind(document.getElementById('wallet-pera'))
 
 > **new WalletComponent**(`wallet`, `manager`): `WalletComponent`
 
-Defined in: [src/WalletComponent.ts:36](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L36)
+Defined in: [src/WalletComponent.ts:36](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L36)
 
 Creates an instance of WalletComponent.
 
@@ -52,7 +52,7 @@ The wallet manager for broader state management
 
 > `private` **element**: `HTMLElement` \| `null` = `null`
 
-Defined in: [src/WalletComponent.ts:28](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L28)
+Defined in: [src/WalletComponent.ts:28](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L28)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [src/WalletComponent.ts:28](https://github.com/ipaleka/rewards-suite
 
 > **manager**: `WalletManager`
 
-Defined in: [src/WalletComponent.ts:26](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L26)
+Defined in: [src/WalletComponent.ts:26](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L26)
 
 The wallet manager for broader wallet state management
 
@@ -70,7 +70,7 @@ The wallet manager for broader wallet state management
 
 > `private` `optional` **unsubscribe**: () => `void`
 
-Defined in: [src/WalletComponent.ts:27](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L27)
+Defined in: [src/WalletComponent.ts:27](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L27)
 
 #### Returns
 
@@ -82,7 +82,7 @@ Defined in: [src/WalletComponent.ts:27](https://github.com/ipaleka/rewards-suite
 
 > **wallet**: `BaseWallet`
 
-Defined in: [src/WalletComponent.ts:24](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L24)
+Defined in: [src/WalletComponent.ts:24](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L24)
 
 The wallet instance this component manages
 
@@ -92,7 +92,7 @@ The wallet instance this component manages
 
 > `private` **addEventListeners**(): `void`
 
-Defined in: [src/WalletComponent.ts:349](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L349)
+Defined in: [src/WalletComponent.ts:349](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L349)
 
 Adds event listeners for user interactions.
 
@@ -108,7 +108,7 @@ Handles clicks on connection buttons and changes to account selection.
 
 > **auth**(`nextUrl?`): `Promise`\<`void`\>
 
-Defined in: [src/WalletComponent.ts:215](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L215)
+Defined in: [src/WalletComponent.ts:215](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L215)
 
 Authenticates the user with the backend using wallet signing.
 
@@ -134,7 +134,7 @@ Performs a cryptographic authentication flow:
 
 > **bind**(`element`): `void`
 
-Defined in: [src/WalletComponent.ts:50](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L50)
+Defined in: [src/WalletComponent.ts:50](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L50)
 
 Binds the component to a DOM element and initializes event listeners.
 
@@ -156,7 +156,7 @@ The HTML element to bind the component to
 
 > **connect**(): `Promise`\<`void`\>
 
-Defined in: [src/WalletComponent.ts:128](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L128)
+Defined in: [src/WalletComponent.ts:128](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L128)
 
 Connects the wallet.
 
@@ -172,7 +172,7 @@ Initiates the wallet connection process.
 
 > **destroy**(): `void`
 
-Defined in: [src/WalletComponent.ts:383](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L383)
+Defined in: [src/WalletComponent.ts:383](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L383)
 
 Cleans up the component by removing event listeners and subscriptions.
 
@@ -189,7 +189,7 @@ memory leaks and unwanted behavior.
 
 > **disconnect**(): `Promise`\<`void`\>
 
-Defined in: [src/WalletComponent.ts:137](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L137)
+Defined in: [src/WalletComponent.ts:137](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L137)
 
 Disconnects the wallet.
 
@@ -205,7 +205,7 @@ Terminates the wallet connection and clears session data.
 
 > `private` **render**(`state`): `void`
 
-Defined in: [src/WalletComponent.ts:65](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L65)
+Defined in: [src/WalletComponent.ts:65](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L65)
 
 Renders the current wallet state to the UI.
 
@@ -244,7 +244,7 @@ The current wallet state
 
 > **sendTransaction**(): `Promise`\<`void`\>
 
-Defined in: [src/WalletComponent.ts:156](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L156)
+Defined in: [src/WalletComponent.ts:156](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L156)
 
 Sends a test transaction using the wallet.
 
@@ -261,7 +261,7 @@ as a test of transaction signing capabilities.
 
 > **setActive**(): `Promise`\<`void`\>
 
-Defined in: [src/WalletComponent.ts:146](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L146)
+Defined in: [src/WalletComponent.ts:146](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L146)
 
 Sets this wallet as the active wallet.
 
@@ -277,7 +277,7 @@ Makes this wallet the primary wallet for transactions and operations.
 
 > **setActiveAccount**(`event`): `Promise`\<`void`\>
 
-Defined in: [src/WalletComponent.ts:337](https://github.com/ipaleka/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L337)
+Defined in: [src/WalletComponent.ts:337](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/WalletComponent.ts#L337)
 
 Sets the active account for the wallet.
 

@@ -349,8 +349,7 @@ class TestRewardsAddAllocationsView:
         )
         mock_generator.return_value = [
             ("tx_hash_1", ["addr1", "addr2"]),  # Batch 1 success
-            (False, []),  # Batch 2 failure
-            ("tx_hash_3", ["addr5"]),  # Batch 3 success
+            (False, ["error text"]),  # Batch 2 failures
         ]
 
         mock_update = mocker.patch(
@@ -372,26 +371,14 @@ class TestRewardsAddAllocationsView:
         assert any(
             "✅ Allocation successful TXID: tx_hash_1" in msg for msg in message_texts
         )
-        assert any("❌ Allocation batch failed" in msg for msg in message_texts)
-        assert any(
-            "✅ Allocation successful TXID: tx_hash_3" in msg for msg in message_texts
-        )
-        assert any("✅ All batches completed" in msg for msg in message_texts)
+        assert any("❌ error text" in msg for msg in message_texts)
+        assert not any("✅ All batches completed" in msg for msg in message_texts)
 
-        # Verify update was called only for successful batches
-        assert mock_update.call_count == 2
-        mock_update.assert_has_calls(
-            [
-                mocker.call(["addr1", "addr2"], mock_contributions),
-                mocker.call(["addr5"], mock_contributions),
-            ]
-        )
-
-        # Verify log action was called for each successful batch
-        assert mock_profile.log_action.call_count == 2
+        mock_update.assert_called_once_with(["addr1", "addr2"], mock_contributions)
+        assert mock_profile.log_action.call_count == 1
 
     @pytest.mark.django_db
-    def test_addallocationsview_post_all_batches_fail(self, client, superuser, mocker):
+    def test_addallocationsview_post_first_batch_fails(self, client, superuser, mocker):
         """Test post when all batches fail."""
         mocker.patch("rewards.views.is_admin_account_configured", return_value=True)
 
@@ -404,7 +391,7 @@ class TestRewardsAddAllocationsView:
         mock_generator = mocker.patch(
             "rewards.views.process_allocations_for_contributions"
         )
-        mock_generator.return_value = [(False, []), (False, []), (False, [])]
+        mock_generator.return_value = [(False, ["error text"])]
 
         mock_update = mocker.patch(
             "rewards.views.Contribution.objects.update_issue_statuses_for_addresses"
@@ -422,12 +409,9 @@ class TestRewardsAddAllocationsView:
         messages = list(get_messages(response.wsgi_request))
         message_texts = [str(msg) for msg in messages]
 
-        # Should have 3 error messages and 1 completion message
-        error_count = sum(
-            1 for msg in message_texts if "❌ Allocation batch failed" in msg
-        )
-        assert error_count == 3
-        assert any("✅ All batches completed" in msg for msg in message_texts)
+        error_count = sum(1 for msg in message_texts if "❌ error text" in msg)
+        assert error_count == 1
+        assert not any("✅ All batches completed" in msg for msg in message_texts)
 
         # Verify no updates were made
         mock_update.assert_not_called()

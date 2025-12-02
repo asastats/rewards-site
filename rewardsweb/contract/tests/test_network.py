@@ -905,7 +905,7 @@ class TestContractNetworkPublicFunctions:
         allocations_callback.assert_called_once_with(contributions)
         mocked_process.assert_called_once_with(ACTIVE_NETWORK, addresses, amounts)
 
-    def test_contract_network_process_allocations_for_contributions_multiple_batches_success(
+    def test_contract_network_process_allocations_for_contributions_multiple_success(
         self, mocker
     ):
         contributions = mocker.MagicMock()
@@ -946,7 +946,7 @@ class TestContractNetworkPublicFunctions:
         ]
         mocked_process.assert_has_calls(expected_calls)
 
-    def test_contract_network_process_allocations_for_contributions_batch_with_exception(
+    def test_contract_network_process_allocations_for_contributions_batch_exception(
         self, mocker
     ):
         contributions = mocker.MagicMock()
@@ -970,7 +970,7 @@ class TestContractNetworkPublicFunctions:
         # First batch succeeds, second batch returns (False, []) due to exception
         expected_results = [
             ("tx_hash_1", ["addr1", "addr2"]),  # Batch 1 (success)
-            (False, []),  # Batch 2 (failed)
+            (False, ["Transaction failed"]),  # Batch 2 (failed)
         ]
 
         assert results == expected_results
@@ -988,7 +988,6 @@ class TestContractNetworkPublicFunctions:
 
         mocker.patch("contract.network.ADD_ALLOCATIONS_BATCH_SIZE", 1)
 
-        # All calls raise exceptions
         mocked_process = mocker.patch(
             "contract.network.process_allocations",
             side_effect=ValueError("Transaction failed"),
@@ -998,16 +997,11 @@ class TestContractNetworkPublicFunctions:
             process_allocations_for_contributions(contributions, allocations_callback)
         )
 
-        # All batches return (False, []) due to exceptions
-        expected_results = [
-            (False, []),  # Batch 1 (failed)
-            (False, []),  # Batch 2 (failed)
-            (False, []),  # Batch 3 (failed)
-        ]
+        expected_results = [(False, ["Transaction failed"])]
 
         assert results == expected_results
         allocations_callback.assert_called_once_with(contributions)
-        assert mocked_process.call_count == 3
+        mocked_process.assert_called_once_with(ACTIVE_NETWORK, ["addr1"], [100])
 
     def test_contract_network_process_allocations_for_contributions_exact_batch_size(
         self, mocker
@@ -1034,7 +1028,7 @@ class TestContractNetworkPublicFunctions:
         allocations_callback.assert_called_once_with(contributions)
         mocked_process.assert_called_once_with(ACTIVE_NETWORK, addresses, amounts)
 
-    def test_contract_network_process_allocations_for_contributions_mixed_success_failure(
+    def test_contract_network_process_allocations_for_contributions_mixed_success_fail(
         self, mocker
     ):
         """Test mixed scenario with success, failure, and success"""
@@ -1049,7 +1043,7 @@ class TestContractNetworkPublicFunctions:
         # Mixed results: success, failure, success
         mocked_process = mocker.patch(
             "contract.network.process_allocations",
-            side_effect=["tx_hash_1", ValueError("Failed"), "tx_hash_3"],
+            side_effect=["tx_hash_1", "tx_hash_2", ValueError("Failed")],
         )
 
         results = list(
@@ -1058,8 +1052,8 @@ class TestContractNetworkPublicFunctions:
 
         expected_results = [
             ("tx_hash_1", ["addr1", "addr2"]),  # Batch 1 (success)
-            (False, []),  # Batch 2 (failed)
-            ("tx_hash_3", ["addr5"]),  # Batch 3 (success)
+            ("tx_hash_2", ["addr3", "addr4"]),  # Batch 2 (success)
+            (False, ["Failed"]),
         ]
 
         assert results == expected_results

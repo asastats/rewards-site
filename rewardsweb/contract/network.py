@@ -10,7 +10,6 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     TransactionWithSigner,
 )
-from algosdk.encoding import decode_address
 from algosdk.error import AlgodHTTPError
 from algosdk.logic import get_application_address
 from algosdk.transaction import AssetTransferTxn, PaymentTxn
@@ -459,13 +458,15 @@ def process_allocations(network, addresses, amounts):
     if admin_token_balance < sum(
         int(amount * 10 ** int(env.get("rewards_token_decimals"))) for amount in amounts
     ):
-        raise ValueError("Not enough token in admin account to process allocations")
+        raise ValueError("Not enough tokens in admin account to process allocations")
 
     return _add_allocations(network, addresses, amounts)
 
 
 def process_allocations_for_contributions(contributions, allocations_callback):
     """Process allocations for applicable contributors from `contributions`.
+
+    TODO: tests
 
     :param contributions: collection of contributions connected to closed issue
     :type contributions: :class:`core.models.Contribution`
@@ -494,8 +495,9 @@ def process_allocations_for_contributions(contributions, allocations_callback):
             result = process_allocations(ACTIVE_NETWORK, batch_addresses, batch_amounts)
             yield result, batch_addresses
 
-        except ValueError:
-            yield False, []
+        except ValueError as exception:
+            yield False, [str(exception)]
+            return
 
 
 def process_reclaim_allocation(user_address, network=ACTIVE_NETWORK):

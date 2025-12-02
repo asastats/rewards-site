@@ -831,16 +831,22 @@ class IssueDetailView(DetailView):
                 issue.save()
                 self.request.user.profile.log_action("issue_status_set", str(issue))
 
-                if (
-                    action == "addressed"
-                    and process_allocations_for_contributions(
-                        self.get_object().contribution_set.all(),
-                        Contribution.objects.addresses_and_amounts_from_contributions,
-                    )[0]
-                ):
-                    issue.status = IssueStatus.CLAIMABLE
-                    issue.save()
-                    self.request.user.profile.log_action("issue_status_set", str(issue))
+                if action == "addressed":
+                    result, payload = list(
+                        process_allocations_for_contributions(
+                            self.get_object().contribution_set.all(),
+                            Contribution.objects.addresses_and_amounts_from_contributions,
+                        )
+                    )
+                    if result:
+                        issue.status = IssueStatus.CLAIMABLE
+                        issue.save()
+                        self.request.user.profile.log_action(
+                            "issue_status_set", str(issue)
+                        )
+
+                    else:
+                        messages.error(request, payload[0])
 
             else:
                 messages.error(

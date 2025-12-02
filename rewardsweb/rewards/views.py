@@ -102,17 +102,19 @@ class AddAllocationsView(LoginRequiredMixin, TemplateView):
         contributions = Contribution.objects.filter(issue__status=IssueStatus.ADDRESSED)
 
         # Run allocations in batches — generator yields results per batch
-        for result, addresses in process_allocations_for_contributions(
+        for result, payload in process_allocations_for_contributions(
             contributions,
             Contribution.objects.addresses_and_amounts_from_contributions,
         ):
             if result:
-                added_allocations_for_addresses(request, addresses, result)
+                added_allocations_for_addresses(request, payload, result)
 
             else:
-                messages.error(request, "❌ Allocation batch failed.")
+                messages.error(request, f"❌ {payload[0]}")
+                break
 
-        messages.info(request, "✅ All batches completed.")
+        else:
+            messages.info(request, "✅ All batches completed.")
 
         response = HttpResponse(status=204)
         response["HX-Redirect"] = reverse("add_allocations")

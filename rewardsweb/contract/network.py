@@ -186,6 +186,32 @@ def _reclaim_allocation(network, user_address):
 
 
 # # PUBLIC
+def app_id_from_contract(env=None, client=None, network=ACTIVE_NETWORK):
+    """Return Rewards application identifier from contract artifact.
+
+    :param env: environment variables collection
+    :type env: dict
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param network: network to deploy to (e.g., "testnet")
+    :type network: str
+    :var atc_stub: collection of data required to create atomic transaction
+    :type atc_stub: dict
+    :return: Rewards dApp unique identifier
+    :rtype: int
+    """
+    if env is None:
+        env = environment_variables()
+
+    if client is None:
+        client = AlgodClient(
+            env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+        )
+
+    atc_stub = atc_method_stub(client, network)
+    return atc_stub.get("app_id")
+
+
 def claimable_amount_for_address(user_address, network=ACTIVE_NETWORK):
     """Check if the provided address can claim their allocation.
 
@@ -197,8 +223,6 @@ def claimable_amount_for_address(user_address, network=ACTIVE_NETWORK):
     :type env: dict
     :var client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :var atc_stub: collection of data required to create atomic transaction
-    :type atc_stub: dict
     :var app_id: Rewards dApp unique identifier
     :type app_id: int
     :var box_name: user's box name
@@ -216,8 +240,7 @@ def claimable_amount_for_address(user_address, network=ACTIVE_NETWORK):
     client = AlgodClient(
         env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
     )
-    atc_stub = atc_method_stub(client, network)
-    app_id = atc_stub.get("app_id")
+    app_id = app_id_from_contract(env=env, client=client, network=network)
     box_name = box_name_from_address(user_address)
     try:
         value = client.application_box_by_name(app_id, box_name).get("value")
@@ -509,8 +532,6 @@ def process_reclaim_allocation(user_address, network=ACTIVE_NETWORK):
     :type env: dict
     :var client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :var atc_stub: collection of data required to create atomic transaction
-    :type atc_stub: dict
     :var app_id: Rewards dApp unique identifier
     :type app_id: int
     :var box_name: user's box name
@@ -526,8 +547,7 @@ def process_reclaim_allocation(user_address, network=ACTIVE_NETWORK):
     client = AlgodClient(
         env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
     )
-    atc_stub = atc_method_stub(client, network)
-    app_id = atc_stub.get("app_id")
+    app_id = app_id_from_contract(env=env, client=client, network=network)
     box_name = box_name_from_address(user_address)
     value = client.application_box_by_name(app_id, box_name).get("value")
     if value is None:
@@ -550,8 +570,6 @@ def reclaimable_addresses(network="testnet"):
     :type env: dict
     :var client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :var atc_stub: collection of data required to create atomic transaction
-    :type atc_stub: dict
     :var app_id: Rewards dApp unique identifier
     :type app_id: int
     :var reclaimable_addresses: collection of addresses that can be reclaimed
@@ -577,8 +595,7 @@ def reclaimable_addresses(network="testnet"):
     client = AlgodClient(
         env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
     )
-    atc_stub = atc_method_stub(client, network)
-    app_id = atc_stub.get("app_id")
+    app_id = app_id_from_contract(env=env, client=client, network=network)
     reclaimable_addresses = []
     boxes = client.application_boxes(app_id).get("boxes", [])
     for box in boxes:

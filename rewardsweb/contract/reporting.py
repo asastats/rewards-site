@@ -1,11 +1,15 @@
 """Module with Rewards smart contract's transparency reports creation functions."""
 
+import json
 import logging
 from copy import deepcopy
+from pathlib import Path
 
+from algosdk.logic import get_application_address
 from algosdk.v2client.indexer import IndexerClient
 
-from contract.helpers import pause
+from contract.helpers import pause, read_json
+from contract.network import app_id_from_contract
 
 INDEXER_ADDRESS = "https://testnet-idx.4160.nodely.dev"
 INDEXER_TOKEN = ""
@@ -59,6 +63,53 @@ def _address_transaction(address, min_round, indexer_client, **kwargs):
             next_page=results.get("next-token"),
             delay=delay,
         )
+
+
+def _fetch_app_allocations():
+    """Fetch and return Rewards dApp's escrow transactions.
+
+    :var app_id: Rewards dApp unique identifier
+    :type app_id: int
+    :var escrow:  Rewards dApp escrow address
+    :type escrow: str
+    :var filename: full path on disk to JSON file with escrow's transactions
+    :type filename: :class:`pathlib.PosixPath`
+    :var transactions: collection of all escrow transactions
+    :type transactions: list
+    :var indexer_client: Algorand Indexer client instance
+    :type indexer_client: :class:`IndexerClient`
+    :var min_round: starting block to yield transactions from
+    :type min_round: int
+    :var new_transactions: collection of new escrow transactions
+    :type new_transactions: list
+    :return: collection of all escrow transactions
+    :rtype: list
+    """
+    app_id = app_id_from_contract()
+    escrow = get_application_address(app_id)
+    filename = (
+        Path(__file__).resolve().parent.parent
+        / "fixtures"
+        / f"{f"{escrow[:5]}-{escrow[-5:]}"}.json"
+    )
+    transactions = read_json(filename) or []
+    indexer_client = _indexer_instance()
+    min_round = (
+        transactions[-1].get("confirmed-round") + 1
+        if transactions
+        else indexer_client.applications(app_id)
+        .get("application", {})
+        .get("created-at-round")
+    )
+    new_transactions = list(_address_transaction(escrow, min_round, indexer_client))
+    if new_transactions:
+        transactions = sorted(
+            transactions + new_transactions, key=lambda x: x.get("confirmed-round", 0)
+        )
+        with open(filename, "w") as json_file:
+            json.dump(transactions, json_file)
+
+    return transactions
 
 
 def _indexer_instance():

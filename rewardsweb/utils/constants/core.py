@@ -26,13 +26,11 @@ REWARDS_COLLECTION = (
     ("[ER] Ecosystem Research", 50000, 100000, 200000),
 )
 
-
-# TODO: put these into .env
 DISCORD_EMOJIS = {
-    "noted": "noted:930825381974523954",
-    "addressed": "addressed:930825322654470204",
-    "wontfix": "noted:910968758284202015",
-    "duplicate": "exists:929454747801489438",
+    "noted": os.getenv("DISCORD_EMOJI_NOTED", "thumbsup"),
+    "addressed": os.getenv("DISCORD_EMOJI_ADDRESSED", "ballot_box_with_check"),
+    "wontfix": os.getenv("DISCORD_EMOJI_WONTFIX", "no_entry_sign"),
+    "duplicate": os.getenv("DISCORD_EMOJI_DUPLICATE", "heavy_multiplication_x"),
 }
 
 ISSUE_CREATION_LABEL_CHOICES = [

@@ -466,8 +466,6 @@ def process_allocations(network, addresses, amounts):
 def process_allocations_for_contributions(contributions, allocations_callback):
     """Process allocations for applicable contributors from `contributions`.
 
-    TODO: tests
-
     :param contributions: collection of contributions connected to closed issue
     :type contributions: :class:`core.models.Contribution`
     :param allocations_callback: callback function to retrieve addresses and amounts

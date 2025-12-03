@@ -13,6 +13,7 @@ from contract.network import (
     _add_allocations,
     _check_balances,
     _reclaim_allocation,
+    app_id_from_contract,
     claimable_amount_for_address,
     create_app,
     delete_app,
@@ -266,6 +267,48 @@ class TestContractNetworkPrivateFunctions:
 class TestContractNetworkPublicFunctions:
     """Testing class for :py:mod:`contract.network` public functions."""
 
+    # # app_id_from_contract
+    def test_contract_network_app_id_from_contract_no_values_provided(self, mocker):
+        env = {
+            f"algod_token_{ACTIVE_NETWORK}": "token",
+            f"algod_address_{ACTIVE_NETWORK}": "address",
+        }
+        mocked_env = mocker.patch(
+            "contract.network.environment_variables", return_value=env
+        )
+        client = mocker.MagicMock()
+        mocked_client = mocker.patch(
+            "contract.network.AlgodClient", return_value=client
+        )
+        app_id = 111
+        atc_stub = {"app_id": app_id}
+        mocked_stub = mocker.patch(
+            "contract.network.atc_method_stub", return_value=atc_stub
+        )
+        returned = app_id_from_contract()
+        assert returned == app_id
+        mocked_env.assert_called_once_with()
+        mocked_client.assert_called_once_with("token", "address")
+        mocked_stub.assert_called_once_with(client, ACTIVE_NETWORK)
+
+    def test_contract_network_app_id_from_contract_functionality(self, mocker):
+        env = mocker.MagicMock()
+        mocked_env = mocker.patch("contract.network.environment_variables")
+        client = mocker.MagicMock()
+        mocked_client = mocker.patch("contract.network.AlgodClient")
+        network = "mainnet"
+        app_id = 111
+        atc_stub = {"app_id": app_id}
+        mocked_stub = mocker.patch(
+            "contract.network.atc_method_stub", return_value=atc_stub
+        )
+        returned = app_id_from_contract(env=env, client=client, network=network)
+        assert returned == app_id
+        mocked_env.assert_not_called()
+        mocked_client.assert_not_called()
+        mocked_stub.assert_called_once_with(client, network)
+
+    # # claimable_amount_for_address
     def test_contract_network_claimable_amount_for_address_claimable_default_network(
         self, mocker
     ):

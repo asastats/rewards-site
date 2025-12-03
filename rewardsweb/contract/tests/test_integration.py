@@ -1,5 +1,6 @@
 """Module with integration tests for the Rewards smart contract."""
 
+import base64
 import json
 import os
 import time
@@ -18,6 +19,7 @@ from algokit_utils import (
     SigningAccount,
 )
 from algokit_utils.applications import AppClient, AppClientParams
+from algosdk import encoding
 from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     TransactionWithSigner,
@@ -1338,21 +1340,16 @@ class TestContractBoxManagement(BaseTestContract):
             .send(SendParams(cover_app_call_inner_transaction_fees=True))
         )
 
-        # Verify box exists - might need to wait or handle differently
-        try:
-            box_info = (
-                self.rewards_client.algorand.client.algod.application_box_by_name(
-                    self.rewards_client.app_id, user_account.address.encode()
-                )
-            )
-            assert box_info["name"] == user_account.address.encode()
-
-        except AlgodHTTPError as e:
-            if "box not found" in str(e):
-                pytest.skip("Box verification not working in test environment")
-
-            else:
-                raise
+        # Verify box exists
+        boxes = self.rewards_client.algorand.client.algod.application_boxes(
+            self.rewards_client.app_id
+        )
+        box_names = [b["name"] for b in boxes["boxes"]]
+        box_name_prefix = b"allocations"
+        public_key = encoding.decode_address(user_account.address)
+        box_name = box_name_prefix + public_key
+        user_address_b64 = base64.b64encode(box_name).decode("utf-8")
+        assert user_address_b64 in box_names
 
         # User opts in and claims (deletes box)
         self.rewards_client.algorand.send.asset_opt_in(

@@ -16,6 +16,10 @@ INDEXER_TOKEN = ""
 INDEXER_FETCH_LIMIT = 1000
 INDEXER_PAGE_DELAY = 1
 
+PROJECT_ADDRESSES = {
+    "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI": "Creator"
+}
+
 
 logger = logging.getLogger(__name__)
 
@@ -177,3 +181,185 @@ def _search_transactions_by_address(
             )
             pause(error_delay)
             counter += 1
+
+
+# # PARSING
+def _parse_transaction(txn, address, top_txn):
+    """Parse a transaction and return a standardized dictionary.
+
+    :param txn: transaction to parse
+    :type txn: dict
+    :param address: target address
+    :type address: str
+    :param top_txn: top-level transaction containing the txn
+    :type top_txn: dict
+    :var tx_type: type of the transaction
+    :type tx_type: str
+    :var parsed: dictionary with parsed transaction data
+    :type parsed: dict
+    :var axfer: asset transfer transaction details
+    :type axfer: dict
+    :var pay: payment transaction details
+    :type pay: dict
+    :return: parsed transaction or None
+    :rtype: dict or None
+    """
+    tx_type = txn.get("tx-type")
+    parsed = {"id": top_txn.get("id"), "group": top_txn.get("group")}
+    if tx_type == "axfer":
+        axfer = txn.get("asset-transfer-transaction")
+        if not axfer.get("amount"):
+            return None
+
+        parsed["asset"] = axfer.get("asset-id")
+        parsed["amount"] = axfer.get("amount")
+        if axfer.get("receiver") == address:
+            parsed["sender"] = txn.get("sender")
+
+        elif txn.get("sender") == address:
+            parsed["amount"] *= -1
+            parsed["receiver"] = axfer.get("receiver")
+
+        else:
+            return None
+
+    elif tx_type == "pay":
+        pay = txn.get("payment-transaction")
+        parsed["asset"] = 0
+        parsed["amount"] = pay.get("amount")
+        if pay.get("receiver") == address:
+            parsed["sender"] = txn.get("sender")
+
+        elif txn.get("sender") == address:
+            parsed["amount"] *= -1
+            parsed["receiver"] = pay.get("receiver")
+
+        else:
+            return None
+
+    else:
+        return None
+
+    return parsed
+
+
+def _parse_transactions(transactions, address, start_date, end_date):
+    """Parse all transactions and filter them by date.
+
+    :param transactions: list of transactions to parse
+    :type transactions: list
+    :param address: target address
+    :type address: str
+    :param start_date: start date of the period
+    :type start_date: :class:`datetime.datetime`
+    :param end_date: end date of the period
+    :type end_date: :class:`datetime.datetime`
+    :var parsed_transactions: list of parsed transactions
+    :type parsed_transactions: list
+    :var txn: transaction from the list
+    :type txn: dict
+    :var round_time: timestamp of the transaction
+    :type round_time: int
+    :var parsed: parsed transaction dictionary
+    :type parsed: dict
+    :var inner_txn: inner transaction
+    :type inner_txn: dict
+    :return: list of parsed transactions
+    :rtype: list
+    """
+    parsed_transactions = []
+    for txn in transactions:
+        round_time = txn.get("round-time")
+        if not (start_date.timestamp() <= round_time <= end_date.timestamp()):
+            continue
+
+        if parsed := _parse_transaction(txn, address, txn):
+            parsed_transactions.append(parsed)
+
+        for inner_txn in txn.get("inner-txns", []):
+            if parsed := _parse_transaction(inner_txn, address, txn):
+                parsed_transactions.append(parsed)
+
+    return parsed_transactions
+
+
+def group_transactions(parsed_transactions):
+    """Group parsed transactions by asset and sign.
+
+    :param parsed_transactions: list of parsed transactions
+    :type parsed_transactions: list
+    :var result: list of grouped transactions
+    :type result: list
+    :var current_group: currently processed group
+    :type current_group: dict
+    :var txn: parsed transaction from the list
+    :type txn: dict
+    :return: list of grouped transactions
+    :rtype: list
+    """
+    if not parsed_transactions:
+        return []
+
+    result = []
+    current_group = None
+
+    for txn in parsed_transactions:
+        if not current_group:
+            current_group = {
+                "asset": txn["asset"],
+                "amount": txn["amount"],
+                "start": txn.get("group") or txn.get("id"),
+                "count": 1,
+            }
+            if txn.get("sender") in PROJECT_ADDRESSES:
+                current_group["sender"] = txn.get("sender")
+
+            elif txn.get("receiver") in PROJECT_ADDRESSES:
+                current_group["receiver"] = txn.get("receiver")
+
+        elif (
+            txn["asset"] == current_group["asset"]
+            and (txn["amount"] > 0) == (current_group["amount"] > 0)
+            and (
+                (
+                    txn.get("sender") in PROJECT_ADDRESSES
+                    and txn.get("sender") == current_group.get("sender")
+                )
+                or (
+                    txn.get("receiver") in PROJECT_ADDRESSES
+                    and txn.get("receiver") == current_group.get("receiver")
+                )
+                or (
+                    txn.get("sender") not in PROJECT_ADDRESSES
+                    and txn.get("receiver") not in PROJECT_ADDRESSES
+                    and not current_group.get("sender")
+                    and not current_group.get("receiver")
+                )
+            )
+        ):
+            current_group["amount"] += txn["amount"]
+            current_group["end"] = txn.get("group") or txn.get("id")
+            current_group["count"] += 1
+
+        else:
+            if "count" in current_group and (
+                current_group.get("sender") or current_group.get("receiver")
+            ):
+                del current_group["count"]
+
+            result.append(current_group)
+            current_group = {
+                "asset": txn["asset"],
+                "amount": txn["amount"],
+                "start": txn.get("group") or txn.get("id"),
+                "count": 1,
+            }
+            if txn.get("sender") in PROJECT_ADDRESSES:
+                current_group["sender"] = txn.get("sender")
+
+            elif txn.get("receiver") in PROJECT_ADDRESSES:
+                current_group["receiver"] = txn.get("receiver")
+
+    result.append(current_group)
+
+    return result

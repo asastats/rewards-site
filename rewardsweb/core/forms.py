@@ -423,3 +423,57 @@ ProfileFormSet = inlineformset_factory(
 It is instantiated together with :class:`UpdateUserForm` form instance
 in the common user/profile editing process.
 """
+
+
+class TransparencyReportForm(Form):
+    """Form class for creating transparency report.
+
+    :var TransparencyReportForm.report_type: report type selection
+    :type TransparencyReportForm.report_type: :class:`django.forms.ChoiceField`
+    :var TransparencyReportForm.month: month selection
+    :type TransparencyReportForm.month: :class:`django.forms.IntegerField`
+    :var TransparencyReportForm.quarter: quarter selection
+    :type TransparencyReportForm.quarter: :class:`django.forms.ChoiceField`
+    :var TransparencyReportForm.year: year selection
+    :type TransparencyReportForm.year: :class:`django.forms.IntegerField`
+    :var TransparencyReportForm.start_date: start date selection
+    :type TransparencyReportForm.start_date: :class:`django.forms.DateField`
+    :var TransparencyReportForm.end_date: end date selection
+    :type TransparencyReportForm.end_date: :class:`django.forms.DateField`
+    :var TransparencyReportForm.ordering: ordering selection
+    :type TransparencyReportForm.ordering: :class:`django.forms.ChoiceField`
+    """
+
+    report_type = ChoiceField(
+        choices=[
+            ("monthly", "Monthly"),
+            ("quarterly", "Quarterly"),
+            ("yearly", "Yearly"),
+            ("custom", "Custom"),
+        ],
+        widget=RadioSelect(attrs={"class": "radio"}),
+        initial="monthly",
+    )
+    month = IntegerField(
+        min_value=1,
+        max_value=12,
+        widget=NumberInput(attrs={"class": TEXTINPUT_CLASS}),
+    )
+    quarter = ChoiceField(
+        choices=[(1, "Q1"), (2, "Q2"), (3, "Q3"), (4, "Q4")],
+        widget=Select(attrs={"class": "select select-bordered w-full"}),
+    )
+    year = IntegerField(
+        widget=NumberInput(attrs={"class": TEXTINPUT_CLASS}),
+    )
+    start_date = CharField(
+        widget=TextInput(attrs={"class": TEXTINPUT_CLASS, "type": "date"}),
+    )
+    end_date = CharField(
+        widget=TextInput(attrs={"class": TEXTINPUT_CLASS, "type": "date"}),
+    )
+    ordering = ChoiceField(
+        choices=[("chronological", "Chronological"), ("by_type", "By Type")],
+        widget=RadioSelect(attrs={"class": "radio"}),
+        initial="chronological",
+    )

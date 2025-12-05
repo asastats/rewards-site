@@ -28,6 +28,10 @@ from django.views.generic import (
 from django.views.generic.detail import SingleObjectMixin
 
 from contract.network import process_allocations_for_contributions
+from contract.reporting import (
+    create_transparency_report,
+    fetch_app_allocations,
+)
 from core.forms import (
     ContributionCreateForm,
     ContributionEditForm,
@@ -36,6 +40,7 @@ from core.forms import (
     DeactivateProfileForm,
     IssueLabelsForm,
     ProfileFormSet,
+    TransparencyReportForm,
     UpdateUserForm,
 )
 from core.models import (
@@ -1274,3 +1279,56 @@ class UnconfirmedContributionsView(ListView):
         :rtype: :class:`django.db.models.QuerySet`
         """
         return Contribution.objects.filter(confirmed=False).reverse()
+
+
+@method_decorator(user_passes_test(lambda user: user.is_superuser), name="dispatch")
+class TransparencyReportView(FormView):
+    """View for creating transparency reports (superusers only).
+
+    :ivar template_name: HTML template for the transparency report page
+    :type template_name: str
+    :ivar form_class: Form class for creating transparency reports
+    :type form_class: :class:`core.forms.TransparencyReportForm`
+    """
+
+    template_name = "core/transparency.html"
+    form_class = TransparencyReportForm
+
+    def get_context_data(self, **kwargs):
+        """Add initial data to the context.
+
+        :return: context dictionary
+        :rtype: dict
+        """
+        context = super().get_context_data(**kwargs)
+        allocations = fetch_app_allocations()
+        if allocations:
+            min_date = allocations[0]["timestamp"].date()
+            context["min_date"] = min_date.isoformat()
+
+        context["max_date"] = datetime.now().date().isoformat()
+        return context
+
+    def form_valid(self, form):
+        """Process a valid form.
+
+        :param form: validated form instance
+        :type form: :class:`core.forms.TransparencyReportForm`
+        :return: http response
+        :rtype: :class:`django.http.HttpResponse`
+        """
+        report, start_date, end_date = create_transparency_report(
+            form.cleaned_data["report_type"],
+            form.cleaned_data.get("month"),
+            form.cleaned_data.get("quarter"),
+            form.cleaned_data.get("year"),
+            form.cleaned_data.get("start_date"),
+            form.cleaned_data.get("end_date"),
+            form.cleaned_data["ordering"],
+        )
+        context = self.get_context_data()
+        context["report"] = report
+        context["form"] = form
+        context["start_date"] = start_date
+        context["end_date"] = end_date
+        return self.render_to_response(context)

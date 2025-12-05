@@ -114,4 +114,4 @@ class TestCoreUrls:
         assert url.name == "unconfirmed_contributions"
 
     def test_core_urls_patterns_count(self):
-        assert len(urls.urlpatterns) == 17
+        assert len(urls.urlpatterns) == 18

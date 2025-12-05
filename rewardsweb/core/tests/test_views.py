@@ -648,7 +648,7 @@ class TestTransparencyReportView:
         """Test the get_context_data method."""
         mocked_fetch = mocker.patch(
             "core.views.fetch_app_allocations",
-            return_value=[{"timestamp": datetime(2023, 1, 1)}],
+            return_value=[{"round-time": 1764838011}],
         )
         client.force_login(superuser)
         url = reverse("transparency")
@@ -656,11 +656,15 @@ class TestTransparencyReportView:
         assert response.status_code == 200
         assert "min_date" in response.context
         assert "max_date" in response.context
-        assert response.context["min_date"] == "2023-01-01"
-        mocked_fetch.assert_called_once()
+        assert response.context["min_date"] == "2025-12-04T08:46:51+00:00"
+        mocked_fetch.assert_called_with()
 
     def test_transparencyreportview_form_valid(self, mocker, client, superuser):
         """Test the form_valid method."""
+        mocker.patch(
+            "core.views.fetch_app_allocations",
+            return_value=[{"round-time": 1764850021}],
+        )
         mocked_create = mocker.patch(
             "core.views.create_transparency_report",
             return_value=("report", "2023-01-01", "2023-01-31"),

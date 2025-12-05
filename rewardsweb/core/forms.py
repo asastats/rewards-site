@@ -1,5 +1,7 @@
 """Module containing code dealing with core app's forms."""
 
+from datetime import datetime
+
 from captcha.fields import CaptchaField, CaptchaTextInput
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
@@ -454,17 +456,16 @@ class TransparencyReportForm(Form):
         widget=RadioSelect(attrs={"class": "radio"}),
         initial="monthly",
     )
-    month = IntegerField(
-        min_value=1,
-        max_value=12,
-        widget=NumberInput(attrs={"class": TEXTINPUT_CLASS}),
+    month = ChoiceField(
+        choices=[(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)],
+        widget=Select(attrs={"class": "select select-bordered w-full"}),
     )
     quarter = ChoiceField(
         choices=[(1, "Q1"), (2, "Q2"), (3, "Q3"), (4, "Q4")],
         widget=Select(attrs={"class": "select select-bordered w-full"}),
     )
-    year = IntegerField(
-        widget=NumberInput(attrs={"class": TEXTINPUT_CLASS}),
+    year = ChoiceField(
+        widget=Select(attrs={"class": "select select-bordered w-full"}),
     )
     start_date = CharField(
         widget=TextInput(attrs={"class": TEXTINPUT_CLASS, "type": "date"}),
@@ -477,3 +478,14 @@ class TransparencyReportForm(Form):
         widget=RadioSelect(attrs={"class": "radio"}),
         initial="chronological",
     )
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the form and set year choices dynamically.
+
+        :param years: list of years to populate the year field
+        :type years: list
+        """
+        years = kwargs.pop("years", [])
+        super().__init__(*args, **kwargs)
+        if years:
+            self.fields["year"].choices = [(year, year) for year in years]

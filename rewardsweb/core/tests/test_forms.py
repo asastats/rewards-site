@@ -1,5 +1,7 @@
 """Testing module for :py:mod:`core.forms` module."""
 
+from datetime import datetime
+
 import pytest
 from captcha.fields import CaptchaField, CaptchaTextInput
 from django.contrib.auth import get_user_model
@@ -32,6 +34,7 @@ from core.forms import (
     IssueLabelsForm,
     ProfileForm,
     ProfileFormSet,
+    TransparencyReportForm,
     UpdateUserForm,
 )
 from core.models import Contribution, Cycle, IssueStatus, Profile
@@ -489,14 +492,10 @@ class TestTransparencyReportForm:
 
     def test_transparencyreportform_issubclass_of_form(self):
         """Test that TransparencyReportForm is a subclass of Form."""
-        from core.forms import TransparencyReportForm
-
         assert issubclass(TransparencyReportForm, Form)
 
     def test_transparencyreportform_report_type_field(self):
         """Test the report_type field."""
-        from core.forms import TransparencyReportForm
-
         form = TransparencyReportForm()
         field = form.fields["report_type"]
         assert isinstance(field, ChoiceField)
@@ -511,19 +510,16 @@ class TestTransparencyReportForm:
 
     def test_transparencyreportform_month_field(self):
         """Test the month field."""
-        from core.forms import TransparencyReportForm
-
         form = TransparencyReportForm()
         field = form.fields["month"]
-        assert isinstance(field, IntegerField)
-        assert isinstance(field.widget, NumberInput)
-        assert field.min_value == 1
-        assert field.max_value == 12
+        assert isinstance(field, ChoiceField)
+        assert isinstance(field.widget, Select)
+        assert field.choices == [
+            (i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)
+        ]
 
     def test_transparencyreportform_quarter_field(self):
         """Test the quarter field."""
-        from core.forms import TransparencyReportForm
-
         form = TransparencyReportForm()
         field = form.fields["quarter"]
         assert isinstance(field, ChoiceField)
@@ -532,17 +528,13 @@ class TestTransparencyReportForm:
 
     def test_transparencyreportform_year_field(self):
         """Test the year field."""
-        from core.forms import TransparencyReportForm
-
         form = TransparencyReportForm()
         field = form.fields["year"]
-        assert isinstance(field, IntegerField)
-        assert isinstance(field.widget, NumberInput)
+        assert isinstance(field, ChoiceField)
+        assert isinstance(field.widget, Select)
 
     def test_transparencyreportform_start_date_field(self):
         """Test the start_date field."""
-        from core.forms import TransparencyReportForm
-
         form = TransparencyReportForm()
         field = form.fields["start_date"]
         assert isinstance(field, CharField)
@@ -550,8 +542,6 @@ class TestTransparencyReportForm:
 
     def test_transparencyreportform_end_date_field(self):
         """Test the end_date field."""
-        from core.forms import TransparencyReportForm
-
         form = TransparencyReportForm()
         field = form.fields["end_date"]
         assert isinstance(field, CharField)
@@ -559,8 +549,6 @@ class TestTransparencyReportForm:
 
     def test_transparencyreportform_ordering_field(self):
         """Test the ordering field."""
-        from core.forms import TransparencyReportForm
-
         form = TransparencyReportForm()
         field = form.fields["ordering"]
         assert isinstance(field, ChoiceField)

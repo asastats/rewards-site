@@ -1,7 +1,7 @@
 """Module containing website's views."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from allauth.account.views import LoginView as AllauthLoginView
 from allauth.account.views import SignupView as AllauthSignupView
@@ -1291,7 +1291,7 @@ class TransparencyReportView(FormView):
     :type form_class: :class:`core.forms.TransparencyReportForm`
     """
 
-    template_name = "core/transparency.html"
+    template_name = "transparency.html"
     form_class = TransparencyReportForm
 
     def get_context_data(self, **kwargs):
@@ -1303,11 +1303,38 @@ class TransparencyReportView(FormView):
         context = super().get_context_data(**kwargs)
         allocations = fetch_app_allocations()
         if allocations:
-            min_date = allocations[0]["timestamp"].date()
+            min_date = datetime.fromtimestamp(
+                allocations[0]["round-time"], tz=timezone.utc
+            )
             context["min_date"] = min_date.isoformat()
+            context["min_year"] = min_date.year
+        else:
+            context["min_year"] = datetime.now().year
 
         context["max_date"] = datetime.now().date().isoformat()
+        context["max_year"] = datetime.now().year
         return context
+
+    def get_form_kwargs(self):
+        """Add years to the form kwargs.
+
+        :return: dictionary with form kwargs
+        :rtype: dict
+        """
+        kwargs = super().get_form_kwargs()
+
+        allocations = fetch_app_allocations()
+        if allocations:
+            min_date = datetime.fromtimestamp(
+                allocations[0]["round-time"], tz=timezone.utc
+            )
+            min_year = min_date.year
+        else:
+            min_year = datetime.now().year
+
+        max_year = datetime.now().year
+        kwargs["years"] = range(min_year, max_year + 1)
+        return kwargs
 
     def form_valid(self, form):
         """Process a valid form.

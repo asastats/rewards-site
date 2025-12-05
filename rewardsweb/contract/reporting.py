@@ -2,7 +2,10 @@
 
 import json
 import logging
+import os
+import urllib.parse
 from copy import deepcopy
+from datetime import datetime, timezone
 from pathlib import Path
 
 from algosdk.logic import get_application_address
@@ -15,7 +18,10 @@ INDEXER_ADDRESS = "https://testnet-idx.4160.nodely.dev"
 INDEXER_TOKEN = ""
 INDEXER_FETCH_LIMIT = 1000
 INDEXER_PAGE_DELAY = 1
-
+EXPLORER_BASE_URLS = {
+    "lora": "https://lora.algokit.io/",
+    "allo": "https://allo.info/",
+}
 PROJECT_ADDRESSES = {
     "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI": "Creator"
 }
@@ -116,6 +122,40 @@ def _fetch_app_allocations():
     return transactions
 
 
+def _fetch_asset_data(asset_ids):
+    """Fetch and return data for a set of asset IDs.
+
+    :param asset_ids: set of asset IDs to fetch data for
+    :type asset_ids: set
+    :var data: dictionary to store asset data
+    :type data: dict
+    :var indexer_client: Algorand Indexer client instance
+    :type indexer_client: :class:`IndexerClient`
+    :var asset_id: asset ID to fetch data for
+    :type asset_id: int
+    :var asset_info: dictionary with asset information
+    :type asset_info: dict
+    :return: dictionary with asset data
+    :rtype: dict
+    """
+    data = {}
+    indexer_client = _indexer_instance()
+    for asset_id in asset_ids:
+        if asset_id == 0:
+            data[asset_id] = {"unit": "ALGO", "decimals": 6}
+
+        else:
+            asset_info = (
+                indexer_client.asset_info(asset_id).get("asset", {}).get("params")
+            )
+            data[asset_id] = {
+                "unit": asset_info.get("unit-name"),
+                "decimals": asset_info.get("decimals"),
+            }
+
+    return data
+
+
 def _indexer_instance():
     """Return Algorand Indexer instance.
 
@@ -184,6 +224,158 @@ def _search_transactions_by_address(
 
 
 # # PARSING
+def _create_chronological_group(txn):
+    """Create a new chronological transaction group.
+
+    :param txn: parsed transaction from the list
+    :type txn: dict
+    :var group: currently processed group
+    :type group: dict
+    :return: new chronological transaction group
+    :rtype: dict
+    """
+    group = {
+        "asset": txn["asset"],
+        "amount": txn["amount"],
+        "start": _create_transaction_entry(txn),
+        "count": 1,
+    }
+    if txn.get("receiver") in PROJECT_ADDRESSES:
+        group["receiver"] = txn.get("receiver")
+
+    if txn.get("sender") in PROJECT_ADDRESSES:
+        group["sender"] = txn.get("sender")
+
+    return group
+
+
+def _create_transaction_entry(txn):
+    """Create a transaction entry dictionary with id/group, round-time and round.
+
+    :param txn: parsed transaction
+    :type txn: dict
+    :var entry: transaction entry
+    :type entry: dict
+    :return: transaction entry dictionary
+    :rtype: dict
+    """
+    entry = {
+        "round-time": txn.get("round-time"),
+        "round": txn.get("round"),
+    }
+    if txn.get("group"):
+        entry["group"] = txn.get("group")
+    else:
+        entry["id"] = txn.get("id")
+    return entry
+
+
+def _group_transactions_by_type(parsed_transactions):
+    """Group parsed transactions by asset and sign.
+
+    :param parsed_transactions: list of parsed transactions
+    :type parsed_transactions: list
+    :var result: list of grouped transactions
+    :type result: list
+    :var asset_groups: dictionary of asset groups
+    :type asset_groups: dict
+    :var txn: parsed transaction from the list
+    :type txn: dict
+    :return: list of grouped transactions
+    :rtype: list
+    """
+    if not parsed_transactions:
+        return []
+
+    result = []
+    asset_groups = {}
+
+    for txn in parsed_transactions:
+        asset_id = txn["asset"]
+        sign = txn["amount"] > 0
+        group_key = (asset_id, sign)
+
+        if group_key not in asset_groups:
+            asset_groups[group_key] = {
+                "asset": asset_id,
+                "amount": 0,
+                "count": 0,
+                "start": _create_transaction_entry(txn),
+            }
+            result.append(asset_groups[group_key])
+
+        group = asset_groups[group_key]
+        group["amount"] += txn["amount"]
+        group["count"] += 1
+        if group["count"] > 1:
+            group["end"] = _create_transaction_entry(txn)
+
+        if txn.get("receiver") in PROJECT_ADDRESSES:
+            group["receiver"] = txn.get("receiver")
+
+        if txn.get("sender") in PROJECT_ADDRESSES:
+            group["sender"] = txn.get("sender")
+
+    return result
+
+
+def _group_transactions_chronological(parsed_transactions):
+    """Group parsed transactions by asset and sign.
+
+    :param parsed_transactions: list of parsed transactions
+    :type parsed_transactions: list
+    :var result: list of grouped transactions
+    :type result: list
+    :var current_group: currently processed group
+    :type current_group: dict
+    :var txn: parsed transaction from the list
+    :type txn: dict
+    :return: list of grouped transactions
+    :rtype: list
+    """
+    if not parsed_transactions:
+        return []
+
+    result = []
+    current_group = None
+
+    for txn in parsed_transactions:
+        if not current_group:
+            current_group = _create_chronological_group(txn)
+
+        elif (
+            txn["asset"] == current_group["asset"]
+            and (txn["amount"] > 0) == (current_group["amount"] > 0)
+            and (
+                (
+                    txn.get("sender") in PROJECT_ADDRESSES
+                    and txn.get("sender") == current_group.get("sender")
+                )
+                or (
+                    txn.get("receiver") in PROJECT_ADDRESSES
+                    and txn.get("receiver") == current_group.get("receiver")
+                )
+                or (
+                    txn.get("sender") not in PROJECT_ADDRESSES
+                    and txn.get("receiver") not in PROJECT_ADDRESSES
+                    and not current_group.get("sender")
+                    and not current_group.get("receiver")
+                )
+            )
+        ):
+            current_group["amount"] += txn["amount"]
+            current_group["end"] = _create_transaction_entry(txn)
+            current_group["count"] += 1
+
+        else:
+            result.append(current_group)
+            current_group = _create_chronological_group(txn)
+
+    result.append(current_group)
+
+    return result
+
+
 def _parse_transaction(txn, address, top_txn):
     """Parse a transaction and return a standardized dictionary.
 
@@ -205,7 +397,16 @@ def _parse_transaction(txn, address, top_txn):
     :rtype: dict or None
     """
     tx_type = txn.get("tx-type")
-    parsed = {"id": top_txn.get("id"), "group": top_txn.get("group")}
+    parsed = {
+        "round-time": top_txn.get("round-time"),
+        "round": top_txn.get("confirmed-round"),
+    }
+    if top_txn.get("group"):
+        parsed["group"] = top_txn.get("group")
+
+    else:
+        parsed["id"] = top_txn.get("id")
+
     if tx_type == "axfer":
         axfer = txn.get("asset-transfer-transaction")
         if not axfer.get("amount"):
@@ -283,83 +484,189 @@ def _parse_transactions(transactions, address, start_date, end_date):
     return parsed_transactions
 
 
-def group_transactions(parsed_transactions):
-    """Group parsed transactions by asset and sign.
+# # REPORTS
+def create_transparency_report(start_date, end_date, grouping="chronological"):
+    """Create and return transparency report for Rewards dApp.
 
-    :param parsed_transactions: list of parsed transactions
+    :param start_date: report's start date
+    :type start_date: :class:`datetime.datetime`
+    :param end_date: report's end date
+    :type end_date: :class:`datetime.datetime`
+    :param grouping: type of grouping of transactions, either chronological or by type
+    :type grouping: str
+    :var app_id: Rewards dApp unique identifier
+    :type app_id: int
+    :var escrow: Rewards dApp escrow address
+    :type escrow: str
+    :var transactions: collection of all escrow transactions
+    :type transactions: list
+    :var parsed_transactions: collection of parsed escrow transactions in the period
     :type parsed_transactions: list
-    :var result: list of grouped transactions
-    :type result: list
-    :var current_group: currently processed group
-    :type current_group: dict
-    :var txn: parsed transaction from the list
-    :type txn: dict
-    :return: list of grouped transactions
-    :rtype: list
+    :var grouped_transactions: collection of grouped escrow transactions
+    :type grouped_transactions: list
+    :var asset_ids: collection of unique asset identifiers
+    :type asset_ids: set
+    :var assets_data: collection of assets' data
+    :type assets_data: dict
+    :return: formatted transparency report
+    :rtype: str
     """
-    if not parsed_transactions:
-        return []
+    app_id = app_id_from_contract()
+    escrow = get_application_address(app_id)
+    transactions = _fetch_app_allocations()
+    parsed_transactions = _parse_transactions(
+        transactions, escrow, start_date, end_date
+    )
+    if grouping == "chronological":
+        grouped_transactions = _group_transactions_chronological(parsed_transactions)
 
-    result = []
-    current_group = None
+    else:
+        grouped_transactions = _group_transactions_by_type(parsed_transactions)
 
-    for txn in parsed_transactions:
-        if not current_group:
-            current_group = {
-                "asset": txn["asset"],
-                "amount": txn["amount"],
-                "start": txn.get("group") or txn.get("id"),
-                "count": 1,
-            }
-            if txn.get("sender") in PROJECT_ADDRESSES:
-                current_group["sender"] = txn.get("sender")
+    asset_ids = {row.get("asset") for row in grouped_transactions}
+    assets_data = _fetch_asset_data(asset_ids)
+    return "\n".join(
+        [
+            _format_paragraph(allocation, assets_data)
+            for allocation in grouped_transactions
+        ]
+    )
 
-            elif txn.get("receiver") in PROJECT_ADDRESSES:
-                current_group["receiver"] = txn.get("receiver")
 
-        elif (
-            txn["asset"] == current_group["asset"]
-            and (txn["amount"] > 0) == (current_group["amount"] > 0)
-            and (
-                (
-                    txn.get("sender") in PROJECT_ADDRESSES
-                    and txn.get("sender") == current_group.get("sender")
-                )
-                or (
-                    txn.get("receiver") in PROJECT_ADDRESSES
-                    and txn.get("receiver") == current_group.get("receiver")
-                )
-                or (
-                    txn.get("sender") not in PROJECT_ADDRESSES
-                    and txn.get("receiver") not in PROJECT_ADDRESSES
-                    and not current_group.get("sender")
-                    and not current_group.get("receiver")
-                )
-            )
-        ):
-            current_group["amount"] += txn["amount"]
-            current_group["end"] = txn.get("group") or txn.get("id")
-            current_group["count"] += 1
+def _format_amount(allocation, assets_data):
+    """Format allocation amount and asset unit to a string.
+
+    :param allocation: dictionary with allocation data
+    :type allocation: dict
+    :param assets_data: dictionary with assets' data
+    :type assets_data: dict
+    :var amount: absolute value of the allocation amount
+    :type amount: float
+    :var unit: asset's unit name
+    :type unit: str
+    :return: formatted amount and asset unit
+    :rtype: str
+    """
+    amount = abs(allocation.get("amount")) / 10 ** assets_data.get(
+        allocation.get("asset")
+    ).get("decimals")
+    unit = assets_data.get(allocation.get("asset")).get("unit")
+    return f"{amount:,.2f} {unit}"
+
+
+def _format_date(entry):
+    """Format entry's timestamp to a standardized string.
+
+    :param entry: dictionary with transaction entry data
+    :type entry: dict
+    :var utc_datetime: entry's timestamp as a datetime object
+    :type utc_datetime: :class:`datetime.datetime`
+    :return: formatted timestamp string
+    :rtype: str
+    """
+    utc_datetime = datetime.fromtimestamp(entry.get("round-time"), tz=timezone.utc)
+    return utc_datetime.strftime("%a, %-d %b %Y %H:%M:%S UTC")
+
+
+def _format_paragraph(allocation, assets_data):
+    """Format allocation data to a markdown paragraph.
+
+    :param allocation: dictionary with allocation data
+    :type allocation: dict
+    :param assets_data: dictionary with assets' data
+    :type assets_data: dict
+    :var amount: formatted amount and asset unit
+    :type amount: str
+    :var amount_text: formatted amount text
+    :type amount_text: str
+    :var source_address: source address of the allocation
+    :type source_address: str
+    :var source: formatted source text
+    :type source: str
+    :var destination: formatted destination text
+    :type destination: str
+    :var dest_address: destination address of the allocation
+    :type dest_address: str
+    :var count: number of contributors
+    :type count: int
+    :var start_text: formatted start date text
+    :type start_text: str
+    :var start_url: formatted start date url
+    :type start_url: str
+    :var end_text: formatted end date text
+    :type end_text: str
+    :var end_url: formatted end date url
+    :type end_url: str
+    :var link: formatted link text
+    :type link: str
+    :return: formatted markdown paragraph
+    :rtype: str
+    """
+    amount = _format_amount(allocation, assets_data)
+    amount_text = f"an amount of {amount}"
+    if allocation.get("amount") > 0:
+        source_address = PROJECT_ADDRESSES.get(allocation.get("sender"))
+        source = f"from {source_address} address"
+        destination = "to Rewards dApp escrow"
+
+    else:
+        source = "from Rewards dApp escrow"
+        if allocation.get("count", 1) == 1:
+            if allocation.get("receiver"):
+                dest_address = PROJECT_ADDRESSES.get(allocation.get("receiver"))
+                destination = f"to {dest_address} address"
+
+            else:
+                destination = "for claiming by one contributor on the Rewards website"
 
         else:
-            if "count" in current_group and (
-                current_group.get("sender") or current_group.get("receiver")
-            ):
-                del current_group["count"]
+            destination = (
+                f"for claiming by {allocation.get('count')} "
+                "contributors on the Rewards website"
+            )
 
-            result.append(current_group)
-            current_group = {
-                "asset": txn["asset"],
-                "amount": txn["amount"],
-                "start": txn.get("group") or txn.get("id"),
-                "count": 1,
-            }
-            if txn.get("sender") in PROJECT_ADDRESSES:
-                current_group["sender"] = txn.get("sender")
+    start_text = _format_date(allocation.get("start"))
+    start_url = _format_url(allocation.get("start"))
+    if not allocation.get("end"):
+        link = f"On [{start_text}]({start_url})"
 
-            elif txn.get("receiver") in PROJECT_ADDRESSES:
-                current_group["receiver"] = txn.get("receiver")
+    else:
+        end_text = _format_date(allocation.get("end"))
+        end_url = _format_url(allocation.get("end"))
+        link = f"From [{start_text}]({start_url}) to [{end_text}]({end_url})"
 
-    result.append(current_group)
+    return f"{link}, {amount_text} was allocated {source} {destination}.\n"
 
-    return result
+
+def _format_url(entry, network="mainnet"):
+    """Format entry data to a blockchain explorer URL.
+
+    :param entry: dictionary with transaction entry data
+    :type entry: dict
+    :param network: blockchain network name
+    :type network: str
+    :var explorer: blockchain explorer name
+    :type explorer: str
+    :var url: base URL of the blockchain explorer
+    :type url: str
+    :var group: URL encoded transaction group
+    :type group: str
+    :return: formatted blockchain explorer URL
+    :rtype: str
+    """
+    explorer = os.getenv("BLOCKCHAIN_EXPLORER", "lora")
+    url = EXPLORER_BASE_URLS.get(explorer)
+    if entry.get("group"):
+        group = urllib.parse.quote(entry.get("group"), safe="")
+        if explorer == "lora":
+            url += network + "/block/" + str(entry.get("round")) + "/group/" + group
+        else:
+            url += "tx/group/" + group
+
+    else:
+        if explorer == "lora":
+            url += network + "/transaction/" + entry.get("id")
+        else:
+            url += "tx/" + entry.get("id")
+
+    return url

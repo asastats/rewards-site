@@ -14,11 +14,12 @@ from contract.reporting import (
     INDEXER_TOKEN,
     _address_transaction,
     _fetch_app_allocations,
+    _group_transactions_by_type,
+    _group_transactions_chronological,
     _indexer_instance,
     _parse_transaction,
     _parse_transactions,
     _search_transactions_by_address,
-    group_transactions,
 )
 
 
@@ -483,6 +484,173 @@ class TestContractReportingParsingFunctions:
             Path(__file__).resolve().parent / "fixture-2ASZE-R274Q.json"
         )
 
+    # # _group_transactions_by_type
+    def test_contract_reporting_group_transactions_by_type_functionality(self):
+        start_date = datetime(2025, 1, 1)
+        end_date = datetime(2026, 1, 1)
+        parsed = _parse_transactions(
+            self.transactions, self.address, start_date, end_date
+        )
+        grouped = _group_transactions_by_type(parsed)
+        expected = [
+            {
+                "asset": 0,
+                "amount": 500000,
+                "count": 1,
+                "start": "5AAL3HQOADA6GVMSUQ3WPXRO22FOGJ4RBTMA2PXONG5F2EBVADSQ",
+                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            },
+            {
+                "asset": 123755640,
+                "amount": 645000000000,
+                "count": 3,
+                "start": "tCpVmg6Wxz3zfnFRfucigfHDyaFmqsKgctvSiWO0StE=",
+                "end": "4yMdnSBzKTU/WuHiiOnNxzhscADlBQkdetBqIRqyirw=",
+                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            },
+            {
+                "asset": 123755640,
+                "amount": -195000000000,
+                "count": 4,
+                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                "end": "XTIG4HP3NN7YOWULX53RB6JGOLP3YO5CL4GTQUPS3ABCOEF4UXEQ",
+                "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            },
+        ]
+
+        assert grouped == expected
+
+    def test_contract_reporting_group_transactions_by_type_for_empty_data(
+        self,
+    ):
+        grouped = _group_transactions_by_type([])
+        assert grouped == []
+
+    def test_contract_reporting_group_transactions_by_type_for_creator_receiver(
+        self,
+    ):
+        start_date = datetime.fromtimestamp(1764837992, tz=timezone.utc)
+        end_date = datetime.fromtimestamp(1764837992, tz=timezone.utc)
+        parsed = _parse_transactions(
+            self.transactions, self.address, start_date, end_date
+        )
+        grouped = _group_transactions_by_type(parsed)
+        expected = [
+            {
+                "asset": 123755640,
+                "amount": -100000000000,
+                "count": 1,
+                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            }
+        ]
+        assert grouped == expected
+
+    # # _group_transactions_chronological
+    def test_contract_reporting_group_transactions_chronological_functionality(self):
+        start_date = datetime(2025, 1, 1)
+        end_date = datetime(2026, 1, 1)
+        parsed = _parse_transactions(
+            self.transactions, self.address, start_date, end_date
+        )
+        grouped = _group_transactions_chronological(parsed)
+        expected = [
+            {
+                "asset": 0,
+                "amount": 500000,
+                "start": "5AAL3HQOADA6GVMSUQ3WPXRO22FOGJ4RBTMA2PXONG5F2EBVADSQ",
+                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            },
+            {
+                "asset": 123755640,
+                "amount": 195000000000,
+                "start": "tCpVmg6Wxz3zfnFRfucigfHDyaFmqsKgctvSiWO0StE=",
+                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            },
+            {
+                "asset": 123755640,
+                "amount": -195000000000,
+                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                "end": "XTIG4HP3NN7YOWULX53RB6JGOLP3YO5CL4GTQUPS3ABCOEF4UXEQ",
+                "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            },
+            {
+                "asset": 123755640,
+                "amount": 450000000000,
+                "count": 2,
+                "start": "+LLeR+KDBcDoJPL5zjPoeXu8knIi7cCAKH/H1p/RCyA=",
+                "end": "4yMdnSBzKTU/WuHiiOnNxzhscADlBQkdetBqIRqyirw=",
+                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            },
+        ]
+        assert grouped == expected
+
+    def test_contract_reporting_group_transactions_chronological_for_empty_data(self):
+        # _parse_transaction
+        # axfer, sender and receiver are not address
+        txn = {
+            "tx-type": "axfer",
+            "asset-transfer-transaction": {
+                "amount": 100,
+                "asset-id": 1,
+                "receiver": "another_address",
+            },
+            "sender": "sender",
+        }
+        top_txn = {"id": "top_id", "group": "top_group"}
+        assert not _parse_transaction(txn, self.address, top_txn)
+        # pay, sender and receiver are not address
+        txn = {
+            "tx-type": "pay",
+            "payment-transaction": {
+                "amount": 50,
+                "receiver": "another_address",
+            },
+            "sender": "sender",
+        }
+        assert not _parse_transaction(txn, self.address, top_txn)
+        # _parse_transactions
+        start_date = datetime(2026, 1, 1)
+        end_date = datetime(2027, 1, 1)
+        parsed = _parse_transactions(
+            self.transactions, self.address, start_date, end_date
+        )
+        assert parsed == []
+        # group_transactions_chronological
+        grouped = _group_transactions_chronological([])
+        assert grouped == []
+        parsed = [
+            {"asset": 1, "amount": 100, "id": "id1"},
+            {"asset": 1, "amount": 200, "id": "id2"},
+            {"asset": 2, "amount": 300, "id": "id3"},
+        ]
+        grouped = _group_transactions_chronological(parsed)
+        expected = [
+            {"asset": 1, "amount": 300, "start": "id1", "end": "id2", "count": 2},
+            {"asset": 2, "amount": 300, "start": "id3", "count": 1},
+        ]
+        assert grouped == expected
+
+    def test_contract_reporting_group_transactions_chronological_for_creator_receiver(
+        self,
+    ):
+        start_date = datetime.fromtimestamp(1764837992, tz=timezone.utc)
+        end_date = datetime.fromtimestamp(1764837992, tz=timezone.utc)
+        parsed = _parse_transactions(
+            self.transactions, self.address, start_date, end_date
+        )
+        grouped = _group_transactions_chronological(parsed)
+        expected = [
+            {
+                "asset": 123755640,
+                "amount": -100000000000,
+                "count": 1,
+                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+            }
+        ]
+        assert grouped == expected
+
     # # _parse_transaction
     def test_contract_reporting_parse_transaction_functionality(self):
         # axfer, amount > 0, receiver is address
@@ -561,107 +729,3 @@ class TestContractReportingParsingFunctions:
             self.transactions, self.address, start_date, end_date
         )
         assert len(parsed) == 8
-
-    # # group_transactions
-    def test_contract_reporting_group_transactions_functionality(self):
-        start_date = datetime(2025, 1, 1)
-        end_date = datetime(2026, 1, 1)
-        parsed = _parse_transactions(
-            self.transactions, self.address, start_date, end_date
-        )
-        grouped = group_transactions(parsed)
-        expected = [
-            {
-                "asset": 0,
-                "amount": 500000,
-                "start": "5AAL3HQOADA6GVMSUQ3WPXRO22FOGJ4RBTMA2PXONG5F2EBVADSQ",
-                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
-            },
-            {
-                "asset": 123755640,
-                "amount": 195000000000,
-                "start": "tCpVmg6Wxz3zfnFRfucigfHDyaFmqsKgctvSiWO0StE=",
-                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
-            },
-            {
-                "asset": 123755640,
-                "amount": -195000000000,
-                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
-                "end": "XTIG4HP3NN7YOWULX53RB6JGOLP3YO5CL4GTQUPS3ABCOEF4UXEQ",
-                "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
-            },
-            {
-                "asset": 123755640,
-                "amount": 450000000000,
-                "count": 2,
-                "start": "+LLeR+KDBcDoJPL5zjPoeXu8knIi7cCAKH/H1p/RCyA=",
-                "end": "4yMdnSBzKTU/WuHiiOnNxzhscADlBQkdetBqIRqyirw=",
-                "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
-            },
-        ]
-        assert grouped == expected
-
-    def test_contract_reporting_group_transactions_for_empty_data(self):
-        # _parse_transaction
-        # axfer, sender and receiver are not address
-        txn = {
-            "tx-type": "axfer",
-            "asset-transfer-transaction": {
-                "amount": 100,
-                "asset-id": 1,
-                "receiver": "another_address",
-            },
-            "sender": "sender",
-        }
-        top_txn = {"id": "top_id", "group": "top_group"}
-        assert not _parse_transaction(txn, self.address, top_txn)
-        # pay, sender and receiver are not address
-        txn = {
-            "tx-type": "pay",
-            "payment-transaction": {
-                "amount": 50,
-                "receiver": "another_address",
-            },
-            "sender": "sender",
-        }
-        assert not _parse_transaction(txn, self.address, top_txn)
-        # _parse_transactions
-        start_date = datetime(2026, 1, 1)
-        end_date = datetime(2027, 1, 1)
-        parsed = _parse_transactions(
-            self.transactions, self.address, start_date, end_date
-        )
-        assert parsed == []
-        # group_transactions
-        grouped = group_transactions([])
-        assert grouped == []
-        parsed = [
-            {"asset": 1, "amount": 100, "id": "id1"},
-            {"asset": 1, "amount": 200, "id": "id2"},
-            {"asset": 2, "amount": 300, "id": "id3"},
-        ]
-        grouped = group_transactions(parsed)
-        expected = [
-            {"asset": 1, "amount": 300, "start": "id1", "end": "id2", "count": 2},
-            {"asset": 2, "amount": 300, "start": "id3", "count": 1},
-        ]
-        assert grouped == expected
-
-    def test_contract_reporting_group_transactions_for_creator_receiver(self):
-
-        start_date = datetime.fromtimestamp(1764837992, tz=timezone.utc)
-        end_date = datetime.fromtimestamp(1764837992, tz=timezone.utc)
-        parsed = _parse_transactions(
-            self.transactions, self.address, start_date, end_date
-        )
-        grouped = group_transactions(parsed)
-        expected = [
-            {
-                "asset": 123755640,
-                "amount": -100000000000,
-                "count": 1,
-                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
-                "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
-            }
-        ]
-        assert grouped == expected

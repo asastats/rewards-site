@@ -123,7 +123,21 @@ def _fetch_app_allocations():
 
 
 def _fetch_asset_data(asset_ids):
-    """TODO: docstring and tests"""
+    """Fetch and return data for a set of asset IDs.
+
+    :param asset_ids: set of asset IDs to fetch data for
+    :type asset_ids: set
+    :var data: dictionary to store asset data
+    :type data: dict
+    :var indexer_client: Algorand Indexer client instance
+    :type indexer_client: :class:`IndexerClient`
+    :var asset_id: asset ID to fetch data for
+    :type asset_id: int
+    :var asset_info: dictionary with asset information
+    :type asset_info: dict
+    :return: dictionary with asset data
+    :rtype: dict
+    """
     data = {}
     indexer_client = _indexer_instance()
     for asset_id in asset_ids:
@@ -354,11 +368,6 @@ def _group_transactions_chronological(parsed_transactions):
             current_group["count"] += 1
 
         else:
-            if "count" in current_group and (
-                current_group.get("sender") or current_group.get("receiver")
-            ):
-                del current_group["count"]
-
             result.append(current_group)
             current_group = _create_chronological_group(txn)
 
@@ -476,8 +485,68 @@ def _parse_transactions(transactions, address, start_date, end_date):
 
 
 # # REPORTS
+def create_transparency_report(start_date, end_date, grouping="chronological"):
+    """Create and return transparency report for Rewards dApp.
+
+    :param start_date: report's start date
+    :type start_date: :class:`datetime.datetime`
+    :param end_date: report's end date
+    :type end_date: :class:`datetime.datetime`
+    :param grouping: type of grouping of transactions, either chronological or by type
+    :type grouping: str
+    :var app_id: Rewards dApp unique identifier
+    :type app_id: int
+    :var escrow: Rewards dApp escrow address
+    :type escrow: str
+    :var transactions: collection of all escrow transactions
+    :type transactions: list
+    :var parsed_transactions: collection of parsed escrow transactions in the period
+    :type parsed_transactions: list
+    :var grouped_transactions: collection of grouped escrow transactions
+    :type grouped_transactions: list
+    :var asset_ids: collection of unique asset identifiers
+    :type asset_ids: set
+    :var assets_data: collection of assets' data
+    :type assets_data: dict
+    :return: formatted transparency report
+    :rtype: str
+    """
+    app_id = app_id_from_contract()
+    escrow = get_application_address(app_id)
+    transactions = _fetch_app_allocations()
+    parsed_transactions = _parse_transactions(
+        transactions, escrow, start_date, end_date
+    )
+    if grouping == "chronological":
+        grouped_transactions = _group_transactions_chronological(parsed_transactions)
+
+    else:
+        grouped_transactions = _group_transactions_by_type(parsed_transactions)
+
+    asset_ids = {row.get("asset") for row in grouped_transactions}
+    assets_data = _fetch_asset_data(asset_ids)
+    return "\n".join(
+        [
+            _format_paragraph(allocation, assets_data)
+            for allocation in grouped_transactions
+        ]
+    )
+
+
 def _format_amount(allocation, assets_data):
-    """TODO: docstring and tests"""
+    """Format allocation amount and asset unit to a string.
+
+    :param allocation: dictionary with allocation data
+    :type allocation: dict
+    :param assets_data: dictionary with assets' data
+    :type assets_data: dict
+    :var amount: absolute value of the allocation amount
+    :type amount: float
+    :var unit: asset's unit name
+    :type unit: str
+    :return: formatted amount and asset unit
+    :rtype: str
+    """
     amount = abs(allocation.get("amount")) / 10 ** assets_data.get(
         allocation.get("asset")
     ).get("decimals")
@@ -486,14 +555,53 @@ def _format_amount(allocation, assets_data):
 
 
 def _format_date(entry):
-    """TODO: docstring and tests"""
+    """Format entry's timestamp to a standardized string.
+
+    :param entry: dictionary with transaction entry data
+    :type entry: dict
+    :var utc_datetime: entry's timestamp as a datetime object
+    :type utc_datetime: :class:`datetime.datetime`
+    :return: formatted timestamp string
+    :rtype: str
+    """
     utc_datetime = datetime.fromtimestamp(entry.get("round-time"), tz=timezone.utc)
     return utc_datetime.strftime("%a, %-d %b %Y %H:%M:%S UTC")
 
 
 def _format_paragraph(allocation, assets_data):
-    """TODO: docstring and tests"""
+    """Format allocation data to a markdown paragraph.
 
+    :param allocation: dictionary with allocation data
+    :type allocation: dict
+    :param assets_data: dictionary with assets' data
+    :type assets_data: dict
+    :var amount: formatted amount and asset unit
+    :type amount: str
+    :var amount_text: formatted amount text
+    :type amount_text: str
+    :var source_address: source address of the allocation
+    :type source_address: str
+    :var source: formatted source text
+    :type source: str
+    :var destination: formatted destination text
+    :type destination: str
+    :var dest_address: destination address of the allocation
+    :type dest_address: str
+    :var count: number of contributors
+    :type count: int
+    :var start_text: formatted start date text
+    :type start_text: str
+    :var start_url: formatted start date url
+    :type start_url: str
+    :var end_text: formatted end date text
+    :type end_text: str
+    :var end_url: formatted end date url
+    :type end_url: str
+    :var link: formatted link text
+    :type link: str
+    :return: formatted markdown paragraph
+    :rtype: str
+    """
     amount = _format_amount(allocation, assets_data)
     amount_text = f"an amount of {amount}"
     if allocation.get("amount") > 0:
@@ -503,34 +611,49 @@ def _format_paragraph(allocation, assets_data):
 
     else:
         source = "from Rewards dApp escrow"
-        if allocation.get("receiver"):
-            dest_address = PROJECT_ADDRESSES.get(allocation.get("sender"))
-            destination = f"to {dest_address} address"
+        if allocation.get("count", 1) == 1:
+            if allocation.get("receiver"):
+                dest_address = PROJECT_ADDRESSES.get(allocation.get("receiver"))
+                destination = f"to {dest_address} address"
+
+            else:
+                destination = "for claiming by one contributor on the Rewards website"
 
         else:
-            count = allocation.get("count")
             destination = (
-                f"to {count} contributors to be claimed on the Rewards website."
+                f"for claiming by {allocation.get('count')} "
+                "contributors on the Rewards website"
             )
 
     start_text = _format_date(allocation.get("start"))
     start_url = _format_url(allocation.get("start"))
     if not allocation.get("end"):
-        link = f"On [{start_text}]({start_url}), {amount_text} was allocated"
+        link = f"On [{start_text}]({start_url})"
 
     else:
         end_text = _format_date(allocation.get("end"))
         end_url = _format_url(allocation.get("end"))
-        link = (
-            f"From [{start_text}]({start_url}) to [{end_text}]({end_url}), "
-            f"{amount_text} had been allocated"
-        )
+        link = f"From [{start_text}]({start_url}) to [{end_text}]({end_url})"
 
-    return f"{link} {source} {destination}.\n"
+    return f"{link}, {amount_text} was allocated {source} {destination}.\n"
 
 
 def _format_url(entry, network="mainnet"):
-    """TODO: docstring and tests"""
+    """Format entry data to a blockchain explorer URL.
+
+    :param entry: dictionary with transaction entry data
+    :type entry: dict
+    :param network: blockchain network name
+    :type network: str
+    :var explorer: blockchain explorer name
+    :type explorer: str
+    :var url: base URL of the blockchain explorer
+    :type url: str
+    :var group: URL encoded transaction group
+    :type group: str
+    :return: formatted blockchain explorer URL
+    :rtype: str
+    """
     explorer = os.getenv("BLOCKCHAIN_EXPLORER", "lora")
     url = EXPLORER_BASE_URLS.get(explorer)
     if entry.get("group"):

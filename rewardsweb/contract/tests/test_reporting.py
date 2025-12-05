@@ -13,6 +13,8 @@ from contract.reporting import (
     INDEXER_PAGE_DELAY,
     INDEXER_TOKEN,
     _address_transaction,
+    _create_chronological_group,
+    _create_transaction_entry,
     _fetch_app_allocations,
     _group_transactions_by_type,
     _group_transactions_chronological,
@@ -484,6 +486,60 @@ class TestContractReportingParsingFunctions:
             Path(__file__).resolve().parent / "fixture-2ASZE-R274Q.json"
         )
 
+    # # _create_chronological_group
+    def test_contract_reporting_create_chronological_group_functionality(self):
+        txn = {
+            "asset": 1,
+            "amount": 100,
+            "id": "id1",
+            "round-time": 1000,
+            "round": 10,
+            "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+        }
+        group = _create_chronological_group(txn)
+        assert group == {
+            "asset": 1,
+            "amount": 100,
+            "start": {"id": "id1", "round-time": 1000, "round": 10},
+            "count": 1,
+            "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
+        }
+
+        txn_receiver = {
+            "asset": 2,
+            "amount": 200,
+            "group": "group2",
+            "round-time": 2000,
+            "round": 20,
+            "receiver": self.address,
+        }
+        group_receiver = _create_chronological_group(txn_receiver)
+        assert group_receiver == {
+            "asset": 2,
+            "amount": 200,
+            "start": {"group": "group2", "round-time": 2000, "round": 20},
+            "count": 1,
+        }
+
+    # # _create_transaction_entry
+    def test_contract_reporting_create_transaction_entry_functionality(self):
+        txn_with_group = {"group": "test_group", "round-time": 100, "round": 10}
+        entry = _create_transaction_entry(txn_with_group)
+        assert entry == {"group": "test_group", "round-time": 100, "round": 10}
+
+        txn_with_id = {"id": "test_id", "round-time": 200, "round": 20}
+        entry = _create_transaction_entry(txn_with_id)
+        assert entry == {"id": "test_id", "round-time": 200, "round": 20}
+
+        txn_both = {
+            "id": "test_id",
+            "group": "test_group",
+            "round-time": 300,
+            "round": 30,
+        }
+        entry = _create_transaction_entry(txn_both)
+        assert entry == {"group": "test_group", "round-time": 300, "round": 30}
+
     # # _group_transactions_by_type
     def test_contract_reporting_group_transactions_by_type_functionality(self):
         start_date = datetime(2025, 1, 1)
@@ -497,23 +553,43 @@ class TestContractReportingParsingFunctions:
                 "asset": 0,
                 "amount": 500000,
                 "count": 1,
-                "start": "5AAL3HQOADA6GVMSUQ3WPXRO22FOGJ4RBTMA2PXONG5F2EBVADSQ",
+                "start": {
+                    "id": "5AAL3HQOADA6GVMSUQ3WPXRO22FOGJ4RBTMA2PXONG5F2EBVADSQ",
+                    "round-time": 1764675278,
+                    "round": 58090657,
+                },
                 "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             },
             {
                 "asset": 123755640,
                 "amount": 645000000000,
                 "count": 3,
-                "start": "tCpVmg6Wxz3zfnFRfucigfHDyaFmqsKgctvSiWO0StE=",
-                "end": "4yMdnSBzKTU/WuHiiOnNxzhscADlBQkdetBqIRqyirw=",
+                "start": {
+                    "group": "tCpVmg6Wxz3zfnFRfucigfHDyaFmqsKgctvSiWO0StE=",
+                    "round-time": 1764684142,
+                    "round": 58093976,
+                },
+                "end": {
+                    "group": "4yMdnSBzKTU/WuHiiOnNxzhscADlBQkdetBqIRqyirw=",
+                    "round-time": 1764838035,
+                    "round": 58151503,
+                },
                 "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             },
             {
                 "asset": 123755640,
                 "amount": -195000000000,
                 "count": 4,
-                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
-                "end": "XTIG4HP3NN7YOWULX53RB6JGOLP3YO5CL4GTQUPS3ABCOEF4UXEQ",
+                "start": {
+                    "id": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                    "round-time": 1764837992,
+                    "round": 58151487,
+                },
+                "end": {
+                    "id": "XTIG4HP3NN7YOWULX53RB6JGOLP3YO5CL4GTQUPS3ABCOEF4UXEQ",
+                    "round-time": 1764838019,
+                    "round": 58151497,
+                },
                 "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             },
         ]
@@ -540,7 +616,11 @@ class TestContractReportingParsingFunctions:
                 "asset": 123755640,
                 "amount": -100000000000,
                 "count": 1,
-                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                "start": {
+                    "id": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                    "round-time": 1764837992,
+                    "round": 58151487,
+                },
                 "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             }
         ]
@@ -558,28 +638,52 @@ class TestContractReportingParsingFunctions:
             {
                 "asset": 0,
                 "amount": 500000,
-                "start": "5AAL3HQOADA6GVMSUQ3WPXRO22FOGJ4RBTMA2PXONG5F2EBVADSQ",
+                "start": {
+                    "id": "5AAL3HQOADA6GVMSUQ3WPXRO22FOGJ4RBTMA2PXONG5F2EBVADSQ",
+                    "round-time": 1764675278,
+                    "round": 58090657,
+                },
                 "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             },
             {
                 "asset": 123755640,
                 "amount": 195000000000,
-                "start": "tCpVmg6Wxz3zfnFRfucigfHDyaFmqsKgctvSiWO0StE=",
+                "start": {
+                    "group": "tCpVmg6Wxz3zfnFRfucigfHDyaFmqsKgctvSiWO0StE=",
+                    "round-time": 1764684142,
+                    "round": 58093976,
+                },
                 "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             },
             {
                 "asset": 123755640,
                 "amount": -195000000000,
-                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
-                "end": "XTIG4HP3NN7YOWULX53RB6JGOLP3YO5CL4GTQUPS3ABCOEF4UXEQ",
+                "start": {
+                    "id": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                    "round-time": 1764837992,
+                    "round": 58151487,
+                },
+                "end": {
+                    "id": "XTIG4HP3NN7YOWULX53RB6JGOLP3YO5CL4GTQUPS3ABCOEF4UXEQ",
+                    "round-time": 1764838019,
+                    "round": 58151497,
+                },
                 "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             },
             {
                 "asset": 123755640,
                 "amount": 450000000000,
                 "count": 2,
-                "start": "+LLeR+KDBcDoJPL5zjPoeXu8knIi7cCAKH/H1p/RCyA=",
-                "end": "4yMdnSBzKTU/WuHiiOnNxzhscADlBQkdetBqIRqyirw=",
+                "start": {
+                    "group": "+LLeR+KDBcDoJPL5zjPoeXu8knIi7cCAKH/H1p/RCyA=",
+                    "round-time": 1764838030,
+                    "round": 58151501,
+                },
+                "end": {
+                    "group": "4yMdnSBzKTU/WuHiiOnNxzhscADlBQkdetBqIRqyirw=",
+                    "round-time": 1764838035,
+                    "round": 58151503,
+                },
                 "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             },
         ]
@@ -620,14 +724,25 @@ class TestContractReportingParsingFunctions:
         grouped = _group_transactions_chronological([])
         assert grouped == []
         parsed = [
-            {"asset": 1, "amount": 100, "id": "id1"},
-            {"asset": 1, "amount": 200, "id": "id2"},
-            {"asset": 2, "amount": 300, "id": "id3"},
+            {"asset": 1, "amount": 100, "id": "id1", "round-time": None, "round": None},
+            {"asset": 1, "amount": 200, "id": "id2", "round-time": None, "round": None},
+            {"asset": 2, "amount": 300, "id": "id3", "round-time": None, "round": None},
         ]
         grouped = _group_transactions_chronological(parsed)
         expected = [
-            {"asset": 1, "amount": 300, "start": "id1", "end": "id2", "count": 2},
-            {"asset": 2, "amount": 300, "start": "id3", "count": 1},
+            {
+                "asset": 1,
+                "amount": 300,
+                "start": {"id": "id1", "round-time": None, "round": None},
+                "end": {"id": "id2", "round-time": None, "round": None},
+                "count": 2,
+            },
+            {
+                "asset": 2,
+                "amount": 300,
+                "start": {"id": "id3", "round-time": None, "round": None},
+                "count": 1,
+            },
         ]
         assert grouped == expected
 
@@ -645,10 +760,15 @@ class TestContractReportingParsingFunctions:
                 "asset": 123755640,
                 "amount": -100000000000,
                 "count": 1,
-                "start": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                "start": {
+                    "id": "XSO5Q5S4ADPSRCJFKEA4TNOJFLZYHE7KJTH3SJ6FW2SWYTHOLXJQ",
+                    "round-time": 1764837992,
+                    "round": 58151487,
+                },
                 "receiver": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
             }
         ]
+
         assert grouped == expected
 
     # # _parse_transaction
@@ -663,11 +783,17 @@ class TestContractReportingParsingFunctions:
             },
             "sender": "sender",
         }
-        top_txn = {"id": "top_id", "group": "top_group"}
-        parsed = _parse_transaction(txn, self.address, top_txn)
-        assert parsed == {
+        top_txn = {
             "id": "top_id",
             "group": "top_group",
+            "round-time": 12345,
+            "confirmed-round": 123,
+        }
+        parsed = _parse_transaction(txn, self.address, top_txn)
+        assert parsed == {
+            "group": "top_group",
+            "round-time": 12345,
+            "round": 123,
             "asset": 1,
             "amount": 100,
             "sender": "sender",
@@ -677,8 +803,9 @@ class TestContractReportingParsingFunctions:
         txn["sender"] = self.address
         parsed = _parse_transaction(txn, self.address, top_txn)
         assert parsed == {
-            "id": "top_id",
             "group": "top_group",
+            "round-time": 12345,
+            "round": 123,
             "asset": 1,
             "amount": -100,
             "receiver": "another_address",
@@ -692,10 +819,12 @@ class TestContractReportingParsingFunctions:
             "payment-transaction": {"amount": 50, "receiver": self.address},
             "sender": "sender",
         }
+        top_txn = {"id": "top_id", "round-time": 12345, "confirmed-round": 123}
         parsed = _parse_transaction(txn, self.address, top_txn)
         assert parsed == {
             "id": "top_id",
-            "group": "top_group",
+            "round-time": 12345,
+            "round": 123,
             "asset": 0,
             "amount": 50,
             "sender": "sender",
@@ -706,7 +835,8 @@ class TestContractReportingParsingFunctions:
         parsed = _parse_transaction(txn, self.address, top_txn)
         assert parsed == {
             "id": "top_id",
-            "group": "top_group",
+            "round-time": 12345,
+            "round": 123,
             "asset": 0,
             "amount": -50,
             "receiver": "another_address",
@@ -714,6 +844,32 @@ class TestContractReportingParsingFunctions:
         # other type
         txn = {"tx-type": "appl"}
         assert not _parse_transaction(txn, self.address, top_txn)
+
+    def test_contract_reporting_parse_transaction_for_no_id(self):
+        # axfer, amount > 0, receiver is address
+        txn = {
+            "tx-type": "axfer",
+            "asset-transfer-transaction": {
+                "amount": 100,
+                "asset-id": 1,
+                "receiver": self.address,
+            },
+            "sender": "sender",
+        }
+        top_txn = {
+            "id": "top_id",
+            "round-time": 12345,
+            "confirmed-round": 123,
+        }
+        parsed = _parse_transaction(txn, self.address, top_txn)
+        assert parsed == {
+            "round-time": 12345,
+            "round": 123,
+            "asset": 1,
+            "id": "top_id",
+            "amount": 100,
+            "sender": "sender",
+        }
 
     # # _parse_transactions
     def test_contract_reporting_parse_transactions_functionality(self):

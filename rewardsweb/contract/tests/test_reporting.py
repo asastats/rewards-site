@@ -1,11 +1,13 @@
 """Testing module for :py:mod:`contract.reporting` module."""
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
+import contract.reporting
 from contract.helpers import read_json
 from contract.reporting import (
     INDEXER_ADDRESS,
@@ -621,8 +623,30 @@ class TestContractReportingParsingFunctions:
         self.transactions = read_json(
             Path(__file__).resolve().parent / "fixture-2ASZE-R274Q.json"
         )
+        mock.patch.object(
+            contract.reporting,
+            "PROJECT_ADDRESSES",
+            {"V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI": "Creator"},
+        ).start()
 
     # # _create_chronological_group
+    def test_contract_reporting_create_chronological_group_for_receiver(self):
+        txn_receiver = {
+            "asset": 2,
+            "amount": 200,
+            "group": "group2",
+            "round-time": 2000,
+            "round": 20,
+            "receiver": self.address,
+        }
+        group_receiver = _create_chronological_group(txn_receiver)
+        assert group_receiver == {
+            "asset": 2,
+            "amount": 200,
+            "start": {"group": "group2", "round-time": 2000, "round": 20},
+            "count": 1,
+        }
+
     def test_contract_reporting_create_chronological_group_functionality(self):
         txn = {
             "asset": 1,
@@ -639,22 +663,6 @@ class TestContractReportingParsingFunctions:
             "start": {"id": "id1", "round-time": 1000, "round": 10},
             "count": 1,
             "sender": "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI",
-        }
-
-        txn_receiver = {
-            "asset": 2,
-            "amount": 200,
-            "group": "group2",
-            "round-time": 2000,
-            "round": 20,
-            "receiver": self.address,
-        }
-        group_receiver = _create_chronological_group(txn_receiver)
-        assert group_receiver == {
-            "asset": 2,
-            "amount": 200,
-            "start": {"group": "group2", "round-time": 2000, "round": 20},
-            "count": 1,
         }
 
     # # _create_transaction_entry
@@ -1038,6 +1046,11 @@ class TestContractReportingReportsFunctions:
             0: {"unit": "ALGO", "decimals": 6},
             123755640: {"unit": "UNIT", "decimals": 6},
         }
+        mock.patch.object(
+            contract.reporting,
+            "PROJECT_ADDRESSES",
+            {"V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI": "Creator"},
+        ).start()
 
     # # _format_amount
     def test_contract_reporting_format_amount_for_algo(self):

@@ -19,10 +19,7 @@ INDEXER_TOKEN = ""
 INDEXER_FETCH_LIMIT = 1000
 INDEXER_PAGE_DELAY = 1
 EXPLORER_BASE_URLS = {"lora": "https://lora.algokit.io/", "allo": "https://allo.info/"}
-PROJECT_ADDRESSES = {
-    "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI": "Creator"
-}
-
+PROJECT_ADDRESSES = json.loads(os.getenv("PROJECT_ADDRESSES", "{}"))
 
 logger = logging.getLogger(__name__)
 

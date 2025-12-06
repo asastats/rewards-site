@@ -50,7 +50,7 @@ def calculate_transpareny_report_period(
         # First day of the year
         start_date = datetime(year, 1, 1)
         # Last day of the year
-        end_date = datetime(year, 12, 31)
+        end_date = datetime(year, 12, 31, 23, 59, 59)
 
     elif report_type == "monthly":
         month = int(month)
@@ -58,7 +58,7 @@ def calculate_transpareny_report_period(
         start_date = datetime(year, month, 1)
         # Last day of the month
         _, last_day = monthrange(year, month)
-        end_date = datetime(year, month, last_day)
+        end_date = datetime(year, month, last_day, 23, 59, 59)
 
     elif report_type == "quarterly":
         quarter = int(quarter)
@@ -76,11 +76,12 @@ def calculate_transpareny_report_period(
         start_date = datetime(year, start_month, 1)
         # Last day of last month in quarter
         _, last_day = monthrange(year, end_month)
-        end_date = datetime(year, end_month, last_day)
+        end_date = datetime(year, end_month, last_day, 23, 59, 59)
 
     else:
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
         end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+        end_date = datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59)
 
     return start_date, end_date
 

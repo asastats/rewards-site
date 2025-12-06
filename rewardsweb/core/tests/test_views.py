@@ -673,14 +673,15 @@ class TestTransparencyReportView:
         mocked_fetch.assert_called_with(force_update=False)
 
     # # form_valid
-    def test_transparencyreportview_form_valid(self, mocker, client, superuser):
+    def test_transparencyreportview_form_valid_for_no_data(
+        self, mocker, client, superuser
+    ):
         mocker.patch(
             "core.views.fetch_app_allocations",
             return_value=[{"round-time": 1672531200}],
         )
         mocked_create = mocker.patch(
-            "core.views.create_transparency_report",
-            return_value=("report", "2023-01-01", "2023-01-31"),
+            "core.views.create_transparency_report", return_value=""
         )
         client.force_login(superuser)
         url = reverse("transparency")
@@ -693,5 +694,29 @@ class TestTransparencyReportView:
         response = client.post(url, data)
         assert response.status_code == 200
         assert "report" in response.context
-        assert response.context["report"] == ("report", "2023-01-01", "2023-01-31")
+        assert response.context["report"] == "No data"
+        mocked_create.assert_called_once()
+
+    def test_transparencyreportview_form_valid_functionality(
+        self, mocker, client, superuser
+    ):
+        mocker.patch(
+            "core.views.fetch_app_allocations",
+            return_value=[{"round-time": 1672531200}],
+        )
+        mocked_create = mocker.patch(
+            "core.views.create_transparency_report", return_value="report data"
+        )
+        client.force_login(superuser)
+        url = reverse("transparency")
+        data = {
+            "report_type": "monthly",
+            "month": 1,
+            "year": 2023,
+            "ordering": "chronological",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 200
+        assert "report" in response.context
+        assert response.context["report"] == "report data"
         mocked_create.assert_called_once()

@@ -728,3 +728,38 @@ class TestTransparencyReportView:
         assert response.context["last_allocation_date"] == "2023-02-01"
         mocked_create.assert_called_once()
         mocked_fetch.assert_called_with(force_update=False)
+
+
+@pytest.mark.django_db
+class TestRefreshTransparencyDataView:
+    """Testing class for :class:`core.views.RefreshTransparencyDataView`."""
+
+    def test_refreshtransparencydataview_is_subclass_of_redirectview(self, mocker):
+        from django.views.generic import RedirectView
+
+        from core.views import RefreshTransparencyDataView
+
+        assert issubclass(RefreshTransparencyDataView, RedirectView)
+
+    def test_refreshtransparencydataview_only_accessible_to_superusers(
+        self, client, regular_user
+    ):
+        url = reverse("refresh_transparency_data")
+        response = client.get(url)
+        assert response.status_code == 302
+        client.force_login(regular_user)
+        response = client.get(url)
+        assert response.status_code == 302
+
+    def test_refreshtransparencydataview_refreshes_and_redirects(
+        self, mocker, client, superuser
+    ):
+        mocked_refresh = mocker.patch("core.views.refresh_data")
+        mocked_messages = mocker.patch("core.views.messages")
+        client.force_login(superuser)
+        url = reverse("refresh_transparency_data")
+        response = client.get(url)
+        assert response.status_code == 302
+        assert response.url == reverse("transparency")
+        mocked_refresh.assert_called_once()
+        mocked_messages.success.assert_called_once()

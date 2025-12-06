@@ -23,6 +23,7 @@ from django.views.generic import (
     DetailView,
     FormView,
     ListView,
+    RedirectView,
     UpdateView,
 )
 from django.views.generic.detail import SingleObjectMixin
@@ -31,6 +32,7 @@ from contract.network import process_allocations_for_contributions
 from contract.reporting import (
     create_transparency_report,
     fetch_app_allocations,
+    refresh_data,
 )
 from core.forms import (
     ContributionCreateForm,
@@ -1366,3 +1368,26 @@ class TransparencyReportView(FormView):
         context["start_date"] = start_date
         context["end_date"] = end_date
         return self.render_to_response(context)
+
+
+@method_decorator(user_passes_test(lambda user: user.is_superuser), name="dispatch")
+class RefreshTransparencyDataView(RedirectView):
+    """View for refreshing transparency data (superusers only).
+
+    :ivar url: URL to redirect to after refreshing data
+    :type url: str
+    """
+
+    url = reverse_lazy("transparency")
+
+    def get(self, request, *args, **kwargs):
+        """Refresh transparency data and redirect to the transparency report page.
+
+        :param request: http request
+        :type request: :class:`django.http.HttpRequest`
+        :return: http response
+        :rtype: :class:`django.http.HttpResponseRedirect`
+        """
+        refresh_data()
+        messages.success(request, "Transparency data refreshed successfully!")
+        return super().get(request, *args, **kwargs)

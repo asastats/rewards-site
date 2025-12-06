@@ -18,10 +18,7 @@ INDEXER_ADDRESS = "https://testnet-idx.4160.nodely.dev"
 INDEXER_TOKEN = ""
 INDEXER_FETCH_LIMIT = 1000
 INDEXER_PAGE_DELAY = 1
-EXPLORER_BASE_URLS = {
-    "lora": "https://lora.algokit.io/",
-    "allo": "https://allo.info/",
-}
+EXPLORER_BASE_URLS = {"lora": "https://lora.algokit.io/", "allo": "https://allo.info/"}
 PROJECT_ADDRESSES = {
     "V2HN6R3A5YTFJLYFTRX7AIPFE7XRG2UVDSK24IZU6YVG2J7IHFRL7CFRTI": "Creator"
 }
@@ -225,6 +222,29 @@ def fetch_app_allocations(force_update=True):
                 json.dump(transactions, json_file)
 
     return transactions
+
+
+def refresh_data():
+    """Delete existing data, refetch new data and save them to the disk.
+
+    :var app_id: Rewards dApp unique identifier
+    :type app_id: int
+    :var escrow: Rewards dApp escrow address
+    :type escrow: str
+    :var filename: full path on disk to JSON file with escrow's transactions
+    :type filename: :class:`pathlib.PosixPath`
+    """
+    app_id = app_id_from_contract()
+    escrow = get_application_address(app_id)
+    filename = (
+        Path(__file__).resolve().parent.parent
+        / "fixtures"
+        / f"{f"{escrow[:5]}-{escrow[-5:]}"}.json"
+    )
+    if os.path.exists(filename):
+        os.remove(filename)
+
+    fetch_app_allocations()
 
 
 # # PARSING

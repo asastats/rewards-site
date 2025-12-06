@@ -28,6 +28,7 @@ from contract.reporting import (
     _search_transactions_by_address,
     create_transparency_report,
     fetch_app_allocations,
+    refresh_data,
 )
 
 
@@ -567,6 +568,49 @@ class TestContractReportingIndexerFunctions:
             "2ASZECPEH4ALJWHFN2MKPAS355GC6MDARIC3MFVZCN6NJF76HZPU4R274Q", 20001, client
         )
         client.applications.return_value.assert_not_called()
+
+    # # refresh_data
+    def test_contract_reporting_refresh_data_for_no_existing_data(self, mocker):
+        app_id = 750934138
+        mocked_app_id = mocker.patch(
+            "contract.reporting.app_id_from_contract", return_value=app_id
+        )
+        filename = (
+            Path(__file__).resolve().parent.parent.parent
+            / "fixtures"
+            / "2ASZE-R274Q.json"
+        )
+        mocked_fetch = mocker.patch("contract.reporting.fetch_app_allocations")
+        with mock.patch(
+            "contract.reporting.os.path.exists",
+            return_value=False,
+        ) as mocked_exists, mock.patch("contract.reporting.os.remove") as mocked_remove:
+            refresh_data()
+            mocked_exists.assert_called_once_with(filename)
+            mocked_remove.assert_not_called()
+        mocked_app_id.assert_called_once_with()
+        mocked_fetch.assert_called_once_with()
+
+    def test_contract_reporting_refresh_data_functionality(self, mocker):
+        app_id = 750934138
+        mocked_app_id = mocker.patch(
+            "contract.reporting.app_id_from_contract", return_value=app_id
+        )
+        filename = (
+            Path(__file__).resolve().parent.parent.parent
+            / "fixtures"
+            / "2ASZE-R274Q.json"
+        )
+        mocked_fetch = mocker.patch("contract.reporting.fetch_app_allocations")
+        with mock.patch(
+            "contract.reporting.os.path.exists",
+            return_value=True,
+        ) as mocked_exists, mock.patch("contract.reporting.os.remove") as mocked_remove:
+            refresh_data()
+            mocked_exists.assert_called_once_with(filename)
+            mocked_remove.assert_called_once_with(filename)
+        mocked_app_id.assert_called_once_with()
+        mocked_fetch.assert_called_once_with()
 
 
 class TestContractReportingParsingFunctions:

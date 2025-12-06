@@ -67,4 +67,9 @@ urlpatterns = [
         views.TransparencyReportView.as_view(),
         name="transparency",
     ),
+    path(
+        "transparency/refresh/",
+        views.RefreshTransparencyDataView.as_view(),
+        name="refresh_transparency_data",
+    ),
 ]

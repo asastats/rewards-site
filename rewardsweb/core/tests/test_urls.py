@@ -113,5 +113,17 @@ class TestCoreUrls:
         assert url.lookup_str == "core.views.UnconfirmedContributionsView"
         assert url.name == "unconfirmed_contributions"
 
+    def test_core_urls_transparency(self):
+        url = self._url_from_pattern("transparency/")
+        assert isinstance(url, URLPattern)
+        assert url.lookup_str == "core.views.TransparencyReportView"
+        assert url.name == "transparency"
+
+    def test_core_urls_refresh_transparency_data(self):
+        url = self._url_from_pattern("transparency/refresh/")
+        assert isinstance(url, URLPattern)
+        assert url.lookup_str == "core.views.RefreshTransparencyDataView"
+        assert url.name == "refresh_transparency_data"
+
     def test_core_urls_patterns_count(self):
-        assert len(urls.urlpatterns) == 18
+        assert len(urls.urlpatterns) == 19

@@ -80,6 +80,13 @@ EXCLUDED_CONTRIBUTORS = [
     if excluded_contributors.split(",")[0]
 ]
 
+TRANPARENCY_REPORT_REQUIRED_FIELDS = {
+    "monthly": ["month", "year"],
+    "quarterly": ["quarter", "year"],
+    "yearly": ["year"],
+    "custom": ["start_date", "end_date"],
+}
+
 ALGORAND_WALLETS = [
     {"id": "pera", "name": "Pera Wallet"},
     {"id": "defly", "name": "Defly Wallet"},

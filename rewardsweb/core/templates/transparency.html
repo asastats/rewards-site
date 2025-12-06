@@ -115,6 +115,14 @@
                   <label class="label-text font-semibold text-lg">{{ form.start_date.label }}</label>
                 </div>
                 <input type="date" name="start_date" class="input input-bordered w-full" min="{{ min_date }}" max="{{ max_date }}">
+                {% if form.start_date.errors %}
+                <div class="text-error text-sm mt-2 flex items-center gap-2">
+                  <i class="fas fa-exclamation-circle"></i>
+                  {% for error in form.start_date.errors %}
+                    <span>{{ error }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
               </div>
               <div class="form-control">
                 <div class="flex items-center gap-2 mb-3">
@@ -122,6 +130,14 @@
                   <label class="label-text font-semibold text-lg">{{ form.end_date.label }}</label>
                 </div>
                 <input type="date" name="end_date" class="input input-bordered w-full" min="{{ min_date }}" max="{{ max_date }}">
+                {% if form.end_date.errors %}
+                <div class="text-error text-sm mt-2 flex items-center gap-2">
+                  <i class="fas fa-exclamation-circle"></i>
+                  {% for error in form.end_date.errors %}
+                    <span>{{ error }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
               </div>
             </div>
 

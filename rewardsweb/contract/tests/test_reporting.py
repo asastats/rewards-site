@@ -1101,7 +1101,7 @@ class TestContractReportingReportsFunctions:
         end_date = datetime(2026, 1, 1)
         mocker.patch("contract.reporting.app_id_from_contract", return_value=750934138)
         mocker.patch(
-            "contract.reporting._fetch_app_allocations",
+            "contract.reporting.fetch_app_allocations",
             return_value=self.transactions,
         )
         mocker.patch(
@@ -1136,7 +1136,7 @@ class TestContractReportingReportsFunctions:
         end_date = datetime(2026, 1, 1)
         mocker.patch("contract.reporting.app_id_from_contract", return_value=750934138)
         mocker.patch(
-            "contract.reporting._fetch_app_allocations",
+            "contract.reporting.fetch_app_allocations",
             return_value=self.transactions,
         )
         mocker.patch(

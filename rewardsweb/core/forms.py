@@ -37,6 +37,7 @@ from core.models import (
 from utils.constants.core import (
     ISSUE_CREATION_LABEL_CHOICES,
     ISSUE_PRIORITY_CHOICES,
+    TRANPARENCY_REPORT_REQUIRED_FIELDS,
 )
 from utils.constants.ui import MISSING_OPTION_TEXT, TEXTINPUT_CLASS
 
@@ -457,20 +458,25 @@ class TransparencyReportForm(Form):
         initial="monthly",
     )
     month = ChoiceField(
+        required=False,
         choices=[(i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)],
         widget=Select(attrs={"class": "select select-bordered w-full"}),
     )
     quarter = ChoiceField(
+        required=False,
         choices=[(1, "Q1"), (2, "Q2"), (3, "Q3"), (4, "Q4")],
         widget=Select(attrs={"class": "select select-bordered w-full"}),
     )
     year = ChoiceField(
+        required=False,
         widget=Select(attrs={"class": "select select-bordered w-full"}),
     )
     start_date = CharField(
+        required=False,
         widget=TextInput(attrs={"class": TEXTINPUT_CLASS, "type": "date"}),
     )
     end_date = CharField(
+        required=False,
         widget=TextInput(attrs={"class": TEXTINPUT_CLASS, "type": "date"}),
     )
     ordering = ChoiceField(
@@ -478,6 +484,32 @@ class TransparencyReportForm(Form):
         widget=RadioSelect(attrs={"class": "radio"}),
         initial="chronological",
     )
+
+    def clean(self):
+        """Clean the form data by ensuring fields are present based on report type.
+
+        :return: cleaned data
+        :rtype: dict
+        """
+        cleaned_data = super().clean()
+        report_type = cleaned_data.get("report_type")
+        required_fields = TRANPARENCY_REPORT_REQUIRED_FIELDS[report_type]
+        errors = {}
+        for field in required_fields:
+            if not cleaned_data.get(field):
+                errors[field] = f"This field is required for {report_type} reports."
+
+        if (
+            report_type == "custom"
+            and not errors
+            and cleaned_data.get("start_date") > cleaned_data.get("end_date")
+        ):
+            errors["start_date"] = "Start date cannot be after end date"
+
+        if errors:
+            raise ValidationError(errors)
+
+        return cleaned_data
 
     def __init__(self, *args, **kwargs):
         """Initialize the form and set year choices dynamically.

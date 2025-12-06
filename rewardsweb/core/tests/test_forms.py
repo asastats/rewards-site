@@ -558,3 +558,76 @@ class TestTransparencyReportForm:
             ("chronological", "Chronological"),
             ("by_type", "By Type"),
         ]
+
+    def test_transparencyreportform_custom_dates_required_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "custom",
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert not form.is_valid()
+        assert "start_date" in form.errors
+        assert "end_date" in form.errors
+        assert "This field is required for custom reports." in form.errors["start_date"]
+        assert "This field is required for custom reports." in form.errors["end_date"]
+
+    def test_transparencyreportform_custom_dates_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "custom",
+                "start_date": "2023-01-01",
+                "end_date": "2023-01-31",
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()
+
+    def test_transparencyreportform_custom_dates_start_date_greater_than_end_date(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "custom",
+                "start_date": "2023-02-01",
+                "end_date": "2023-01-31",
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert not form.is_valid()
+
+    def test_transparencyreportform_monthly_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "monthly",
+                "month": 1,
+                "year": 2023,
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()
+
+    def test_transparencyreportform_quarterly_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "quarterly",
+                "quarter": 1,
+                "year": 2023,
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()
+
+    def test_transparencyreportform_yearly_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "yearly",
+                "year": 2023,
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()

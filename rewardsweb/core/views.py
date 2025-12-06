@@ -59,6 +59,7 @@ from utils.constants.core import (
     ISSUE_PRIORITY_CHOICES,
 )
 from utils.constants.ui import MISSING_API_TOKEN_TEXT
+from utils.helpers import calculate_transpareny_report_period
 
 logger = logging.getLogger(__name__)
 
@@ -1344,14 +1345,16 @@ class TransparencyReportView(FormView):
         :return: http response
         :rtype: :class:`django.http.HttpResponse`
         """
-        report, start_date, end_date = create_transparency_report(
+        start_date, end_date = calculate_transpareny_report_period(
             form.cleaned_data["report_type"],
             form.cleaned_data.get("month"),
             form.cleaned_data.get("quarter"),
             form.cleaned_data.get("year"),
             form.cleaned_data.get("start_date"),
             form.cleaned_data.get("end_date"),
-            form.cleaned_data["ordering"],
+        )
+        report = create_transparency_report(
+            start_date, end_date, form.cleaned_data["ordering"]
         )
         context = self.get_context_data()
         context["report"] = report

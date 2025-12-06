@@ -630,13 +630,11 @@ class TestTransparencyReportView:
     """Testing class for :class:`core.views.TransparencyReportView`."""
 
     def test_transparencyreportview_is_subclass_of_formview(self):
-        """Test that TransparencyReportView is a subclass of FormView."""
         assert issubclass(TransparencyReportView, FormView)
 
     def test_transparencyreportview_only_accessible_to_superusers(
         self, client, regular_user
     ):
-        """Test that the view is only accessible to superusers."""
         url = reverse("transparency")
         response = client.get(url)
         assert response.status_code == 302
@@ -644,8 +642,23 @@ class TestTransparencyReportView:
         response = client.get(url)
         assert response.status_code == 302
 
-    def test_transparencyreportview_get_context_data(self, mocker, client, superuser):
-        """Test the get_context_data method."""
+    # # get_context_data
+    def test_transparencyreportview_get_context_data_for_no_allocations(
+        self, mocker, client, superuser
+    ):
+        mocked_fetch = mocker.patch("core.views.fetch_app_allocations", return_value=[])
+        client.force_login(superuser)
+        url = reverse("transparency")
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "min_year" in response.context
+        assert "max_year" in response.context
+        assert "min_date" not in response.context
+        mocked_fetch.assert_called_with()
+
+    def test_transparencyreportview_get_context_data_functionality(
+        self, mocker, client, superuser
+    ):
         mocked_fetch = mocker.patch(
             "core.views.fetch_app_allocations",
             return_value=[{"round-time": 1672531200}],
@@ -659,8 +672,8 @@ class TestTransparencyReportView:
         assert response.context["min_date"] == "2023-01-01T00:00:00+00:00"
         mocked_fetch.assert_called_with()
 
+    # # form_valid
     def test_transparencyreportview_form_valid(self, mocker, client, superuser):
-        """Test the form_valid method."""
         mocker.patch(
             "core.views.fetch_app_allocations",
             return_value=[{"round-time": 1672531200}],
@@ -680,5 +693,5 @@ class TestTransparencyReportView:
         response = client.post(url, data)
         assert response.status_code == 200
         assert "report" in response.context
-        assert response.context["report"] == "report"
+        assert response.context["report"] == ("report", "2023-01-01", "2023-01-31")
         mocked_create.assert_called_once()

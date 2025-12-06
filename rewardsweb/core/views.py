@@ -1307,8 +1307,13 @@ class TransparencyReportView(FormView):
             min_date = datetime.fromtimestamp(
                 allocations[0]["round-time"], tz=timezone.utc
             )
+            last_allocation_date = datetime.fromtimestamp(
+                allocations[-1]["round-time"], tz=timezone.utc
+            )
             context["min_date"] = min_date.isoformat()
             context["min_year"] = min_date.year
+            context["first_allocation_date"] = min_date.date().isoformat()
+            context["last_allocation_date"] = last_allocation_date.date().isoformat()
         else:
             context["min_year"] = datetime.now().year
 
@@ -1356,7 +1361,7 @@ class TransparencyReportView(FormView):
         report = create_transparency_report(
             start_date, end_date, form.cleaned_data["ordering"]
         )
-        context = super().get_context_data(form=form)
+        context = self.get_context_data(form=form)
         context["report"] = report or "No data"
         context["start_date"] = start_date
         context["end_date"] = end_date

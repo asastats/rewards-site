@@ -7,7 +7,7 @@
 {% block page_title %}Transparency Report{% endblock %}
 
 {% block content %}
-<div class="space-y-6 fade-in">
+<div id="transparency-report-container" class="space-y-6 fade-in">
   <!-- Page Header -->
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
@@ -18,8 +18,7 @@
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Form -->
-    <div class="lg:col-span-2">
+    <div class="lg:col-span-2 space-y-6">
       <div class="stat-card">
         <div class="flex items-center gap-2 mb-6">
           <i class="fas fa-file-alt text-primary"></i>
@@ -143,65 +142,70 @@
 
             <!-- Ordering -->
             <div class="form-control">
-                <div class="flex items-center gap-2 mb-3">
-                    <i class="fas fa-sort-amount-down text-accent"></i>
-                    <label class="label-text font-semibold text-lg">{{ form.ordering.label }}</label>
-                </div>
-                <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300 flex gap-2">
-                    {% for radio in form.ordering %}
-                    <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-300 px-4 py-3 rounded-lg transition-colors duration-200 flex-1 justify-center">
-                        {{ radio.tag }}
-                        <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
+              <div class="flex items-center gap-2 mb-3">
+                <i class="fas fa-sort-amount-down text-accent"></i>
+                <label class="label-text font-semibold text-lg">{{ form.ordering.label }}</label>
+              </div>
+              <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300 flex gap-2">
+                {% for radio in form.ordering %}
+                <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-300 px-4 py-3 rounded-lg transition-colors duration-200 flex-1 justify-center">
+                  {{ radio.tag }}
+                  <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
+                </label>
+                {% endfor %}
+              </div>
             </div>
           </div>
 
           <!-- Action Buttons -->
           <div class="flex gap-4 mt-8 pt-6 border-t border-base-300">
-            <button type="submit" class="btn btn-primary flex-1">
+            <button type="submit" id="generate-report-btn" class="btn btn-primary flex-1">
               <i class="fas fa-cogs mr-2"></i>
               Generate Report
             </button>
           </div>
         </form>
       </div>
-    </div>
-  </div>
 
   {% if report %}
-  <div class="stat-card mt-6">
-    <div class="flex items-center gap-2 mb-6">
-      <i class="fas fa-file-invoice text-success"></i>
-      <h2 class="text-xl font-bold">Generated Report</h2>
+    <div class="stat-card mt-6">
+      <div class="flex items-center gap-2 mb-6">
+        <i class="fas fa-file-invoice text-success"></i>
+        <h2 class="text-xl font-bold">Generated Report</h2>
+      </div>
+      <div class="form-control">
+        <div class="flex justify-between items-center">
+          <p class="text-lg">Report for period: {{ start_date }} - {{ end_date }}</p>
+          <button id="copy-report-btn" class="btn btn-sm btn-ghost">
+            <i class="fas fa-copy mr-2"></i>
+            Copy to clipboard
+          </button>
+        </div>
+        <textarea id="report-textarea" class="textarea textarea-bordered w-full h-96 mt-4" readonly>{{ report }}</textarea>
+      </div>
     </div>
-    <div class="form-control">
-        <p class="text-lg">Report for period: {{ start_date }} - {{ end_date }}</p>
-        <textarea class="textarea textarea-bordered w-full h-96 mt-4" readonly>{{ report }}</textarea>
+  {% endif %}
+    </div>
+
+    <div class="lg:col-span-1 space-y-6">
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-info-circle text-info"></i>
+          <h2 class="text-xl font-bold">Info</h2>
+        </div>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">First allocation</span>
+            <span class="font-semibold text-primary">{{ first_allocation_date }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Last allocation</span>
+            <span class="font-semibold text-primary">{{ last_allocation_date }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  {% endif %}
 </div>
 
-<script>
-document.body.addEventListener('htmx:load', function () {
-    const reportTypeRadios = document.querySelectorAll('input[name="report_type"]');
-    const monthlyFields = document.getElementById('monthly-fields');
-    const quarterlyFields = document.getElementById('quarterly-fields');
-    const yearlyFields = document.getElementById('yearly-fields');
-    const customFields = document.getElementById('custom-fields');
-
-    function toggleFields() {
-        const selectedValue = document.querySelector('input[name="report_type"]:checked').value;
-        monthlyFields.classList.toggle('hidden', selectedValue !== 'monthly');
-        quarterlyFields.classList.toggle('hidden', selectedValue !== 'quarterly');
-        yearlyFields.classList.toggle('hidden', selectedValue !== 'yearly');
-        customFields.classList.toggle('hidden', selectedValue !== 'custom');
-    }
-
-    reportTypeRadios.forEach(radio => radio.addEventListener('change', toggleFields));
-    toggleFields();
-});
-</script>
 {% endblock %}

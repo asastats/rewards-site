@@ -1,7 +1,6 @@
 """Testing module for :py:mod:`core.views` underlying views."""
 
 import time
-from datetime import datetime
 
 import pytest
 from allauth.account.forms import LoginForm, SignupForm
@@ -661,7 +660,7 @@ class TestTransparencyReportView:
     ):
         mocked_fetch = mocker.patch(
             "core.views.fetch_app_allocations",
-            return_value=[{"round-time": 1672531200}],
+            return_value=[{"round-time": 1672531200}, {"round-time": 1675209600}],
         )
         client.force_login(superuser)
         url = reverse("transparency")
@@ -669,7 +668,11 @@ class TestTransparencyReportView:
         assert response.status_code == 200
         assert "min_date" in response.context
         assert "max_date" in response.context
+        assert "first_allocation_date" in response.context
+        assert "last_allocation_date" in response.context
         assert response.context["min_date"] == "2023-01-01T00:00:00+00:00"
+        assert response.context["first_allocation_date"] == "2023-01-01"
+        assert response.context["last_allocation_date"] == "2023-02-01"
         mocked_fetch.assert_called_with(force_update=False)
 
     # # form_valid
@@ -700,9 +703,9 @@ class TestTransparencyReportView:
     def test_transparencyreportview_form_valid_functionality(
         self, mocker, client, superuser
     ):
-        mocker.patch(
+        mocked_fetch = mocker.patch(
             "core.views.fetch_app_allocations",
-            return_value=[{"round-time": 1672531200}],
+            return_value=[{"round-time": 1672531200}, {"round-time": 1675209600}],
         )
         mocked_create = mocker.patch(
             "core.views.create_transparency_report", return_value="report data"
@@ -718,5 +721,10 @@ class TestTransparencyReportView:
         response = client.post(url, data)
         assert response.status_code == 200
         assert "report" in response.context
+        assert "first_allocation_date" in response.context
+        assert "last_allocation_date" in response.context
         assert response.context["report"] == "report data"
+        assert response.context["first_allocation_date"] == "2023-01-01"
+        assert response.context["last_allocation_date"] == "2023-02-01"
         mocked_create.assert_called_once()
+        mocked_fetch.assert_called_with(force_update=False)

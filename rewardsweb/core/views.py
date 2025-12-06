@@ -1356,9 +1356,8 @@ class TransparencyReportView(FormView):
         report = create_transparency_report(
             start_date, end_date, form.cleaned_data["ordering"]
         )
-        context = self.get_context_data()
+        context = super().get_context_data(form=form)
         context["report"] = report or "No data"
-        context["form"] = form
         context["start_date"] = start_date
         context["end_date"] = end_date
         return self.render_to_response(context)

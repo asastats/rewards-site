@@ -195,6 +195,10 @@
         {% if user.is_superuser %}Manage{% else %}View{% endif %} Issues
       </a>
       {% if user.is_superuser %}
+      <a href="{% url 'transparency' %}" class="btn btn-warning" hx-boost="false" hx-disable="true" target="_blank" rel="noopener">
+        <i class="fas fa-file-lines mr-2"></i>
+        Transparency Report
+      </a>
       <a href="{% url 'admin:index' %}" class="btn btn-warning" target="_blank" rel="noopener">
         <i class="fas fa-shield-alt mr-2"></i>
         Admin Dashboard

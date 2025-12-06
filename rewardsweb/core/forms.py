@@ -433,15 +433,15 @@ class TransparencyReportForm(Form):
     :var TransparencyReportForm.report_type: report type selection
     :type TransparencyReportForm.report_type: :class:`django.forms.ChoiceField`
     :var TransparencyReportForm.month: month selection
-    :type TransparencyReportForm.month: :class:`django.forms.IntegerField`
+    :type TransparencyReportForm.month: :class:`django.forms.ChoiceField`
     :var TransparencyReportForm.quarter: quarter selection
     :type TransparencyReportForm.quarter: :class:`django.forms.ChoiceField`
     :var TransparencyReportForm.year: year selection
-    :type TransparencyReportForm.year: :class:`django.forms.IntegerField`
+    :type TransparencyReportForm.year: :class:`django.forms.ChoiceField`
     :var TransparencyReportForm.start_date: start date selection
-    :type TransparencyReportForm.start_date: :class:`django.forms.DateField`
+    :type TransparencyReportForm.start_date: :class:`django.forms.CharField`
     :var TransparencyReportForm.end_date: end date selection
-    :type TransparencyReportForm.end_date: :class:`django.forms.DateField`
+    :type TransparencyReportForm.end_date: :class:`django.forms.CharField`
     :var TransparencyReportForm.ordering: ordering selection
     :type TransparencyReportForm.ordering: :class:`django.forms.ChoiceField`
     """
@@ -488,4 +488,4 @@ class TransparencyReportForm(Form):
         years = kwargs.pop("years", [])
         super().__init__(*args, **kwargs)
         if years:
-            self.fields["year"].choices = [(year, year) for year in years]
+            self.fields["year"].choices = [(str(year), year) for year in years]

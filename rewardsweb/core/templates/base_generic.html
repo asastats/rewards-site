@@ -224,6 +224,12 @@
                 Reclaim Allocations
               </a>
             </li>
+            <li>
+              <a href="{% url 'transparency' %}" hx-boost="false" class="{% if request.resolver_match.url_name == 'transparency' %}active{% endif %}">
+                <i class="fas fa-file-lines w-5"></i>
+                Transparency Report
+              </a>
+            </li>
             {% endif %}
 
             <!-- Account Section for Authenticated Users -->

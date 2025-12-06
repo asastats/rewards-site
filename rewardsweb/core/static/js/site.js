@@ -182,6 +182,51 @@ function processDaisyUITheme() {
   });
 }
 
+/**
+ * Sets up the copy to clipboard functionality for the transparency report.
+ */
+function processClipboardCopy() {
+  const copyBtn = document.getElementById('copy-report-btn');
+  if (!copyBtn) return;
+
+  copyBtn.addEventListener('click', () => {
+    const reportTextarea = document.getElementById('report-textarea');
+    if (reportTextarea && navigator.clipboard) {
+      navigator.clipboard.writeText(reportTextarea.value);
+      const originalText = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
+      setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+      }, 2000);
+    }
+  });
+}
+
+/**
+ * Sets up the toggle functionality for the transparency report form.
+ */
+
+function processTransparencyReportForm() {
+  const reportTypeRadios = document.querySelectorAll('input[name="report_type"]');
+  if (!reportTypeRadios.length) return;
+
+  const monthlyFields = document.getElementById('monthly-fields');
+  const quarterlyFields = document.getElementById('quarterly-fields');
+  const yearlyFields = document.getElementById('yearly-fields');
+  const customFields = document.getElementById('custom-fields');
+
+  function toggleFields() {
+    const selectedValue = document.querySelector('input[name="report_type"]:checked').value;
+    monthlyFields.classList.toggle('hidden', selectedValue !== 'monthly');
+    quarterlyFields.classList.toggle('hidden', selectedValue !== 'quarterly');
+    yearlyFields.classList.toggle('hidden', selectedValue !== 'yearly');
+    customFields.classList.toggle('hidden', selectedValue !== 'custom');
+  }
+
+  reportTypeRadios.forEach(radio => radio.addEventListener('change', toggleFields));
+  toggleFields();
+}
+
 /******************************************************************************
  *
  *  Global Event Listeners
@@ -213,6 +258,11 @@ document.body.addEventListener("htmx:configRequest", (event) => {
     event.detail.requestConfig
   );
   startProgressBar(htmxState.requestBlocking);
+
+  const btn = document.getElementById('generate-report-btn');
+  if (btn && event.detail.elt === btn.form) {
+    btn.disabled = true;
+  }
 });
 
 /**
@@ -221,6 +271,11 @@ document.body.addEventListener("htmx:configRequest", (event) => {
  */
 document.body.addEventListener("htmx:afterSwap", (event) => {
   finishProgressBar(htmxState.requestBlocking);
+
+  const generateReportBtn = document.getElementById('generate-report-btn');
+  if (generateReportBtn) {
+    generateReportBtn.disabled = false;
+  }
 
   const swappedEl = event.detail.target;
 
@@ -256,6 +311,20 @@ document.body.addEventListener("htmx:afterSwap", (event) => {
   processDaisyUITheme();
 });
 
+
+/**
+ * 
+ * 
+ */
+document.body.addEventListener('htmx:load', function () {
+  const transparencyContainer = document.getElementById('transparency-report-container');
+  if (transparencyContainer) {
+    processTransparencyReportForm();
+    processClipboardCopy();
+  }
+});
+
+
 /**
  * HTMX listener: Fired on a request error.
  * Ensures the progress bar and blocking state are always reset.
@@ -281,6 +350,8 @@ if (typeof exports !== "undefined") {
     finishProgressBar,
     processActiveNetwork,
     processDaisyUITheme,
+    processTransparencyReportForm,
+    processClipboardCopy,
     htmxState,
     initializeDomReadyListeners,
   };

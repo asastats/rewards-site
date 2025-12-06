@@ -7,6 +7,8 @@ const {
   finishProgressBar,
   processActiveNetwork,
   processDaisyUITheme,
+  processTransparencyReportForm,
+  processClipboardCopy,
 } = require("./site.js");
 
 // JSDOM doesn't implement showModal, so we'll mock it.
@@ -23,7 +25,7 @@ describe("Toast and Message Functions", () => {
     jest.useRealTimers();
   });
 
-  test("showToast should create and append a toast notification", () => {
+  it("showToast should create and append a toast notification", () => {
     showToast("success", "Test message");
     const toastContainer = document.getElementById("toast-container");
     expect(toastContainer.children.length).toBe(1);
@@ -36,7 +38,7 @@ describe("Toast and Message Functions", () => {
     expect(toastContainer.children.length).toBe(0);
   });
 
-  test("showToast should handle different types", () => {
+  it("showToast should handle different types", () => {
     showToast("error", "Error message");
     let toast = document.querySelector(".alert");
     expect(toast.classList.contains("alert-error")).toBe(true);
@@ -52,12 +54,12 @@ describe("Toast and Message Functions", () => {
     expect(toast.classList.contains("alert-warning")).toBe(true);
   });
 
-  test("showToast should not fail if container is not found", () => {
+  it("showToast should not fail if container is not found", () => {
     document.body.innerHTML = ""; // No toast container
     expect(() => showToast("success", "test")).not.toThrow();
   });
 
-  test("processDjangoMessages should show toasts and remove the container", () => {
+  it("processDjangoMessages should show toasts and remove the container", () => {
     document.body.innerHTML += `
       <div id="django-messages">
         <div data-message="Message 1" data-message-type="success"></div>
@@ -74,20 +76,20 @@ describe("Toast and Message Functions", () => {
     expect(document.getElementById("django-messages")).toBeNull();
   });
 
-  test("processDjangoMessages should not fail if container is not found", () => {
+  it("processDjangoMessages should not fail if container is not found", () => {
     expect(() => processDjangoMessages()).not.toThrow();
   });
 });
 
 describe("Modal Functions", () => {
-  test("closeModal should clear the modal container", () => {
+  it("closeModal should clear the modal container", () => {
     document.body.innerHTML = '<div id="modal-container">Some content</div>';
     closeModal();
     const modalContainer = document.getElementById("modal-container");
     expect(modalContainer.innerHTML).toBe("");
   });
 
-  test("closeModal should not fail if container is not found", () => {
+  it("closeModal should not fail if container is not found", () => {
     document.body.innerHTML = "";
     expect(() => closeModal()).not.toThrow();
   });
@@ -103,7 +105,7 @@ describe("HTMX Progress Bar Functions", () => {
     jest.useRealTimers();
   });
 
-  test("isBlockingRequest should detect blocking conditions", () => {
+  it("isBlockingRequest should detect blocking conditions", () => {
     const elWithHxVals = document.createElement("div");
     elWithHxVals.setAttribute("hx-vals", '{"blocking": "true"}');
     expect(isBlockingRequest(elWithHxVals, {})).toBe(true);
@@ -121,12 +123,12 @@ describe("HTMX Progress Bar Functions", () => {
     expect(isBlockingRequest(null, {})).toBe(false);
   });
 
-  test("startProgressBar should not fail if bar is not found", () => {
+  it("startProgressBar should not fail if bar is not found", () => {
     document.body.innerHTML = "";
     expect(() => startProgressBar()).not.toThrow();
   });
 
-  test("startProgressBar should show the bar and start the interval", () => {
+  it("startProgressBar should show the bar and start the interval", () => {
     startProgressBar();
     const bar = document.getElementById("htmx-progress-bar");
     expect(bar.classList.contains("hidden")).toBe(false);
@@ -136,17 +138,17 @@ describe("HTMX Progress Bar Functions", () => {
     expect(parseFloat(bar.style.width)).toBeGreaterThan(0);
   });
 
-  test("startProgressBar with blocking should disable pointer events", () => {
+  it("startProgressBar with blocking should disable pointer events", () => {
     startProgressBar(true);
     expect(document.body.style.pointerEvents).toBe("none");
   });
 
-  test("finishProgressBar should not fail if bar is not found", () => {
+  it("finishProgressBar should not fail if bar is not found", () => {
     document.body.innerHTML = "";
     expect(() => finishProgressBar()).not.toThrow();
   });
 
-  test("finishProgressBar should complete and hide the bar", async () => {
+  it("finishProgressBar should complete and hide the bar", async () => {
     startProgressBar();
     const bar = document.getElementById("htmx-progress-bar");
     const promise = finishProgressBar();
@@ -157,13 +159,13 @@ describe("HTMX Progress Bar Functions", () => {
     expect(bar.classList.contains("hidden")).toBe(true);
   });
 
-  test("finishProgressBar with blocking should re-enable pointer events", () => {
+  it("finishProgressBar with blocking should re-enable pointer events", () => {
     document.body.style.pointerEvents = "none";
     finishProgressBar(true);
     expect(document.body.style.pointerEvents).toBe("");
   });
 
-  test("finishProgressBar should execute a callback", (done) => {
+  it("finishProgressBar should execute a callback", (done) => {
     const callback = jest.fn(() => {
       done();
     });
@@ -174,7 +176,7 @@ describe("HTMX Progress Bar Functions", () => {
 });
 
 describe("UI Initializers", () => {
-  test("processActiveNetwork should toggle button states on click", () => {
+  it("processActiveNetwork should toggle button states on click", () => {
     document.body.innerHTML = `
       <div id="active-network">
         <button data-network="mainnet">Mainnet</button>
@@ -206,12 +208,12 @@ describe("UI Initializers", () => {
     expect(testnetButton.disabled).toBe(true); // State should not change
   });
 
-  test("processActiveNetwork should not fail if container is not found", () => {
+  it("processActiveNetwork should not fail if container is not found", () => {
     document.body.innerHTML = "";
     expect(() => processActiveNetwork()).not.toThrow();
   });
 
-  test("processDaisyUITheme should not fail if saved theme element is not found", () => {
+  it("processDaisyUITheme should not fail if saved theme element is not found", () => {
     localStorage.setItem("theme", "nonexistent");
     document.body.innerHTML = `
       <input type="radio" name="theme-dropdown" value="light">
@@ -219,7 +221,7 @@ describe("UI Initializers", () => {
     expect(() => processDaisyUITheme()).not.toThrow();
   });
 
-  test("processDaisyUITheme should load theme from localStorage", () => {
+  it("processDaisyUITheme should load theme from localStorage", () => {
     localStorage.setItem("theme", "dark");
     document.body.innerHTML = `
       <input type="radio" name="theme-dropdown" value="light">
@@ -230,7 +232,7 @@ describe("UI Initializers", () => {
     expect(darkThemeInput.checked).toBe(true);
   });
 
-  test("processDaisyUITheme should handle no theme in localStorage", () => {
+  it("processDaisyUITheme should handle no theme in localStorage", () => {
     localStorage.removeItem("theme");
     document.body.innerHTML = `
       <input type="radio" name="theme-dropdown" value="light" checked>
@@ -241,7 +243,7 @@ describe("UI Initializers", () => {
     expect(lightThemeInput.checked).toBe(true); // Stays at default
   });
 
-  test("processDaisyUITheme should save theme to localStorage on change", () => {
+  it("processDaisyUITheme should save theme to localStorage on change", () => {
     document.body.innerHTML = `
       <input type="radio" name="theme-dropdown" value="light" checked>
       <input type="radio" name="theme-dropdown" value="dark">
@@ -255,7 +257,7 @@ describe("UI Initializers", () => {
     expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
   });
 
-  test("processDaisyUITheme should not add listeners twice", () => {
+  it("processDaisyUITheme should not add listeners twice", () => {
     document.body.innerHTML = `
       <input type="radio" name="theme-dropdown" value="light">
     `;
@@ -266,6 +268,123 @@ describe("UI Initializers", () => {
     processDaisyUITheme(); // Call a second time
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("processTransparencyReportForm", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+            <input type="radio" name="report_type" value="monthly" checked>
+            <input type="radio" name="report_type" value="quarterly">
+            <input type="radio" name="report_type" value="yearly">
+            <input type="radio" name="report_type" value="custom">
+            <div id="monthly-fields"></div>
+            <div id="quarterly-fields" class="hidden"></div>
+            <div id="yearly-fields" class="hidden"></div>
+            <div id="custom-fields" class="hidden"></div>
+        `;
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it("should not throw if form elements are not present", () => {
+    document.body.innerHTML = '';
+    expect(() => processTransparencyReportForm()).not.toThrow();
+  });
+
+  it("should show monthly fields and hide others by default", () => {
+    processTransparencyReportForm();
+    expect(document.getElementById('monthly-fields').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('quarterly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('yearly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('custom-fields').classList.contains('hidden')).toBe(true);
+  });
+
+  it("should show quarterly fields when quarterly is selected", () => {
+    const quarterlyRadio = document.querySelector('input[value="quarterly"]');
+    quarterlyRadio.checked = true;
+    processTransparencyReportForm();
+    quarterlyRadio.dispatchEvent(new Event('change'));
+
+    expect(document.getElementById('monthly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('quarterly-fields').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('yearly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('custom-fields').classList.contains('hidden')).toBe(true);
+  });
+
+  it("should show yearly fields when yearly is selected", () => {
+    const yearlyRadio = document.querySelector('input[value="yearly"]');
+    yearlyRadio.checked = true;
+    processTransparencyReportForm();
+    yearlyRadio.dispatchEvent(new Event('change'));
+
+    expect(document.getElementById('monthly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('quarterly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('yearly-fields').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('custom-fields').classList.contains('hidden')).toBe(true);
+  });
+
+  it("should show custom fields when custom is selected", () => {
+    const customRadio = document.querySelector('input[value="custom"]');
+    customRadio.checked = true;
+    processTransparencyReportForm();
+    customRadio.dispatchEvent(new Event('change'));
+
+    expect(document.getElementById('monthly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('quarterly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('yearly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('custom-fields').classList.contains('hidden')).toBe(false);
+  });
+});
+
+describe("processClipboardCopy", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+            <button id="copy-report-btn">Copy</button>
+            <textarea id="report-textarea">Test content</textarea>
+        `;
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: jest.fn(),
+      },
+    });
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    document.body.innerHTML = '';
+  });
+
+  it("should not throw if button is not present", () => {
+    document.body.innerHTML = '';
+    expect(() => processClipboardCopy()).not.toThrow();
+  });
+
+  it("should copy text to clipboard on button click", () => {
+    processClipboardCopy();
+    const copyBtn = document.getElementById('copy-report-btn');
+    copyBtn.click();
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("Test content");
+  });
+
+  it("should provide user feedback on successful copy", () => {
+    processClipboardCopy();
+    const copyBtn = document.getElementById('copy-report-btn');
+    copyBtn.click();
+    expect(copyBtn.innerHTML).toContain('Copied!');
+    jest.advanceTimersByTime(2500);
+    expect(copyBtn.innerHTML).toBe('Copy');
+  });
+
+  it("should not fail if textarea or clipboard is not available", () => {
+    document.getElementById('report-textarea').remove();
+    processClipboardCopy();
+    const copyBtn = document.getElementById('copy-report-btn');
+    expect(() => copyBtn.click()).not.toThrow();
+    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
   });
 });
 
@@ -284,7 +403,7 @@ describe("Global Event Listeners", () => {
     jest.useRealTimers();
   });
 
-  test("DOMContentLoaded should initialize UI components", () => {
+  it("DOMContentLoaded should initialize UI components", () => {
     jest.mock("./site.js", () => ({
       processActiveNetwork: jest.fn(),
       processDaisyUITheme: jest.fn(),
@@ -306,7 +425,7 @@ describe("Global Event Listeners", () => {
     expect(site.processDjangoMessages).toHaveBeenCalled();
   });
 
-  test("htmx:configRequest should start the progress bar", () => {
+  it("htmx:configRequest should start the progress bar", () => {
     const event = new CustomEvent("htmx:configRequest", {
       detail: { elt: document.body, requestConfig: {} },
     });
@@ -315,7 +434,7 @@ describe("Global Event Listeners", () => {
     expect(bar.classList.contains("hidden")).toBe(false);
   });
 
-  test("htmx:afterSwap should trigger multiple UI updates", () => {
+  it("htmx:afterSwap should trigger multiple UI updates", () => {
     const site = require("./site.js");
     site.htmxState.requestBlocking = true;
 
@@ -325,6 +444,8 @@ describe("Global Event Listeners", () => {
       <input type="text">
       <dialog id="my-modal"></dialog>
     `;
+    const focusSpy = jest.spyOn(swapTarget.querySelector('input'), 'focus');
+
 
     const configRequestEvent = new CustomEvent("htmx:configRequest", {
       detail: { elt: document.body, requestConfig: {} },
@@ -350,6 +471,8 @@ describe("Global Event Listeners", () => {
 
     // Test autofocus
     expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 30);
+    expect(focusSpy).toHaveBeenCalled();
+
 
     // Test toast is present
     const toast = document.querySelector(".alert");
@@ -365,7 +488,7 @@ describe("Global Event Listeners", () => {
     expect(document.querySelector(".alert")).toBeNull();
   });
 
-  test("htmx:afterSwap should handle swapped element being a dialog", () => {
+  it("htmx:afterSwap should handle swapped element being a dialog", () => {
     const swapTarget = document.createElement("dialog");
     const event = new CustomEvent("htmx:afterSwap", {
       bubbles: true,
@@ -375,7 +498,7 @@ describe("Global Event Listeners", () => {
     expect(swapTarget.showModal).toHaveBeenCalled();
   });
 
-  test("htmx:afterSwap should handle no focusable inputs or dialogs", () => {
+  it("htmx:afterSwap should handle no focusable inputs or dialogs", () => {
     const swapTarget = document.createElement("div");
     swapTarget.innerHTML = "<span>Some content</span>";
     const event = new CustomEvent("htmx:afterSwap", {
@@ -385,11 +508,25 @@ describe("Global Event Listeners", () => {
     expect(() => swapTarget.dispatchEvent(event)).not.toThrow();
   });
 
-  test("htmx:error should finish the progress bar", () => {
+  it("htmx:afterSwap should not show toast if data-toast-message is absent", () => {
+    const site = require("./site.js");
+    const swapTarget = document.createElement("div");
+    swapTarget.innerHTML = `<span>No toast here</span>`;
+    const event = new CustomEvent("htmx:afterSwap", {
+      bubbles: true,
+      detail: { target: swapTarget },
+    });
+    document.body.dispatchEvent(event);
+    jest.advanceTimersByTime(300); // Allow fade-in to complete
+    const toast = document.querySelector(".alert");
+    expect(toast).toBeNull();
+  });
+
+  it("htmx:error should finish the progress bar", () => {
     const site = require('./site.js');
     site.htmxState.requestBlocking = true;
 
-    const event = new Event("htmx:error");
+    const event = new Event("htmx:error", { bubbles: true });
     document.body.dispatchEvent(event);
 
     const bar = document.getElementById("htmx-progress-bar");
@@ -406,9 +543,9 @@ describe("initializeDomReadyListeners Isolation Test", () => {
   beforeEach(() => {
     jest.resetModules(); // Ensure a clean module state for this isolated test
     const site = require("./site.js");
-    mockProcessActiveNetwork = jest.spyOn(site, "processActiveNetwork").mockImplementation(() => {});
-    mockProcessDaisyUITheme = jest.spyOn(site, "processDaisyUITheme").mockImplementation(() => {});
-    mockProcessDjangoMessages = jest.spyOn(site, "processDjangoMessages").mockImplementation(() => {});
+    mockProcessActiveNetwork = jest.spyOn(site, "processActiveNetwork").mockImplementation(() => { });
+    mockProcessDaisyUITheme = jest.spyOn(site, "processDaisyUITheme").mockImplementation(() => { });
+    mockProcessDjangoMessages = jest.spyOn(site, "processDjangoMessages").mockImplementation(() => { });
   });
 
   afterEach(() => {
@@ -417,12 +554,199 @@ describe("initializeDomReadyListeners Isolation Test", () => {
     mockProcessDjangoMessages.mockRestore();
   });
 
-  test("should call all initialization functions", () => {
+  it("should call all initialization functions", () => {
     const { initializeDomReadyListeners } = require("./site.js");
     initializeDomReadyListeners();
 
     expect(mockProcessActiveNetwork).toHaveBeenCalledTimes(1);
     expect(mockProcessDaisyUITheme).toHaveBeenCalledTimes(1);
     expect(mockProcessDjangoMessages).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("HTMX Progress Bar - generate-report-btn disabled state", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="htmx-progress-bar" class="hidden"></div>
+      <div id="toast-container"></div>
+      <form>
+        <button id="generate-report-btn">Generate Report</button>
+      </form>
+    `;
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("htmx:configRequest should disable generate-report-btn when its form is triggered", () => {
+    const btn = document.getElementById('generate-report-btn');
+    const event = new CustomEvent("htmx:configRequest", {
+      detail: {
+        elt: btn.form,
+        requestConfig: {}
+      }
+    });
+
+    expect(btn.disabled).toBe(false);
+    document.body.dispatchEvent(event);
+    expect(btn.disabled).toBe(true);
+  });
+
+  it("htmx:configRequest should not disable generate-report-btn when different form is triggered", () => {
+    const btn = document.getElementById('generate-report-btn');
+    const otherForm = document.createElement('form');
+    document.body.appendChild(otherForm);
+
+    const event = new CustomEvent("htmx:configRequest", {
+      detail: {
+        elt: otherForm,
+        requestConfig: {}
+      }
+    });
+
+    expect(btn.disabled).toBe(false);
+    document.body.dispatchEvent(event);
+    expect(btn.disabled).toBe(false);
+  });
+
+  it("htmx:afterSwap should re-enable generate-report-btn", () => {
+    const btn = document.getElementById('generate-report-btn');
+    btn.disabled = true; // Start disabled
+
+    const event = new CustomEvent("htmx:afterSwap", {
+      detail: {
+        target: document.createElement('div')
+      }
+    });
+
+    document.body.dispatchEvent(event);
+    expect(btn.disabled).toBe(false);
+  });
+
+  it("htmx:afterSwap should not throw if generate-report-btn doesn't exist", () => {
+    document.getElementById('generate-report-btn').remove();
+
+    const event = new CustomEvent("htmx:afterSwap", {
+      detail: {
+        target: document.createElement('div')
+      }
+    });
+
+    expect(() => document.body.dispatchEvent(event)).not.toThrow();
+  });
+});
+
+describe("htmx:load listener for transparency report", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="htmx-progress-bar" class="hidden"></div>
+      <div id="toast-container"></div>
+    `;
+
+    // Mock the clipboard API
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: jest.fn(),
+      },
+    });
+
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("htmx:load should initialize transparency form when container exists", () => {
+    document.body.innerHTML += `
+      <div id="transparency-report-container">
+        <input type="radio" name="report_type" value="monthly" checked>
+        <input type="radio" name="report_type" value="quarterly">
+        <div id="monthly-fields"></div>
+        <div id="quarterly-fields" class="hidden"></div>
+        <div id="yearly-fields" class="hidden"></div>
+        <div id="custom-fields" class="hidden"></div>
+      </div>
+    `;
+
+    // Trigger htmx:load event
+    const event = new CustomEvent('htmx:load', { bubbles: true });
+    document.body.dispatchEvent(event);
+
+    // Test that form functionality works (radio buttons toggle fields)
+    const quarterlyRadio = document.querySelector('input[value="quarterly"]');
+    quarterlyRadio.checked = true;
+    quarterlyRadio.dispatchEvent(new Event('change'));
+
+    expect(document.getElementById('monthly-fields').classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('quarterly-fields').classList.contains('hidden')).toBe(false);
+  });
+
+  it("htmx:load should initialize clipboard copy when container exists", () => {
+    document.body.innerHTML += `
+      <div id="transparency-report-container">
+        <button id="copy-report-btn">Copy</button>
+        <textarea id="report-textarea">Test content</textarea>
+      </div>
+    `;
+
+    // Trigger htmx:load event
+    const event = new CustomEvent('htmx:load', { bubbles: true });
+    document.body.dispatchEvent(event);
+
+    // Test that clipboard functionality works
+    const copyBtn = document.getElementById('copy-report-btn');
+    copyBtn.click();
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("Test content");
+    expect(copyBtn.innerHTML).toContain('Copied!');
+  });
+
+  it("htmx:load should not initialize anything when transparency container doesn't exist", () => {
+    document.body.innerHTML += `
+      <div id="some-other-container">
+        <input type="radio" name="report_type" value="monthly" checked>
+        <div id="monthly-fields"></div>
+        <button id="copy-report-btn">Copy</button>
+      </div>
+    `;
+
+    // These shouldn't work since container doesn't match
+    const monthlyFields = document.getElementById('monthly-fields');
+    const copyBtn = document.getElementById('copy-report-btn');
+
+    // Trigger htmx:load event
+    const event = new CustomEvent('htmx:load', { bubbles: true });
+    document.body.dispatchEvent(event);
+
+    // Radio buttons in wrong container shouldn't toggle
+    const quarterlyRadio = document.querySelector('input[value="quarterly"]');
+    if (quarterlyRadio) {
+      quarterlyRadio.checked = true;
+      quarterlyRadio.dispatchEvent(new Event('change'));
+      // monthly-fields should remain visible (not toggled)
+      expect(monthlyFields.classList.contains('hidden')).toBe(false);
+    }
+
+    // Copy button in wrong container shouldn't work
+    if (copyBtn) {
+      copyBtn.click();
+      expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+    }
+  });
+
+  it("htmx:load should handle empty transparency container", () => {
+    document.body.innerHTML += `
+      <div id="transparency-report-container">
+        <!-- Empty container -->
+      </div>
+    `;
+
+    const event = new CustomEvent('htmx:load', { bubbles: true });
+
+    // Should not throw
+    expect(() => document.body.dispatchEvent(event)).not.toThrow();
   });
 });

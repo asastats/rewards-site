@@ -62,4 +62,9 @@ urlpatterns = [
         views.UnconfirmedContributionsView.as_view(),
         name="unconfirmed_contributions",
     ),
+    path(
+        "transparency/",
+        views.TransparencyReportView.as_view(),
+        name="transparency",
+    ),
 ]

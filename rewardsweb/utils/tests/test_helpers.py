@@ -2,6 +2,7 @@
 
 import os
 import pickle
+from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -11,6 +12,7 @@ from nacl.exceptions import BadSignatureError
 
 from utils.constants.core import MISSING_ENVIRONMENT_VARIABLE_ERROR
 from utils.helpers import (
+    calculate_transpareny_report_period,
     convert_and_clean_excel,
     get_env_variable,
     humanize_contributions,
@@ -24,6 +26,217 @@ from utils.helpers import (
 
 class TestUtilsHelpersFunctions:
     """Testing class for :py:mod:`utils.helpers` functions."""
+
+    # # calculate_transpareny_report_period
+    @pytest.mark.parametrize(
+        "month,year,expected_start,expected_end",
+        [
+            (1, 2024, datetime(2024, 1, 1), datetime(2024, 1, 31, 23, 59, 59)),
+            (2, 2023, datetime(2023, 2, 1), datetime(2023, 2, 28, 23, 59, 59)),
+            (2, 2024, datetime(2024, 2, 1), datetime(2024, 2, 29, 23, 59, 59)),
+            (3, 2024, datetime(2024, 3, 1), datetime(2024, 3, 31, 23, 59, 59)),
+            (4, 2024, datetime(2024, 4, 1), datetime(2024, 4, 30, 23, 59, 59)),
+            (5, 2024, datetime(2024, 5, 1), datetime(2024, 5, 31, 23, 59, 59)),
+            (6, 2024, datetime(2024, 6, 1), datetime(2024, 6, 30, 23, 59, 59)),
+            (7, 2024, datetime(2024, 7, 1), datetime(2024, 7, 31, 23, 59, 59)),
+            (8, 2024, datetime(2024, 8, 1), datetime(2024, 8, 31, 23, 59, 59)),
+            (9, 2024, datetime(2024, 9, 1), datetime(2024, 9, 30, 23, 59, 59)),
+            (10, 2024, datetime(2024, 10, 1), datetime(2024, 10, 31, 23, 59, 59)),
+            (11, 2024, datetime(2024, 11, 1), datetime(2024, 11, 30, 23, 59, 59)),
+            (12, 2024, datetime(2024, 12, 1), datetime(2024, 12, 31, 23, 59, 59)),
+        ],
+    )
+    def test_utils_helpers_calculate_period_monthly_report_valid_cases(
+        self, month, year, expected_start, expected_end
+    ):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="monthly",
+            month=month,
+            year=year,
+        )
+        assert start_date == expected_start
+        assert end_date == expected_end
+
+    @pytest.mark.parametrize(
+        "quarter,year,expected_start,expected_end",
+        [
+            (1, 2024, datetime(2024, 1, 1), datetime(2024, 3, 31, 23, 59, 59)),
+            (2, 2024, datetime(2024, 4, 1), datetime(2024, 6, 30, 23, 59, 59)),
+            (3, 2024, datetime(2024, 7, 1), datetime(2024, 9, 30, 23, 59, 59)),
+            (4, 2024, datetime(2024, 10, 1), datetime(2024, 12, 31, 23, 59, 59)),
+            (1, 2023, datetime(2023, 1, 1), datetime(2023, 3, 31, 23, 59, 59)),
+            (4, 2023, datetime(2023, 10, 1), datetime(2023, 12, 31, 23, 59, 59)),
+        ],
+    )
+    def test_utils_helpers_calculate_period_quarterly_report_valid_cases(
+        self, quarter, year, expected_start, expected_end
+    ):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="quarterly",
+            quarter=quarter,
+            year=year,
+        )
+        assert start_date == expected_start
+        assert end_date == expected_end
+
+    @pytest.mark.parametrize(
+        "year,expected_start,expected_end",
+        [
+            (2024, datetime(2024, 1, 1), datetime(2024, 12, 31, 23, 59, 59)),
+            (2023, datetime(2023, 1, 1), datetime(2023, 12, 31, 23, 59, 59)),
+            (2020, datetime(2020, 1, 1), datetime(2020, 12, 31, 23, 59, 59)),
+            (2025, datetime(2025, 1, 1), datetime(2025, 12, 31, 23, 59, 59)),
+            (2000, datetime(2000, 1, 1), datetime(2000, 12, 31, 23, 59, 59)),
+        ],
+    )
+    def test_utils_helpers_calculate_period_yearly_report_valid_cases(
+        self, year, expected_start, expected_end
+    ):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="yearly",
+            year=year,
+        )
+        assert start_date == expected_start
+        assert end_date == expected_end
+
+    @pytest.mark.parametrize(
+        "start_date_str,end_date_str,expected_start,expected_end",
+        [
+            (
+                "2024-01-01",
+                "2024-01-31",
+                datetime(2024, 1, 1),
+                datetime(2024, 1, 31, 23, 59, 59),
+            ),
+            (
+                "2023-12-01",
+                "2024-01-15",
+                datetime(2023, 12, 1),
+                datetime(2024, 1, 15, 23, 59, 59),
+            ),
+            (
+                "2024-02-29",
+                "2024-02-29",
+                datetime(2024, 2, 29),
+                datetime(2024, 2, 29, 23, 59, 59),
+            ),
+            (
+                "2020-01-01",
+                "2020-12-31",
+                datetime(2020, 1, 1),
+                datetime(2020, 12, 31, 23, 59, 59),
+            ),
+            (
+                "2024-03-15",
+                "2024-03-20",
+                datetime(2024, 3, 15),
+                datetime(2024, 3, 20, 23, 59, 59),
+            ),
+        ],
+    )
+    def test_utils_helpers_calculate_period_custom_report_valid_cases(
+        self, start_date_str, end_date_str, expected_start, expected_end
+    ):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="custom",
+            start_date_str=start_date_str,
+            end_date_str=end_date_str,
+        )
+        assert start_date == expected_start
+        assert end_date == expected_end
+
+    @pytest.mark.parametrize(
+        "report_type,params,expected_start,expected_end",
+        [
+            (
+                "monthly",
+                {"month": "1", "year": "2024"},
+                datetime(2024, 1, 1),
+                datetime(2024, 1, 31, 23, 59, 59),
+            ),
+            (
+                "quarterly",
+                {"quarter": "2", "year": "2024"},
+                datetime(2024, 4, 1),
+                datetime(2024, 6, 30, 23, 59, 59),
+            ),
+            (
+                "yearly",
+                {"year": "2023"},
+                datetime(2023, 1, 1),
+                datetime(2023, 12, 31, 23, 59, 59),
+            ),
+        ],
+    )
+    def test_utils_helpers_calculate_period_string_inputs_converted_correctly(
+        self, report_type, params, expected_start, expected_end
+    ):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type=report_type, **params
+        )
+        assert start_date == expected_start
+        assert end_date == expected_end
+
+    def test_utils_helpers_calculate_period_edge_case_february_leap_year(self):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="monthly",
+            month=2,
+            year=2024,
+        )
+        assert start_date == datetime(2024, 2, 1)
+        assert end_date == datetime(2024, 2, 29, 23, 59, 59)
+
+    def test_utils_helpers_calculate_period_edge_case_february_non_leap_year(self):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="monthly",
+            month=2,
+            year=2023,
+        )
+        assert start_date == datetime(2023, 2, 1)
+        assert end_date == datetime(2023, 2, 28, 23, 59, 59)
+
+    def test_utils_helpers_calculate_period_edge_case_custom_same_day(self):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="custom",
+            start_date_str="2024-03-15",
+            end_date_str="2024-03-15",
+        )
+        assert start_date == datetime(2024, 3, 15)
+        assert end_date == datetime(2024, 3, 15, 23, 59, 59)
+
+    def test_utils_helpers_calculate_period_edge_case_year_boundaries(self):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="yearly", year=2024
+        )
+        assert start_date.year == 2024
+        assert start_date.month == 1
+        assert start_date.day == 1
+        assert end_date.year == 2024
+        assert end_date.month == 12
+        assert end_date.day == 31
+        assert end_date.hour == 23
+        assert end_date.minute == 59
+        assert end_date.second == 59
+
+    def test_utils_helpers_calculate_period_extra_parameters_ignored(self):
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="monthly",
+            month=3,
+            year=2024,
+            quarter=2,  # This should be ignored
+        )
+        assert start_date == datetime(2024, 3, 1)
+        assert end_date == datetime(2024, 3, 31, 23, 59, 59)
+
+        # Quarterly report with month parameter (should be ignored)
+        start_date, end_date = calculate_transpareny_report_period(
+            report_type="quarterly",
+            quarter=1,
+            year=2024,
+            month=5,  # This should be ignored
+        )
+        assert start_date == datetime(2024, 1, 1)
+        assert end_date == datetime(2024, 3, 31, 23, 59, 59)
 
     # # convert_and_clean_excel
     def test_utils_helpers_convert_and_clean_excel_functionality(self, mocker):

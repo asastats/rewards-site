@@ -75,53 +75,6 @@ def _address_transaction(address, min_round, indexer_client, **kwargs):
         )
 
 
-def _fetch_app_allocations():
-    """Fetch and return Rewards dApp's escrow transactions.
-
-    :var app_id: Rewards dApp unique identifier
-    :type app_id: int
-    :var escrow:  Rewards dApp escrow address
-    :type escrow: str
-    :var filename: full path on disk to JSON file with escrow's transactions
-    :type filename: :class:`pathlib.PosixPath`
-    :var transactions: collection of all escrow transactions
-    :type transactions: list
-    :var indexer_client: Algorand Indexer client instance
-    :type indexer_client: :class:`IndexerClient`
-    :var min_round: starting block to yield transactions from
-    :type min_round: int
-    :var new_transactions: collection of new escrow transactions
-    :type new_transactions: list
-    :return: collection of all escrow transactions
-    :rtype: list
-    """
-    app_id = app_id_from_contract()
-    escrow = get_application_address(app_id)
-    filename = (
-        Path(__file__).resolve().parent.parent
-        / "fixtures"
-        / f"{f"{escrow[:5]}-{escrow[-5:]}"}.json"
-    )
-    transactions = read_json(filename) or []
-    indexer_client = _indexer_instance()
-    min_round = (
-        transactions[-1].get("confirmed-round") + 1
-        if transactions
-        else indexer_client.applications(app_id)
-        .get("application", {})
-        .get("created-at-round")
-    )
-    new_transactions = list(_address_transaction(escrow, min_round, indexer_client))
-    if new_transactions:
-        transactions = sorted(
-            transactions + new_transactions, key=lambda x: x.get("confirmed-round", 0)
-        )
-        with open(filename, "w") as json_file:
-            json.dump(transactions, json_file)
-
-    return transactions
-
-
 def _fetch_asset_data(asset_ids):
     """Fetch and return data for a set of asset IDs.
 
@@ -221,6 +174,57 @@ def _search_transactions_by_address(
             )
             pause(error_delay)
             counter += 1
+
+
+def fetch_app_allocations(force_update=True):
+    """Fetch and return Rewards dApp's escrow transactions.
+
+    :var force_update: use only existing data if they exists and this value is True
+    :type force_update: Boolean
+    :var app_id: Rewards dApp unique identifier
+    :type app_id: int
+    :var escrow:  Rewards dApp escrow address
+    :type escrow: str
+    :var filename: full path on disk to JSON file with escrow's transactions
+    :type filename: :class:`pathlib.PosixPath`
+    :var transactions: collection of all escrow transactions
+    :type transactions: list
+    :var indexer_client: Algorand Indexer client instance
+    :type indexer_client: :class:`IndexerClient`
+    :var min_round: starting block to yield transactions from
+    :type min_round: int
+    :var new_transactions: collection of new escrow transactions
+    :type new_transactions: list
+    :return: collection of all escrow transactions
+    :rtype: list
+    """
+    app_id = app_id_from_contract()
+    escrow = get_application_address(app_id)
+    filename = (
+        Path(__file__).resolve().parent.parent
+        / "fixtures"
+        / f"{f"{escrow[:5]}-{escrow[-5:]}"}.json"
+    )
+    transactions = read_json(filename) or []
+    if force_update or not transactions:
+        indexer_client = _indexer_instance()
+        min_round = (
+            transactions[-1].get("confirmed-round") + 1
+            if transactions
+            else indexer_client.applications(app_id)
+            .get("application", {})
+            .get("created-at-round")
+        )
+        new_transactions = list(_address_transaction(escrow, min_round, indexer_client))
+        if new_transactions:
+            transactions = sorted(
+                transactions + new_transactions,
+                key=lambda x: x.get("confirmed-round", 0),
+            )
+            with open(filename, "w") as json_file:
+                json.dump(transactions, json_file)
+
+    return transactions
 
 
 # # PARSING
@@ -485,54 +489,6 @@ def _parse_transactions(transactions, address, start_date, end_date):
 
 
 # # REPORTS
-def create_transparency_report(start_date, end_date, grouping="chronological"):
-    """Create and return transparency report for Rewards dApp.
-
-    :param start_date: report's start date
-    :type start_date: :class:`datetime.datetime`
-    :param end_date: report's end date
-    :type end_date: :class:`datetime.datetime`
-    :param grouping: type of grouping of transactions, either chronological or by type
-    :type grouping: str
-    :var app_id: Rewards dApp unique identifier
-    :type app_id: int
-    :var escrow: Rewards dApp escrow address
-    :type escrow: str
-    :var transactions: collection of all escrow transactions
-    :type transactions: list
-    :var parsed_transactions: collection of parsed escrow transactions in the period
-    :type parsed_transactions: list
-    :var grouped_transactions: collection of grouped escrow transactions
-    :type grouped_transactions: list
-    :var asset_ids: collection of unique asset identifiers
-    :type asset_ids: set
-    :var assets_data: collection of assets' data
-    :type assets_data: dict
-    :return: formatted transparency report
-    :rtype: str
-    """
-    app_id = app_id_from_contract()
-    escrow = get_application_address(app_id)
-    transactions = _fetch_app_allocations()
-    parsed_transactions = _parse_transactions(
-        transactions, escrow, start_date, end_date
-    )
-    if grouping == "chronological":
-        grouped_transactions = _group_transactions_chronological(parsed_transactions)
-
-    else:
-        grouped_transactions = _group_transactions_by_type(parsed_transactions)
-
-    asset_ids = {row.get("asset") for row in grouped_transactions}
-    assets_data = _fetch_asset_data(asset_ids)
-    return "\n".join(
-        [
-            _format_paragraph(allocation, assets_data)
-            for allocation in grouped_transactions
-        ]
-    )
-
-
 def _format_amount(allocation, assets_data):
     """Format allocation amount and asset unit to a string.
 
@@ -670,3 +626,51 @@ def _format_url(entry, network="mainnet"):
             url += "tx/" + entry.get("id")
 
     return url
+
+
+def create_transparency_report(start_date, end_date, grouping="chronological"):
+    """Create and return transparency report for Rewards dApp.
+
+    :param start_date: report's start date
+    :type start_date: :class:`datetime.datetime`
+    :param end_date: report's end date
+    :type end_date: :class:`datetime.datetime`
+    :param grouping: type of grouping of transactions, either chronological or by type
+    :type grouping: str
+    :var app_id: Rewards dApp unique identifier
+    :type app_id: int
+    :var escrow: Rewards dApp escrow address
+    :type escrow: str
+    :var transactions: collection of all escrow transactions
+    :type transactions: list
+    :var parsed_transactions: collection of parsed escrow transactions in the period
+    :type parsed_transactions: list
+    :var grouped_transactions: collection of grouped escrow transactions
+    :type grouped_transactions: list
+    :var asset_ids: collection of unique asset identifiers
+    :type asset_ids: set
+    :var assets_data: collection of assets' data
+    :type assets_data: dict
+    :return: formatted transparency report
+    :rtype: str
+    """
+    app_id = app_id_from_contract()
+    escrow = get_application_address(app_id)
+    transactions = fetch_app_allocations()
+    parsed_transactions = _parse_transactions(
+        transactions, escrow, start_date, end_date
+    )
+    if grouping == "chronological":
+        grouped_transactions = _group_transactions_chronological(parsed_transactions)
+
+    else:
+        grouped_transactions = _group_transactions_by_type(parsed_transactions)
+
+    asset_ids = {row.get("asset") for row in grouped_transactions}
+    assets_data = _fetch_asset_data(asset_ids)
+    return "\n".join(
+        [
+            _format_paragraph(allocation, assets_data)
+            for allocation in grouped_transactions
+        ]
+    )

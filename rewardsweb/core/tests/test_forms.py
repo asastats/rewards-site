@@ -1,5 +1,7 @@
 """Testing module for :py:mod:`core.forms` module."""
 
+from datetime import datetime
+
 import pytest
 from captcha.fields import CaptchaField, CaptchaTextInput
 from django.contrib.auth import get_user_model
@@ -32,6 +34,7 @@ from core.forms import (
     IssueLabelsForm,
     ProfileForm,
     ProfileFormSet,
+    TransparencyReportForm,
     UpdateUserForm,
 )
 from core.models import Contribution, Cycle, IssueStatus, Profile
@@ -482,3 +485,149 @@ class TestProfileFormSet:
         assert formset.extra == 1
         assert not formset.can_delete
         assert formset.max_num == 1
+
+
+class TestTransparencyReportForm:
+    """Testing class for :class:`TransparencyReportForm`."""
+
+    def test_transparencyreportform_issubclass_of_form(self):
+        """Test that TransparencyReportForm is a subclass of Form."""
+        assert issubclass(TransparencyReportForm, Form)
+
+    def test_transparencyreportform_report_type_field(self):
+        """Test the report_type field."""
+        form = TransparencyReportForm()
+        field = form.fields["report_type"]
+        assert isinstance(field, ChoiceField)
+        assert isinstance(field.widget, RadioSelect)
+        assert field.initial == "monthly"
+        assert field.choices == [
+            ("monthly", "Monthly"),
+            ("quarterly", "Quarterly"),
+            ("yearly", "Yearly"),
+            ("custom", "Custom"),
+        ]
+
+    def test_transparencyreportform_month_field(self):
+        """Test the month field."""
+        form = TransparencyReportForm()
+        field = form.fields["month"]
+        assert isinstance(field, ChoiceField)
+        assert isinstance(field.widget, Select)
+        assert field.choices == [
+            (i, datetime(2000, i, 1).strftime("%B")) for i in range(1, 13)
+        ]
+
+    def test_transparencyreportform_quarter_field(self):
+        """Test the quarter field."""
+        form = TransparencyReportForm()
+        field = form.fields["quarter"]
+        assert isinstance(field, ChoiceField)
+        assert isinstance(field.widget, Select)
+        assert field.choices == [(1, "Q1"), (2, "Q2"), (3, "Q3"), (4, "Q4")]
+
+    def test_transparencyreportform_year_field(self):
+        """Test the year field."""
+        form = TransparencyReportForm()
+        field = form.fields["year"]
+        assert isinstance(field, ChoiceField)
+        assert isinstance(field.widget, Select)
+
+    def test_transparencyreportform_start_date_field(self):
+        """Test the start_date field."""
+        form = TransparencyReportForm()
+        field = form.fields["start_date"]
+        assert isinstance(field, CharField)
+        assert isinstance(field.widget, TextInput)
+
+    def test_transparencyreportform_end_date_field(self):
+        """Test the end_date field."""
+        form = TransparencyReportForm()
+        field = form.fields["end_date"]
+        assert isinstance(field, CharField)
+        assert isinstance(field.widget, TextInput)
+
+    def test_transparencyreportform_ordering_field(self):
+        """Test the ordering field."""
+        form = TransparencyReportForm()
+        field = form.fields["ordering"]
+        assert isinstance(field, ChoiceField)
+        assert isinstance(field.widget, RadioSelect)
+        assert field.initial == "chronological"
+        assert field.choices == [
+            ("chronological", "Chronological"),
+            ("by_type", "By Type"),
+        ]
+
+    def test_transparencyreportform_custom_dates_required_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "custom",
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert not form.is_valid()
+        assert "start_date" in form.errors
+        assert "end_date" in form.errors
+        assert "This field is required for custom reports." in form.errors["start_date"]
+        assert "This field is required for custom reports." in form.errors["end_date"]
+
+    def test_transparencyreportform_custom_dates_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "custom",
+                "start_date": "2023-01-01",
+                "end_date": "2023-01-31",
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()
+
+    def test_transparencyreportform_custom_dates_start_date_greater_than_end_date(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "custom",
+                "start_date": "2023-02-01",
+                "end_date": "2023-01-31",
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert not form.is_valid()
+
+    def test_transparencyreportform_monthly_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "monthly",
+                "month": 1,
+                "year": 2023,
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()
+
+    def test_transparencyreportform_quarterly_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "quarterly",
+                "quarter": 1,
+                "year": 2023,
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()
+
+    def test_transparencyreportform_yearly_valid_action(self):
+        form = TransparencyReportForm(
+            data={
+                "report_type": "yearly",
+                "year": 2023,
+                "ordering": "chronological",
+            },
+            years=range(2023, 2026),
+        )
+        assert form.is_valid()

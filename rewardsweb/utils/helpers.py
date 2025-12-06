@@ -4,6 +4,8 @@ import base64
 import logging
 import os
 import pickle
+from calendar import monthrange
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -15,6 +17,73 @@ from nacl.signing import VerifyKey
 from utils.constants.core import MISSING_ENVIRONMENT_VARIABLE_ERROR
 
 logger = logging.getLogger(__name__)
+
+
+def calculate_transpareny_report_period(
+    report_type,
+    month=None,
+    quarter=None,
+    year=None,
+    start_date_str=None,
+    end_date_str=None,
+):
+    """Calculate start and end dates based on report type and parameters.
+
+    :param report_type: Type of report (monthly, quarterly, yearly, custom)
+    :type report_type: str
+    :param month: Month number (1-12) for monthly reports
+    :type month: int or None
+    :param quarter: Quarter number (1-4) for quarterly reports
+    :type quarter: int or None
+    :param year: Year for reports
+    :type year: int or None
+    :param start_date_str: Start date string for custom reports (YYYY-MM-DD)
+    :type start_date_str: str or None
+    :param end_date_str: End date string for custom reports (YYYY-MM-DD)
+    :type end_date_str: str or None
+    :return: Tuple of (start_date, end_date)
+    :rtype: two-tuple
+    """
+    year = int(year) if year else None
+
+    if report_type == "yearly":
+        # First day of the year
+        start_date = datetime(year, 1, 1)
+        # Last day of the year
+        end_date = datetime(year, 12, 31, 23, 59, 59)
+
+    elif report_type == "monthly":
+        month = int(month)
+        # First day of the month
+        start_date = datetime(year, month, 1)
+        # Last day of the month
+        _, last_day = monthrange(year, month)
+        end_date = datetime(year, month, last_day, 23, 59, 59)
+
+    elif report_type == "quarterly":
+        quarter = int(quarter)
+
+        # Define quarter start and end months
+        quarter_map = {
+            1: (1, 3),  # Q1: Jan-Mar
+            2: (4, 6),  # Q2: Apr-Jun
+            3: (7, 9),  # Q3: Jul-Sep
+            4: (10, 12),  # Q4: Oct-Dec
+        }
+
+        start_month, end_month = quarter_map[quarter]
+        # First day of first month in quarter
+        start_date = datetime(year, start_month, 1)
+        # Last day of last month in quarter
+        _, last_day = monthrange(year, end_month)
+        end_date = datetime(year, end_month, last_day, 23, 59, 59)
+
+    else:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+        end_date = datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59)
+
+    return start_date, end_date
 
 
 def convert_and_clean_excel(input_file, output_file, legacy_contributions):

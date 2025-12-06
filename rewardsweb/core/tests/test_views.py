@@ -1,6 +1,7 @@
 """Testing module for :py:mod:`core.views` underlying views."""
 
 import time
+from datetime import datetime
 
 import pytest
 from allauth.account.forms import LoginForm, SignupForm
@@ -24,6 +25,7 @@ from core.views import (
     ProfileEditView,
     ProfileUpdate,
     SignupView,
+    TransparencyReportView,
     UnconfirmedContributionsView,
 )
 
@@ -621,3 +623,100 @@ class TestDbUnconfirmedContributionsView:
         # Should only include unconfirmed contributions
         assert queryset.filter(confirmed=True).count() == 0
         assert queryset.filter(confirmed=False).count() == 1
+
+
+@pytest.mark.django_db
+class TestTransparencyReportView:
+    """Testing class for :class:`core.views.TransparencyReportView`."""
+
+    def test_transparencyreportview_is_subclass_of_formview(self):
+        assert issubclass(TransparencyReportView, FormView)
+
+    def test_transparencyreportview_only_accessible_to_superusers(
+        self, client, regular_user
+    ):
+        url = reverse("transparency")
+        response = client.get(url)
+        assert response.status_code == 302
+        client.force_login(regular_user)
+        response = client.get(url)
+        assert response.status_code == 302
+
+    # # get_context_data
+    def test_transparencyreportview_get_context_data_for_no_allocations(
+        self, mocker, client, superuser
+    ):
+        mocked_fetch = mocker.patch("core.views.fetch_app_allocations", return_value=[])
+        client.force_login(superuser)
+        url = reverse("transparency")
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "min_year" in response.context
+        assert "max_year" in response.context
+        assert "min_date" not in response.context
+        mocked_fetch.assert_called_with(force_update=False)
+
+    def test_transparencyreportview_get_context_data_functionality(
+        self, mocker, client, superuser
+    ):
+        mocked_fetch = mocker.patch(
+            "core.views.fetch_app_allocations",
+            return_value=[{"round-time": 1672531200}],
+        )
+        client.force_login(superuser)
+        url = reverse("transparency")
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "min_date" in response.context
+        assert "max_date" in response.context
+        assert response.context["min_date"] == "2023-01-01T00:00:00+00:00"
+        mocked_fetch.assert_called_with(force_update=False)
+
+    # # form_valid
+    def test_transparencyreportview_form_valid_for_no_data(
+        self, mocker, client, superuser
+    ):
+        mocker.patch(
+            "core.views.fetch_app_allocations",
+            return_value=[{"round-time": 1672531200}],
+        )
+        mocked_create = mocker.patch(
+            "core.views.create_transparency_report", return_value=""
+        )
+        client.force_login(superuser)
+        url = reverse("transparency")
+        data = {
+            "report_type": "monthly",
+            "month": 1,
+            "year": 2023,
+            "ordering": "chronological",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 200
+        assert "report" in response.context
+        assert response.context["report"] == "No data"
+        mocked_create.assert_called_once()
+
+    def test_transparencyreportview_form_valid_functionality(
+        self, mocker, client, superuser
+    ):
+        mocker.patch(
+            "core.views.fetch_app_allocations",
+            return_value=[{"round-time": 1672531200}],
+        )
+        mocked_create = mocker.patch(
+            "core.views.create_transparency_report", return_value="report data"
+        )
+        client.force_login(superuser)
+        url = reverse("transparency")
+        data = {
+            "report_type": "monthly",
+            "month": 1,
+            "year": 2023,
+            "ordering": "chronological",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 200
+        assert "report" in response.context
+        assert response.context["report"] == "report data"
+        mocked_create.assert_called_once()

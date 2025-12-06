@@ -654,7 +654,7 @@ class TestTransparencyReportView:
         assert "min_year" in response.context
         assert "max_year" in response.context
         assert "min_date" not in response.context
-        mocked_fetch.assert_called_with()
+        mocked_fetch.assert_called_with(force_update=False)
 
     def test_transparencyreportview_get_context_data_functionality(
         self, mocker, client, superuser
@@ -670,7 +670,7 @@ class TestTransparencyReportView:
         assert "min_date" in response.context
         assert "max_date" in response.context
         assert response.context["min_date"] == "2023-01-01T00:00:00+00:00"
-        mocked_fetch.assert_called_with()
+        mocked_fetch.assert_called_with(force_update=False)
 
     # # form_valid
     def test_transparencyreportview_form_valid(self, mocker, client, superuser):

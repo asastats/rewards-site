@@ -176,9 +176,11 @@ def _search_transactions_by_address(
             counter += 1
 
 
-def fetch_app_allocations():
+def fetch_app_allocations(force_update=True):
     """Fetch and return Rewards dApp's escrow transactions.
 
+    :var force_update: use only existing data if they exists and this value is True
+    :type force_update: Boolean
     :var app_id: Rewards dApp unique identifier
     :type app_id: int
     :var escrow:  Rewards dApp escrow address
@@ -204,21 +206,23 @@ def fetch_app_allocations():
         / f"{f"{escrow[:5]}-{escrow[-5:]}"}.json"
     )
     transactions = read_json(filename) or []
-    indexer_client = _indexer_instance()
-    min_round = (
-        transactions[-1].get("confirmed-round") + 1
-        if transactions
-        else indexer_client.applications(app_id)
-        .get("application", {})
-        .get("created-at-round")
-    )
-    new_transactions = list(_address_transaction(escrow, min_round, indexer_client))
-    if new_transactions:
-        transactions = sorted(
-            transactions + new_transactions, key=lambda x: x.get("confirmed-round", 0)
+    if force_update or not transactions:
+        indexer_client = _indexer_instance()
+        min_round = (
+            transactions[-1].get("confirmed-round") + 1
+            if transactions
+            else indexer_client.applications(app_id)
+            .get("application", {})
+            .get("created-at-round")
         )
-        with open(filename, "w") as json_file:
-            json.dump(transactions, json_file)
+        new_transactions = list(_address_transaction(escrow, min_round, indexer_client))
+        if new_transactions:
+            transactions = sorted(
+                transactions + new_transactions,
+                key=lambda x: x.get("confirmed-round", 0),
+            )
+            with open(filename, "w") as json_file:
+                json.dump(transactions, json_file)
 
     return transactions
 

@@ -454,6 +454,75 @@ class TestContractReportingIndexerFunctions:
         )
         client.applications.return_value.assert_not_called()
 
+    def test_contract_reporting_fetch_app_allocations_force_update_false(self, mocker):
+        app_id = 750934138
+        mocked_app_id = mocker.patch(
+            "contract.reporting.app_id_from_contract", return_value=app_id
+        )
+        txns = [{"confirmed-round": 10000}, {"confirmed-round": 20000}]
+        filename = (
+            Path(__file__).resolve().parent.parent.parent
+            / "fixtures"
+            / "2ASZE-R274Q.json"
+        )
+        mocked_read = mocker.patch("contract.reporting.read_json", return_value=txns)
+        mocked_client = mocker.patch("contract.reporting._indexer_instance")
+        mocked_txn = mocker.patch("contract.reporting._address_transaction")
+        result = [{"confirmed-round": 10000}, {"confirmed-round": 20000}]
+        returned = fetch_app_allocations(force_update=False)
+        assert returned == result
+        mocked_app_id.assert_called_once_with()
+        mocked_read.assert_called_once_with(filename)
+        mocked_client.assert_not_called()
+        mocked_txn.assert_not_called()
+
+    def test_contract_reporting_fetch_app_allocations_no_existing_forse_false(
+        self, mocker
+    ):
+        app_id = 750934138
+        mocked_app_id = mocker.patch(
+            "contract.reporting.app_id_from_contract", return_value=app_id
+        )
+        filename = (
+            Path(__file__).resolve().parent.parent.parent
+            / "fixtures"
+            / "2ASZE-R274Q.json"
+        )
+        mocked_read = mocker.patch("contract.reporting.read_json", return_value={})
+        client = mocker.MagicMock()
+        mocked_client = mocker.patch(
+            "contract.reporting._indexer_instance", return_value=client
+        )
+        min_round = 15000
+        client.applications.return_value = {
+            "application": {"created-at-round": min_round}
+        }
+        txns = [{"confirmed-round": 20000}, {"confirmed-round": 10000}]
+        mocked_txn = mocker.patch(
+            "contract.reporting._address_transaction", return_value=txns
+        )
+        result = [{"confirmed-round": 10000}, {"confirmed-round": 20000}]
+        json_file = mocker.MagicMock()
+        with mock.patch(
+            "contract.reporting.open",
+            return_value=json_file,
+        ) as mocked_open, mock.patch("contract.reporting.json.dump") as mocked_dump:
+            returned = fetch_app_allocations(force_update=False)
+            mocked_open.assert_called_once_with(filename, "w")
+            mocked_dump.assert_called_once_with(
+                result, json_file.__enter__.return_value
+            )
+        assert returned == result
+        mocked_app_id.assert_called_once_with()
+        mocked_read.assert_called_once_with(filename)
+        mocked_client.assert_called_once_with()
+        mocked_txn.assert_called_once_with(
+            "2ASZECPEH4ALJWHFN2MKPAS355GC6MDARIC3MFVZCN6NJF76HZPU4R274Q",
+            min_round,
+            client,
+        )
+        client.applications.assert_called_once_with(app_id)
+
     def test_contract_reporting_fetch_app_allocations_functionality(self, mocker):
         app_id = 750934138
         mocked_app_id = mocker.patch(
@@ -470,9 +539,6 @@ class TestContractReportingIndexerFunctions:
         client = mocker.MagicMock()
         mocked_client = mocker.patch(
             "contract.reporting._indexer_instance", return_value=client
-        )
-        mocked_txn = mocker.patch(
-            "contract.reporting._address_transaction", return_value=new_txns
         )
         mocked_txn = mocker.patch(
             "contract.reporting._address_transaction", return_value=new_txns

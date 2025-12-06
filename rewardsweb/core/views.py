@@ -1302,7 +1302,7 @@ class TransparencyReportView(FormView):
         :rtype: dict
         """
         context = super().get_context_data(**kwargs)
-        allocations = fetch_app_allocations()
+        allocations = fetch_app_allocations(force_update=False)
         if allocations:
             min_date = datetime.fromtimestamp(
                 allocations[0]["round-time"], tz=timezone.utc
@@ -1324,7 +1324,7 @@ class TransparencyReportView(FormView):
         """
         kwargs = super().get_form_kwargs()
 
-        allocations = fetch_app_allocations()
+        allocations = fetch_app_allocations(force_update=False)
         if allocations:
             min_date = datetime.fromtimestamp(
                 allocations[0]["round-time"], tz=timezone.utc

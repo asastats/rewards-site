@@ -97,9 +97,17 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Unconfirmed Contributions -->
     <div class="stat-card">
-      <div class="flex items-center gap-2 mb-4">
-        <i class="fas fa-clock text-warning"></i>
-        <h2 class="text-xl font-bold">Unconfirmed Contributions</h2>
+
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-clock text-warning"></i>
+          <h2 class="text-xl font-bold">Unconfirmed Contributions</h2>
+        </div>
+        {% if is_paginated %}
+          <span class="badge badge-warning">
+            {{ paginator.count }} total
+          </span>
+        {% endif %}
       </div>
 
       {% if contribution_list %}
@@ -113,6 +121,9 @@
           </div>
           {% endfor %}
         </div>
+
+        {% include "snippets/pagination.html" %}
+
       {% else %}
         <div class="text-center py-8">
           <i class="fas fa-check-circle text-3xl text-success mb-3"></i>

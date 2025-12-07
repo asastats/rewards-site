@@ -96,6 +96,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "utils.context_processors.global_constants",
+                "utils.context_processors.pagination_context",
             ],
         },
     },

@@ -183,37 +183,71 @@
     {% endif %}
   </div>
 
-  <!-- ✅ Pagination stays HTMX-aware -->
+  <!-- ✅ HTMX-aware pagination -->
   {% if is_paginated %}
     <div class="stat-card">
       <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div class="text-sm text-base-content/70">
-          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-          • {{ page_obj.paginator.count }} total contributors
+          Showing <span class="font-semibold">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span> 
+          of <span class="font-semibold">{{ paginator.count }}</span> items
         </div>
         
-        <div class="flex gap-2">
+        <div class="join">
+          <!-- First Page -->
           {% if page_obj.has_previous %}
-            <a hx-get="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
-               hx-target="#results-container"
-               hx-swap="innerHTML transition:true"
-               class="btn btn-outline btn-sm">
-              <i class="fas fa-chevron-left mr-1"></i>
-              Previous
+            <a hx-get="?{% if has_query_params %}{{ query_string }}&{% endif %}page=1"
+              hx-target="#results-container"
+              hx-select="#results-container > *"
+              hx-swap="innerHTML transition:true"
+              hx-push-url="true"
+              class="join-item btn btn-sm btn-outline" title="First page">
+              <i class="fas fa-angle-double-left"></i>
             </a>
           {% endif %}
-
+          
+          <!-- Previous Page -->
+          {% if page_obj.has_previous %}
+            <a hx-get="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}"
+              hx-target="#results-container"
+              hx-select="#results-container > *"
+              hx-swap="innerHTML transition:true"
+              hx-push-url="true"
+              class="join-item btn btn-sm btn-outline" title="Previous page">
+              <i class="fas fa-angle-left"></i>
+            </a>
+          {% endif %}
+          
+          <!-- Current Page Indicator -->
+          <div class="join-item btn btn-sm btn-outline btn-active pointer-events-none">
+            Page {{ page_obj.number }} of {{ paginator.num_pages }}
+          </div>
+          
+          <!-- Next Page -->
           {% if page_obj.has_next %}
-            <a hx-get="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
-               hx-target="#results-container"
-               hx-swap="innerHTML transition:true"
-               class="btn btn-outline btn-sm">
-              Next
-              <i class="fas fa-chevron-right ml-1"></i>
+            <a hx-get="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}"
+              hx-target="#results-container"
+              hx-select="#results-container > *"
+              hx-swap="innerHTML transition:true"
+              hx-push-url="true"
+              class="join-item btn btn-sm btn-outline" title="Next page">
+              <i class="fas fa-angle-right"></i>
+            </a>
+          {% endif %}
+          
+          <!-- Last Page -->
+          {% if page_obj.has_next %}
+            <a hx-get="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ paginator.num_pages }}"
+              hx-target="#results-container"
+              hx-select="#results-container > *"
+              hx-swap="innerHTML transition:true"
+              hx-push-url="true"
+              class="join-item btn btn-sm btn-outline" title="Last page">
+              <i class="fas fa-angle-double-right"></i>
             </a>
           {% endif %}
         </div>
       </div>
     </div>
   {% endif %}
+
 {% endpartialdef %}

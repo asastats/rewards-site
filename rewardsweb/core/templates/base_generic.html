@@ -134,32 +134,6 @@
           {% block content %}{% endblock %}
         </main>
 
-        <!-- Pagination -->
-        {% block pagination %}
-          {% if is_paginated %}
-          <div class="p-6 pt-0">
-            <div class="flex justify-center items-center gap-4">
-              {% if page_obj.has_previous %}
-                <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}" class="btn btn-outline btn-sm">
-                  <i class="fas fa-chevron-left mr-1"></i>
-                  Previous
-                </a>
-              {% endif %}
-              
-              <span class="text-sm">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-              </span>
-              
-              {% if page_obj.has_next %}
-                <a href="{{ request.path }}?page={{ page_obj.next_page_number }}" class="btn btn-outline btn-sm">
-                  Next
-                  <i class="fas fa-chevron-right ml-1"></i>
-                </a>
-              {% endif %}
-            </div>
-          </div>
-          {% endif %}
-        {% endblock %}
       </div>
 
       <div class="drawer-side">

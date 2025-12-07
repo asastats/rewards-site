@@ -1,0 +1,77 @@
+{% if is_paginated %}
+<div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-base-300">
+  <div class="text-sm text-base-content/70">
+    Showing <span class="font-semibold">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span> 
+    of <span class="font-semibold">{{ paginator.count }}</span> items
+  </div>
+  
+  <div class="join">
+    <!-- First Page -->
+    {% if page_obj.has_previous %}
+      <a href="?{% if has_query_params %}{{ query_string }}&{% endif %}page=1" 
+         class="join-item btn btn-sm btn-outline" title="First page">
+        <i class="fas fa-angle-double-left"></i>
+      </a>
+    {% else %}
+      <button class="join-item btn btn-sm btn-outline btn-disabled">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+    {% endif %}
+    
+    <!-- Previous Page -->
+    {% if page_obj.has_previous %}
+      <a href="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+         class="join-item btn btn-sm btn-outline" title="Previous page">
+        <i class="fas fa-angle-left"></i>
+      </a>
+    {% else %}
+      <button class="join-item btn btn-sm btn-outline btn-disabled">
+        <i class="fas fa-angle-left"></i>
+      </button>
+    {% endif %}
+    
+    <!-- Current Page Indicator -->
+    <div class="join-item btn btn-sm btn-outline btn-active pointer-events-none">
+      Page {{ page_obj.number }} of {{ paginator.num_pages }}
+    </div>
+    
+    <!-- Next Page -->
+    {% if page_obj.has_next %}
+      <a href="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" 
+         class="join-item btn btn-sm btn-outline" title="Next page">
+        <i class="fas fa-angle-right"></i>
+      </a>
+    {% else %}
+      <button class="join-item btn btn-sm btn-outline btn-disabled">
+        <i class="fas fa-angle-right"></i>
+      </button>
+    {% endif %}
+    
+    <!-- Last Page -->
+    {% if page_obj.has_next %}
+      <a href="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ paginator.num_pages }}" 
+         class="join-item btn btn-sm btn-outline" title="Last page">
+        <i class="fas fa-angle-double-right"></i>
+      </a>
+    {% else %}
+      <button class="join-item btn btn-sm btn-outline btn-disabled">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    {% endif %}
+  </div>
+  
+  <div class="hidden sm:flex gap-1">
+  {% for i in page_obj.paginator.page_range %}
+    {% if i >= page_obj.number|add:"-2" and i <= page_obj.number|add:"2" %}
+    {% if i == page_obj.number %}
+      <span class="btn btn-sm btn-primary pointer-events-none">{{ i }}</span>
+    {% else %}
+      <a href="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ i }}" 
+      class="btn btn-sm btn-outline">{{ i }}</a>
+    {% endif %}
+    {% endif %}
+  {% endfor %}
+  </div>
+
+</div>
+{% endif %}

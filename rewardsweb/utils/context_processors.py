@@ -16,3 +16,22 @@ def global_constants(request):
         "PROJECT_WEBSITE_NAME": f"{settings.PROJECT_OWNER} Rewards website",
         "PROJECT_DOMAIN": settings.PROJECT_DOMAIN,
     }
+
+
+def pagination_context(request):
+    """Add query_string context for pagination and preserve all GET params but 'page'.
+
+    :param request: HTTP request object
+    :type request: :class:`django.http.HttpRequest`
+    :var params: request get parameters collection
+    :type params: :class:`django.http.QueryDict`
+    :var query_string: URL encoded query string
+    :type query_string: str
+    :return: dict
+    """
+    params = request.GET.copy()
+    if "page" in params:
+        del params["page"]
+
+    query_string = params.urlencode()
+    return {"query_string": query_string, "has_query_params": bool(query_string)}

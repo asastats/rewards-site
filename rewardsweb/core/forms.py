@@ -51,7 +51,7 @@ class ContributionEditForm(ModelForm):
     :type ContributionEditForm.percentage: :class:`django.forms.DecimalField`
     :var ContributionEditForm.comment: optional comment for the contribution
     :type ContributionEditForm.comment: :class:`django.forms.CharField`
-    :var ContributionEditForm.issue_number: GitHub issue number
+    :var ContributionEditForm.issue_number: tracker issue number
     :type ContributionEditForm.issue_number: :class:`django.forms.IntegerField`
     :var ContributionEditForm.issue_status: Status for newly created issue
     :type ContributionEditForm.issue_status: :class:`django.forms.ChoiceField`
@@ -83,7 +83,7 @@ class ContributionEditForm(ModelForm):
         widget=NumberInput(
             attrs={
                 "class": TEXTINPUT_CLASS,
-                "placeholder": "GitHub issue number (optional)",
+                "placeholder": "Tracker issue number (optional)",
             }
         ),
     )
@@ -147,7 +147,7 @@ class ContributionCreateForm(ModelForm):
     :type ContributionCreateForm.percentage: :class:`django.forms.DecimalField`
     :var ContributionCreateForm.comment: optional comment for the contribution
     :type ContributionCreateForm.comment: :class:`django.forms.CharField`
-    :var ContributionCreateForm.issue_number: GitHub issue number
+    :var ContributionCreateForm.issue_number: tracker issue number
     :type ContributionCreateForm.issue_number: :class:`django.forms.IntegerField`
     :var ContributionCreateForm.issue_status: Status for newly created issue
     :type ContributionCreateForm.issue_status: :class:`django.forms.ChoiceField`
@@ -190,7 +190,7 @@ class ContributionCreateForm(ModelForm):
         widget=NumberInput(
             attrs={
                 "class": TEXTINPUT_CLASS,
-                "placeholder": "GitHub issue number (optional)",
+                "placeholder": "Tracker issue number (optional)",
             }
         ),
     )
@@ -230,7 +230,7 @@ class ContributionCreateForm(ModelForm):
 
 
 class CreateIssueForm(Form):
-    """Form class for creating GitHub issues.
+    """Form class for creating tracker issues.
 
     :var CreateIssueForm.labels: issue labels selection
     :type CreateIssueForm.labels: :class:`django.forms.MultipleChoiceField`
@@ -295,7 +295,7 @@ class CreateIssueForm(Form):
 
 
 class IssueLabelsForm(Form):
-    """Form for adding labels and priority to GitHub issues.
+    """Form for adding labels and priority to tracker issues.
 
     :var IssueLabelsForm.labels: issue labels selection
     :type IssueLabelsForm.labels: :class:`django.forms.MultipleChoiceField`

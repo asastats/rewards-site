@@ -43,6 +43,10 @@ class DummyBaseIssueProvider(BaseIssueProvider):
         super()._get_issue_by_number_impl(issue_number)
         return issue_number
 
+    def _issue_url_impl(self, issue_number):
+        super()._issue_url_impl(issue_number)
+        return issue_number
+
     def _set_labels_to_issue_impl(self, issue_number, labels_to_set):
         super()._set_labels_to_issue_impl(issue_number, labels_to_set)
         return f"issue_number: {issue_number} labels_to_set: {labels_to_set}"
@@ -86,6 +90,10 @@ class TestBaseIssueProvider:
     def test_issues_providers_baseissueprovider_get_issue_by_number_impl(self):
         c = DummyBaseIssueProvider(None)
         assert c._get_issue_by_number_impl("issue_number") == "issue_number"
+
+    def test_issues_providers_baseissueprovider_issue_url_impl(self):
+        c = DummyBaseIssueProvider(None)
+        assert c._issue_url_impl("issue_number") == "issue_number"
 
     def test_issues_providers_baseissueprovider_set_labels_to_issue_impl(self):
         c = DummyBaseIssueProvider(None)
@@ -564,6 +572,22 @@ class TestIssuesProvidersBitbucketProvider:
         assert result["issue"]["assignees"] == ["test_assignee"]
         assert result["issue"]["user"] == "test_reporter"
 
+    # # _issue_url_impl
+    def test_issues_providers_bitbucketprovider_issue_url_impl(self, mocker):
+        mocker.patch("issues.providers.BitbucketProvider._get_client")
+        mocker.patch("issues.providers.BitbucketProvider._get_repository")
+        user = mocker.MagicMock()
+        provider = BitbucketProvider(user)
+        provider.repo = ("workspace", "repo_slug")
+        provider.client = mocker.MagicMock()
+        issue = mocker.MagicMock()
+        issue.assignee = {"display_name": "test_assignee"}
+        issue.reporter = {"display_name": "test_reporter"}
+        provider.client.get_issue.return_value = issue
+
+        result = provider._issue_url_impl(10)
+        assert result == "https://bitbucket.org/workspace/repo_slug/issues/10/"
+
     # # _set_labels_to_issue_impl
     def test_issues_providers_bitbucketprovider_set_labels_to_issue_impl_resolved(
         self, mocker
@@ -770,6 +794,17 @@ class TestIssuesProvidersGithubProvider:
             f"{settings.ISSUE_TRACKER_OWNER}/{settings.ISSUE_TRACKER_NAME}"
         )
 
+    # # _issue_url_impl
+    def test_issues_providers_githubprovider_issue_url_impl(self, mocker):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        provider = GithubProvider(mocker.MagicMock())
+        result = provider._issue_url_impl(10)
+        assert result == (
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/10"
+        )
+
     # # close_issue_with_labels
     def test_issues_providers_githubprovider_close_issue_with_labels_for_no_client(
         self, mocker
@@ -933,6 +968,17 @@ class TestIssuesProvidersGithubProvider:
         returned = provider.issue_by_number(mocker.MagicMock())
         assert returned["success"]
         assert "Retrieved issue" in returned["message"]
+
+    # # issue_url
+    def test_issues_providers_githubprovider_issue_url_functionality(self, mocker):
+        mocker.patch("issues.providers.GithubProvider._get_client")
+        mocker.patch("issues.providers.GithubProvider._get_repository")
+        provider = GithubProvider(mocker.MagicMock())
+        returned = provider.issue_url(10)
+        assert returned == (
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/10"
+        )
 
     # # set_labels_to_issue
     def test_issues_providers_githubprovider_set_labels_to_issue_for_no_client(
@@ -1313,6 +1359,17 @@ class TestIssuesProvidersGitlabProvider:
         result = provider._get_issue_by_number_impl(1)
 
         assert result["issue"]["assignees"] == ["gl_user1", "gl_user2"]
+
+    # # _issue_url_impl
+    def test_issues_providers_gitlabprovider_issue_url_impl(self, mocker):
+        mocker.patch("issues.providers.GitlabProvider._get_client")
+        mocker.patch("issues.providers.GitlabProvider._get_repository")
+        provider = GitlabProvider(mocker.MagicMock())
+        result = provider._issue_url_impl(10)
+        assert result == (
+            f"https://gitlab.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/-/issues/10"
+        )
 
     # # _set_labels_to_issue_impl
     def test_issues_providers_gitlabprovider_set_labels_to_issue_impl(self, mocker):

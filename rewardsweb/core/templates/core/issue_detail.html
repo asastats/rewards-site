@@ -5,7 +5,7 @@
   <title>Issue #{{ issue.number }} - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
-{% block page_title %}GitHub issue #{{ issue.number }}{% endblock %}
+{% block page_title %}{{ ISSUE_TRACKER }} issue #{{ issue.number }}{% endblock %}
 {% block page_subtitle %}Issue details and management{% endblock %}
 
 {% block header_badge_content %}
@@ -84,10 +84,12 @@
   <!-- Action Buttons -->
   <div class="stat-card">
     <div class="flex flex-col sm:flex-row gap-3">
-      {% include "includes/buttons/external_link.html" with url=issue_html_url text="View on GitHub" icon="fab fa-github" %}
+      <a href="{{ issue_html_url }}" class="btn btn-outline" target="_blank" rel="noopener noreferrer">
+        <i class="fas fa-ticket-alt mr-2"></i>View on {{ ISSUE_TRACKER }}
+      </a>
 
-      <!-- Close Issue Buttons - Only for superusers and if GitHub issue is open -->
-      {% if user.is_superuser and github_issue and issue_state == 'open' %}
+      <!-- Close Issue Buttons - Only for superusers and if issue is open -->
+      {% if user.is_superuser and tracker_issue and issue_state == 'open' %}
         <button class="btn btn-success flex-1"
                 hx-get="{% url 'issue_modal' issue.pk %}?action=addressed"
                 hx-target="#modal-container"
@@ -107,22 +109,22 @@
     </div>
   </div>
 
-  <!-- GitHub Issue Section -->
-  {% if github_issue or github_error %}
+  <!-- Issue Section -->
+  {% if tracker_issue or tracker_error %}
   <div class="stat-card">
     <div class="flex items-center gap-2 mb-6">
-      <i class="fab fa-github text-base-content"></i>
-      <h2 class="text-xl font-bold">GitHub Issue Details</h2>
+      <i class="fab fa-ticket-alt text-base-content"></i>
+      <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Issue Details</h2>
     </div>
 
-    {% if github_error %}
+    {% if tracker_error %}
       <div class="alert alert-error shadow-lg">
         <i class="fas fa-exclamation-triangle mr-2"></i>
-        <span>Error fetching GitHub issue: {{ github_error }}</span>
+        <span>Error fetching {{ ISSUE_TRACKER }} issue: {{ tracker_error }}</span>
       </div>
-    {% elif github_issue %}
+    {% elif tracker_issue %}
 
-      <!-- Add Labels Form - Only for superusers and if GitHub issue is open -->
+      <!-- Add Labels Form - Only for superusers and if tracker issue is open -->
       {% if user.is_superuser and issue_state == 'open' and labels_form %}
       <div id="labels-form-container">
           {% partial labels_form_partial %}
@@ -250,11 +252,11 @@
     </div>
   </div>
 
-  <!-- GitHub Info -->
+  <!-- Issue Tracker Info -->
   <div class="stat-card">
     <div class="flex items-center gap-2 mb-4">
-      <i class="fab fa-github text-base-content"></i>
-      <h2 class="text-xl font-bold">GitHub Info</h2>
+      <i class="fab fa-ticket-alt text-base-content"></i>
+      <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Info</h2>
     </div>
 
     <div class="space-y-3 text-sm">

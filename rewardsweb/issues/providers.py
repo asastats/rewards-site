@@ -279,6 +279,16 @@ class BaseIssueProvider(ABC):
         """
         pass
 
+    def _issue_url_impl(self, issue_number):
+        """Provider-specific implementation to full URL to the issue defined by number.
+
+        :param issue_number: unique issue identifier
+        :type issue_number: int
+        :return: full URL to the issue
+        :rtype: str
+        """
+        pass
+
     @abstractmethod
     def _set_labels_to_issue_impl(self, issue_number, labels_to_set):
         """Provider-specific implementation to set labels to an issue.
@@ -389,6 +399,16 @@ class BaseIssueProvider(ABC):
 
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def issue_url(self, issue_number):
+        """Get full URL of the issue defined by provided `issue_number`.
+
+        :param issue_number: unique issue identifier
+        :type issue_number: int
+        :return: full URL to the issue
+        :rtype: str
+        """
+        return self._issue_url_impl(issue_number)
 
     def set_labels_to_issue(self, issue_number, labels_to_set):
         """Set labels to issue.
@@ -565,6 +585,17 @@ class BitbucketProvider(BaseIssueProvider):
             "issue": issue_data,
         }
 
+    def _issue_url_impl(self, issue_number):
+        """Get URL of the Bitbucket issue defined by provided `issue_number`.
+
+        :param issue_number: unique issue identifier
+        :type issue_number: int
+        :return: full URL to the issue
+        :rtype: str
+        """
+        workspace, repo_slug = self.repo
+        return f"https://bitbucket.org/{workspace}/{repo_slug}/issues/{issue_number}/"
+
     def _set_labels_to_issue_impl(self, issue_number, labels_to_set):
         """Set components to Bitbucket issue.
 
@@ -729,6 +760,19 @@ class GithubProvider(BaseIssueProvider):
             "message": f"Retrieved issue #{issue_number}",
             "issue": issue_data,
         }
+
+    def _issue_url_impl(self, issue_number):
+        """Get URL of the GitHub issue defined by provided `issue_number`.
+
+        :param issue_number: unique issue identifier
+        :type issue_number: int
+        :return: full URL to the issue
+        :rtype: str
+        """
+        return (
+            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/issues/{issue_number}"
+        )
 
     def _set_labels_to_issue_impl(self, issue_number, labels_to_set):
         """Add provided `labels` to the GitHub issue defined by `issue_number`.
@@ -911,6 +955,19 @@ class GitlabProvider(BaseIssueProvider):
             "message": f"Retrieved GitLab issue #{issue_number}",
             "issue": issue_data,
         }
+
+    def _issue_url_impl(self, issue_number):
+        """Get URL of the GitLab issue defined by provided `issue_number`.
+
+        :param issue_number: unique issue identifier
+        :type issue_number: int
+        :return: full URL to the issue
+        :rtype: str
+        """
+        return (
+            f"https://gitlab.com/{settings.ISSUE_TRACKER_OWNER}/"
+            f"{settings.ISSUE_TRACKER_NAME}/-/issues/{issue_number}"
+        )
 
     def _set_labels_to_issue_impl(self, issue_number, labels_to_set):
         """Set labels to GitLab issue.

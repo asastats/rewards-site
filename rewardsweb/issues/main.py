@@ -39,7 +39,7 @@ class IssueProvider:
         :param user: Django user instance
         :type user: class:`django.contrib.auth.models.User`
         """
-        self.name = settings.ISSUE_TRACKER_PROVIDER
+        self.name = settings.ISSUE_TRACKER_PROVIDER.lower()
         self.user = user
         self._provider_instance = self._get_provider_instance(**kwargs)
 

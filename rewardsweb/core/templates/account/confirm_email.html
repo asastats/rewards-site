@@ -1,35 +1,42 @@
-{% extends "account/base_entrance.html" %}
+{% extends "base_standard.html" %}
 {% load i18n %}
 
-{% block page_title %}Confirm Email Address{% endblock %}
+{% block title %}
+  <title>Confirm Email Address - {{ PROJECT_NAME }}</title>
+{% endblock %}
 
-{% block inner_content %}
+{% block page_title %}Confirm Email Address{% endblock %}
+{% block page_subtitle %}{% trans "Please confirm that you want to use this email address for your account" %}{% endblock %}
+
+{% block header_badge_content %}
+  <i class="fas fa-envelope-circle-check mr-1"></i> Confirm
+{% endblock %}
+
+{% block header_badge_class %}badge-warning{% endblock %}
+
+{% block main_content %}
 <div class="space-y-6 fade-in">
-  <div class="text-center">
+  <div class="stat-card text-center">
     <div class="p-4 rounded-lg bg-warning/10 text-warning inline-block mb-4">
       <i class="fas fa-envelope-circle-check text-3xl"></i>
     </div>
-    <p class="text-lg text-base-content/70">
-      {% trans "Please confirm that you want to use this email address for your account:" %}
-    </p>
-  </div>
 
-  <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300 text-center">
-    <div class="text-2xl font-bold text-accent mb-4">{{ email }}</div>
+    <div class="text-2xl font-bold text-accent mb-6">{{ email }}</div>
+
     <form method="post" class="space-y-4">
       {% csrf_token %}
-      <button class="btn btn-success w-full" type="submit">
+      <button class="btn btn-success w-full max-w-xs" type="submit">
         <i class="fas fa-check-circle mr-2"></i>
         {% trans "Confirm Email Address" %}
       </button>
     </form>
-  </div>
 
-  <div class="text-center">
-    <a href="{% url 'index' %}" class="btn btn-outline">
-      <i class="fas fa-arrow-left mr-2"></i>
-      {% trans "Back to Home" %}
-    </a>
+    <div class="mt-8 pt-6 border-t border-base-300">
+      <a href="{% url 'index' %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left mr-2"></i>
+        {% trans "Back to Home" %}
+      </a>
+    </div>
   </div>
 </div>
 {% endblock %}

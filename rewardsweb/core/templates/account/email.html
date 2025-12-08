@@ -1,33 +1,28 @@
-{% extends "account/base.html" %}
+{% extends "base_standard.html" %}
 {% load i18n %}
 {% load allauth %}
 
-{% block head_title %}
-  Email Addresses - {{ PROJECT_NAME }}
+{% block title %}
+  <title>Email Addresses - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Email Addresses{% endblock %}
+{% block page_subtitle %}Manage your email addresses and verification status{% endblock %}
 
-{% block inner_content %}
+{% block header_badge_content %}
+  <i class="fas fa-envelope mr-1"></i>
+  {{ user.emailaddress_set.all|length }} Email{{ user.emailaddress_set.all|length|pluralize }}
+{% endblock %}
+
+{% block header_badge_class %}badge-primary{% endblock %}
+
+{% block main_content %}
 <div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Manage your email addresses and verification status
-      </p>
-    </div>
-    <div class="badge badge-primary badge-lg">
-      <i class="fas fa-envelope mr-1"></i>
-      {{ user.emailaddress_set.all|length }} Email{{ user.emailaddress_set.all|length|pluralize }}
-    </div>
-  </div>
-
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Content -->
     <div class="lg:col-span-2 space-y-6">
       <!-- Current Email Addresses -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-6">
           <i class="fas fa-list text-primary"></i>
           <h2 class="text-xl font-bold">Your Email Addresses</h2>
@@ -115,7 +110,7 @@
       </div>
 
       <!-- Add Email Address -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-6">
           <i class="fas fa-plus-circle text-success"></i>
           <h2 class="text-xl font-bold">Add Email Address</h2>
@@ -152,7 +147,7 @@
     <!-- Sidebar -->
     <div class="space-y-6">
       <!-- Email Stats -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-chart-bar text-info"></i>
           <h2 class="text-xl font-bold">Email Stats</h2>
@@ -179,7 +174,7 @@
       </div>
 
       <!-- Quick Actions -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-rocket text-accent"></i>
           <h2 class="text-xl font-bold">Quick Actions</h2>
@@ -206,7 +201,7 @@
       </div>
 
       <!-- Email Tips -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-lightbulb text-warning"></i>
           <h2 class="text-xl font-bold">Email Tips</h2>
@@ -224,20 +219,6 @@
           <div class="flex items-start gap-2">
             <i class="fas fa-check text-success mt-1"></i>
             <span>Keep your email addresses up to date</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Security Notice -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300 bg-info/5 border-info/20">
-        <div class="flex items-start gap-3">
-          <i class="fas fa-shield-alt text-info text-xl mt-1"></i>
-          <div>
-            <h3 class="font-semibold text-info mb-2">Security Notice</h3>
-            <p class="text-base-content/80 text-sm">
-              Your email addresses are secure and protected. 
-              We never share your information with third parties.
-            </p>
           </div>
         </div>
       </div>

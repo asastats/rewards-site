@@ -1,26 +1,26 @@
-{% extends "account/base_entrance.html" %}
+{% extends "base_standard.html" %}
 {% load i18n static allauth account %}
 
-{% block head_title %}
-  Sign In - {{ PROJECT_NAME }}
-{% endblock head_title %}
+{% block title %}
+  <title>Sign In - {{ PROJECT_NAME }}</title>
+{% endblock %}
 
 {% block page_title %}Welcome Back{% endblock %}
+{% block page_subtitle %}Sign in to access your {{ PROJECT_NAME }} account{% endblock %}
 
-{% block inner_content %}
+{% block header_badge_content %}
+  <i class="fas fa-sign-in-alt mr-1"></i> Login
+{% endblock %}
+
+{% block header_badge_class %}badge-primary{% endblock %}
+
+{% block main_content %}
 <div class="space-y-8 fade-in">
-  <!-- Header -->
-  <div class="text-center mb-8">
-    <p class="text-lg text-base-content/70">
-      Sign in to access your {{ PROJECT_NAME }} account
-    </p>
-  </div>
-
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-6xl mx-auto">
     <!-- Left Column - Algorand Wallet -->
     <div class="space-y-6">
       <!-- Algorand Wallet Login -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-wallet text-primary text-xl"></i>
           <h2 class="text-xl font-bold">Algorand Wallet</h2>
@@ -33,7 +33,7 @@
 
       <!-- Alternative Methods -->
       {% if LOGIN_BY_CODE_ENABLED or PASSKEY_LOGIN_ENABLED %}
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-key text-accent text-xl"></i>
           <h2 class="text-xl font-bold">Other Methods</h2>
@@ -63,7 +63,7 @@
     <div class="space-y-6">
       <!-- Traditional Login -->
       {% if not SOCIALACCOUNT_ONLY %}
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-envelope text-secondary text-xl"></i>
           <h2 class="text-xl font-bold">Email & Password</h2>
@@ -118,7 +118,7 @@
 
       <!-- Social Login -->
       {% if SOCIALACCOUNT_ENABLED %}
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-share-alt text-info text-xl"></i>
           <h2 class="text-xl font-bold">Social Login</h2>
@@ -129,28 +129,14 @@
         {% include "socialaccount/snippets/providers_list.html" %}
       </div>
       {% endif %}
-
-      <!-- Help Links -->
-      <div class="bg-base-100 p-4 rounded-xl border-2 border-base-300">
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="{% url 'account_reset_password' %}" class="btn btn-ghost btn-sm">
-            <i class="fas fa-key mr-2"></i>
-            Forgot Password?
-          </a>
-          <a href="{% url 'index' %}" class="btn btn-ghost btn-sm">
-            <i class="fas fa-home mr-2"></i>
-            Back to Home
-          </a>
-        </div>
-      </div>
     </div>
   </div>
 </div>
-{% endblock inner_content %}
 
 {% block extra_body %}
   {{ block.super }}
   {% if PASSKEY_LOGIN_ENABLED %}
     {% include "mfa/webauthn/snippets/login_script.html" with button_id="passkey_login" %}
   {% endif %}
+{% endblock %}
 {% endblock %}

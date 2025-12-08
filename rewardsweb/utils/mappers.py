@@ -333,13 +333,13 @@ def _identify_reward_from_issue_title(title, active=True):
 
 
 def _is_url_github_issue(url):
-    """Check if a URL matches the pattern of a GitHub issue in the configured repository.
+    """Check if a URL matches the pattern of a issue in the configured repository.
 
     :param url: URL to check
     :type url: str
-    :return: GitHub issue number if URL matches pattern, False otherwise
+    :return: tracker issue number if URL matches pattern, False otherwise
     :rtype: int or bool
-    :var pattern: regex pattern for GitHub issue URL matching
+    :var pattern: regex pattern for tracker issue URL matching
     :type pattern: str
     :var match: regex match object
     :type match: :class:`re.Match` or None
@@ -456,7 +456,7 @@ def _create_issues_bulk(issue_assignments):
 
     :param issue_assignments: list of issue number and contribution ID pairs to assign
     :type issue_assignments: list of tuple (int, int)
-    :var unique_issue_numbers: set of distinct GitHub issue numbers to process
+    :var unique_issue_numbers: set of distinct tracker issue numbers to process
     :type unique_issue_numbers: set of int
     :var existing_issues: existing Issue objects from database
     :type existing_issues: QuerySet of :class:`core.models.Issue`
@@ -697,7 +697,7 @@ def _map_closed_archived_issues(github_issues):
     if not contributions:
         return []
 
-    # Create a mapping from GitHub issue number to issue object for quick lookup
+    # Create a mapping from trackerGitHub issue number to issue object for quick lookup
     github_issues_by_number = {
         issue.issue.number: issue.issue for issue in github_issues
     }

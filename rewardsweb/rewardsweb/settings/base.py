@@ -267,6 +267,6 @@ ADMINS = [
 # +-------------+-----------------------+-----------------------+
 # =============================================================================
 
-ISSUE_TRACKER_PROVIDER = "github"  # Options: "github", "gitlab", "bitbucket"
+ISSUE_TRACKER_PROVIDER = "GitHub"  # Options: "GitHub", "GitLab", "Bitbucket"
 ISSUE_TRACKER_OWNER = "asastats"
 ISSUE_TRACKER_NAME = "channel"

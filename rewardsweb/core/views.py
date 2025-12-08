@@ -132,7 +132,7 @@ class ContributionEditView(UpdateView):
     """View for updating contribution information (superusers only).
 
     Allows superusers to edit contribution details including reward,
-    percentage, comments, GitHub issue number, and issue status.
+    percentage, comments, tracker issue number, and issue status.
 
     :ivar model: Model class for contributions
     :type model: :class:`core.models.Contribution`
@@ -147,7 +147,7 @@ class ContributionEditView(UpdateView):
     template_name = "core/contribution_edit.html"
 
     def form_valid(self, form):
-        """Handle form validation with GitHub issue processing."""
+        """Handle form validation with tracker issue processing."""
         issue_number = form.cleaned_data.get("issue_number")
         issue_status = form.cleaned_data.get("issue_status", IssueStatus.CREATED)
 
@@ -163,14 +163,14 @@ class ContributionEditView(UpdateView):
                 form.instance.issue = issue
 
             except Issue.DoesNotExist:
-                # Check if GitHub issue exists
+                # Check if tracker issue exists
                 issue_data = IssueProvider(self.request.user).issue_by_number(
                     issue_number
                 )
                 if not issue_data.get("success"):
                     if issue_data.get("error") == MISSING_API_TOKEN_TEXT:
                         form.add_error(
-                            "issue_number", "That GitHub issue doesn't exist!"
+                            "issue_number", "That tracker issue doesn't exist!"
                         )
                     else:
                         form.add_error("issue_number", MISSING_API_TOKEN_TEXT)
@@ -655,7 +655,10 @@ class IssueDetailView(DetailView):
     model = Issue
 
     def get_context_data(self, *args, **kwargs):
-        """Add GitHub issue data and form to template context."""
+        """Add tracker issue data and form to template context.
+
+        TODO: use settings' issue tracker URL
+        """
         context = super().get_context_data(*args, **kwargs)
 
         issue = self.get_object()
@@ -664,13 +667,13 @@ class IssueDetailView(DetailView):
             f"{settings.ISSUE_TRACKER_NAME}/issues/{issue.number}"
         )
 
-        # Only fetch GitHub data and show form for superusers
+        # Only fetch tracker data and show form for superusers
         if self.request.user.is_superuser:
-            # Retrieve GitHub issue data if issue number exists
+            # Retrieve tracker issue data if issue number exists
             issue_data = IssueProvider(self.request.user).issue_by_number(issue.number)
 
             if issue_data["success"]:
-                context["github_issue"] = issue_data["issue"]
+                context["tracker_issue"] = issue_data["issue"]
                 context["issue_title"] = issue_data["issue"]["title"]
                 context["issue_body"] = issue_data["issue"]["body"]
                 context["issue_state"] = issue_data["issue"]["state"]
@@ -680,9 +683,9 @@ class IssueDetailView(DetailView):
                 context["issue_created_at"] = issue_data["issue"]["created_at"]
                 context["issue_updated_at"] = issue_data["issue"]["updated_at"]
 
-                # Only show forms if GitHub issue is open
+                # Only show forms if tracker issue is open
                 if issue_data["issue"]["state"] == "open":
-                    # Extract current labels and priority from GitHub issue
+                    # Extract current labels and priority from tracker issue
                     current_labels = issue_data["issue"]["labels"]
                     selected_labels = []
                     selected_priority = "medium priority"  # Default
@@ -716,7 +719,7 @@ class IssueDetailView(DetailView):
                     context["current_custom_labels"] = selected_labels
 
             else:
-                context["github_error"] = issue_data["error"]
+                context["tracker_error"] = issue_data["error"]
 
         return context
 
@@ -790,18 +793,18 @@ class IssueDetailView(DetailView):
             return redirect("issue_detail", pk=issue.pk)
 
         try:
-            # Get current labels from GitHub
+            # Get current labels from tracker
             issue_data = IssueProvider(request.user).issue_by_number(issue.number)
             if not issue_data["success"]:
                 messages.error(
-                    request, f"Failed to fetch GitHub issue: {issue_data.get('error')}"
+                    request, f"Failed to fetch tracker issue: {issue_data.get('error')}"
                 )
                 return redirect("issue_detail", pk=issue.pk)
 
             # Check if issue is still open
             if issue_data["issue"]["state"] != "open":
                 messages.error(
-                    request, "Cannot close an issue that is already closed on GitHub."
+                    request, "Cannot close an issue that is already closed on tracker."
                 )
                 return redirect("issue_detail", pk=issue.pk)
 
@@ -817,7 +820,7 @@ class IssueDetailView(DetailView):
 
             success_message = f"Issue #{issue.number} closed as {action} successfully."
 
-            # Call the function to close issue on GitHub
+            # Call the function to close issue on tracker
             result = IssueProvider(request.user).close_issue_with_labels(
                 issue_number=issue.number,
                 labels_to_set=labels_to_set,
@@ -858,7 +861,7 @@ class IssueDetailView(DetailView):
 
             else:
                 messages.error(
-                    request, result.get("error", "Failed to close issue on GitHub")
+                    request, result.get("error", "Failed to close issue on tracker")
                 )
 
         except Exception as e:
@@ -943,15 +946,15 @@ class IssueModalView(DetailView):
 
 @method_decorator(user_passes_test(lambda user: user.is_superuser), name="dispatch")
 class CreateIssueView(FormView):
-    """View for creating GitHub issues from contributions.
+    """View for creating tracker issues from contributions.
 
-    This view allows superusers to create GitHub issues based on contribution data.
+    This view allows superusers to create tracker issues based on contribution data.
     It pre-populates the form with data from the contribution and handles the
-    GitHub API integration for issue creation.
+    tracker API integration for issue creation.
 
     :ivar template_name: HTML template for the create issue form
     :type template_name: str
-    :ivar form_class: Form class for creating GitHub issues
+    :ivar form_class: Form class for creating tracker issues
     :type form_class: :class:`core.forms.CreateIssueForm`
     :ivar contribution_id: ID of the contribution being processed
     :type contribution_id: int
@@ -1031,7 +1034,7 @@ class CreateIssueView(FormView):
         return context
 
     def form_valid(self, form):
-        """Process valid form data and create GitHub issue.
+        """Process valid form data and create tracker issue.
 
         :param form: Validated form instance
         :type form: :class:`core.forms.CreateIssueForm`

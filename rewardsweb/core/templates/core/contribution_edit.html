@@ -28,11 +28,11 @@
   <!-- Comment Field -->
   {% include "includes/form_field.html" with field=form.comment icon="comment" %}
 
-  <!-- GitHub Issue Section -->
+  <!-- Issue Tracker Section -->
   <div class="form-control">
     <div class="flex items-center gap-2 mb-4">
-      <i class="fab fa-github text-base-content"></i>
-      <label class="label-text font-semibold text-lg">GitHub Issue</label>
+      <i class="fab fa-ticket-alt text-base-content"></i>
+      <label class="label-text font-semibold text-lg">{{ ISSUE_TRACKER }} Issue</label>
     </div>
 
     <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
@@ -86,7 +86,7 @@
         <div class="flex items-start gap-2">
           <i class="fas fa-info-circle text-info mt-0.5"></i>
           <span class="text-sm text-base-content/70">
-            Leave issue number empty to remove GitHub association. Status applies to both new and existing issues.
+            Leave issue number empty to remove {{ ISSUE_TRACKER }} association. Status applies to both new and existing issues.
           </span>
         </div>
       </div>
@@ -165,7 +165,7 @@
       </div>
       <div class="flex items-start gap-2">
         <i class="fas fa-check text-success mt-1"></i>
-        <span>Link GitHub issues when applicable</span>
+        <span>Link {{ ISSUE_TRACKER }} issues when applicable</span>
       </div>
       <div class="flex items-start gap-2">
         <i class="fas fa-check text-success mt-1"></i>
@@ -184,7 +184,7 @@
       </div>
 
       <div class="space-y-3">
-        {% include "includes/buttons/superuser_action.html" with url_name='contribution_detail' arg1=object.id text="View Contribution" icon="eye" color="outline" extra_classes="justify-start w-full" %}
+        {% include "includes/superuser_action.html" with url_name='contribution_detail' arg1=object.id text="View Contribution" icon="eye" color="outline" extra_classes="justify-start w-full" %}
         <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
           <i class="fas fa-users mr-2"></i>
           All Contributors

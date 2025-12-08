@@ -641,7 +641,7 @@ class IssueManager(models.Manager):
     def confirm_contribution_with_issue(self, issue_number, contribution):
         """Create issue from provided number and assign it to confirmed `contribution`.
 
-        :param issue_number: unique GitHub issue number
+        :param issue_number: unique tracker issue number
         :type issue_number: int
         :param contribution: contribution's model instance
         :type contribution: :class:`Contribution`
@@ -657,7 +657,7 @@ class IssueManager(models.Manager):
 
 
 class IssueStatus(models.TextChoices):
-    """Rewards Suite GitHub channel issue status choices."""
+    """Rewards Suite tracker issue status choices."""
 
     CREATED = "created", "Created"
     WONTFIX = "wontfix", "Wontfix"
@@ -667,7 +667,7 @@ class IssueStatus(models.TextChoices):
 
 
 class Issue(models.Model):
-    """Rewards Suite GitHub issue model."""
+    """Rewards Suite tracker issue model."""
 
     number = models.IntegerField()
     status = models.CharField(

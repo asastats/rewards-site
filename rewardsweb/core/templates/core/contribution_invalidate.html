@@ -196,8 +196,8 @@
       </div>
 
       <div class="space-y-3">
-        {% include "includes/buttons/superuser_action.html" with url_name='contribution_detail' arg1=object.id text="View Contribution" icon="eye" color="outline" extra_classes="justify-start w-full" %}
-        {% include "includes/buttons/superuser_action.html" with url_name='contribution_edit' arg1=object.id text="Edit Contribution" icon="edit" color="outline" extra_classes="justify-start w-full" %}
+        {% include "includes/superuser_action.html" with url_name='contribution_detail' arg1=object.id text="View Contribution" icon="eye" color="outline" extra_classes="justify-start w-full" %}
+        {% include "includes/superuser_action.html" with url_name='contribution_edit' arg1=object.id text="Edit Contribution" icon="edit" color="outline" extra_classes="justify-start w-full" %}
         <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
           <i class="fas fa-home mr-2"></i>
           Back to Home

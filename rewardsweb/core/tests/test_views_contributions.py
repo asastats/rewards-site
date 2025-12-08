@@ -200,10 +200,9 @@ class TestDbContributionEditView:
         ]
         mocked_log_action.assert_has_calls(calls)
 
-    def test_contributioneditview_form_invalid_with_nonexistent_github_issue(
+    def test_contributioneditview_form_invalid_with_nonexistent_tracker_issue(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub issue doesn't exist (success=False, error=MISSING_API_TOKEN_TEXT)."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -232,15 +231,13 @@ class TestDbContributionEditView:
         assert "form" in response.context_data
         form = response.context_data["form"]
         assert "issue_number" in form.errors
-        assert "That GitHub issue doesn't exist!" in form.errors["issue_number"]
+        assert "That tracker issue doesn't exist!" in form.errors["issue_number"]
 
         mock_issue_by_number.assert_called_once_with(999)
 
-    def test_contributioneditview_form_invalid_with_github_api_error(
+    def test_contributioneditview_form_invalid_with_tracker_api_error(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub API returns a different error (not MISSING_API_TOKEN_TEXT)."""
-
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -274,10 +271,9 @@ class TestDbContributionEditView:
 
         mock_issue_by_number.assert_called_once_with(999)
 
-    def test_contributioneditview_form_invalid_with_github_api_missing_token_error(
+    def test_contributioneditview_form_invalid_with_tracker_api_missing_token_error(
         self, rf, superuser, contribution, mocker
     ):
-        """Test when GitHub API returns MISSING_API_TOKEN_TEXT error specifically."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -307,7 +303,7 @@ class TestDbContributionEditView:
         assert "form" in response.context_data
         form = response.context_data["form"]
         assert "issue_number" in form.errors
-        assert "That GitHub issue doesn't exist!" in form.errors["issue_number"]
+        assert "That tracker issue doesn't exist!" in form.errors["issue_number"]
 
         mock_issue_by_number.assert_called_once_with(999)
 
@@ -368,7 +364,6 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_valid_creates_new_issue_when_success_true(
         self, rf, superuser, contribution, mocker
     ):
-        """Test that new issue is created when GitHub API returns success=True."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -402,7 +397,7 @@ class TestDbContributionEditView:
         assert contribution.issue.number == 456
         assert contribution.issue.status == IssueStatus.CREATED
 
-        # Verify the GitHub API was called
+        # Verify the tracker API was called
         mock_issue_by_number.assert_called_once_with(456)
 
     def test_contributioneditview_form_valid_with_existing_issue_different_number(
@@ -474,7 +469,7 @@ class TestDbContributionEditView:
         assert contribution.issue.number == 456
         assert contribution.issue.status == IssueStatus.ADDRESSED  # Custom status
 
-        # Verify the GitHub API was called
+        # Verify the tracker API was called
         mock_issue_by_number.assert_called_once_with(456)
 
     def test_contributioneditview_form_valid_updates_existing_issue_status(

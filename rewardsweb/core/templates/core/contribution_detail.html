@@ -141,15 +141,15 @@
 
     <div class="flex flex-col sm:flex-row gap-3">
       {% if not contribution.confirmed %}
-        {% include "includes/buttons/superuser_action.html" with url_name='create_issue' arg1=contribution.id text="Create Issue" icon="plus-circle" color="success" %}
+        {% include "includes/superuser_action.html" with url_name='create_issue' arg1=contribution.id text="Create Issue" icon="plus-circle" color="success" %}
       {% endif %}
 
-      {% include "includes/buttons/superuser_action.html" with url_name='contribution_edit' arg1=contribution.id text="Edit Contribution" icon="edit" color="primary" %}
+      {% include "includes/superuser_action.html" with url_name='contribution_edit' arg1=contribution.id text="Edit Contribution" icon="edit" color="primary" %}
 
       {% if not contribution.confirmed %}
       <div class="flex gap-2 ml-auto">
-        {% include "includes/buttons/superuser_action.html" with url_name='contribution_invalidate' arg1=contribution.id arg2='wontfix' text="Mark as Wontfix" icon="times-circle" %}
-        {% include "includes/buttons/superuser_action.html" with url_name='contribution_invalidate' arg1=contribution.id arg2='duplicate' text="Mark as Duplicate" icon="copy" %}
+        {% include "includes/superuser_action.html" with url_name='contribution_invalidate' arg1=contribution.id arg2='wontfix' text="Mark as Wontfix" icon="times-circle" %}
+        {% include "includes/superuser_action.html" with url_name='contribution_invalidate' arg1=contribution.id arg2='duplicate' text="Mark as Duplicate" icon="copy" %}
       </div>
       {% endif %}
     </div>

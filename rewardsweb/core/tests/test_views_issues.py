@@ -267,10 +267,9 @@ class TestDbIssueDetailView:
         response = client.get(url)
         assert response.status_code == 200
 
-    def test_issuedetailview_github_data_added_for_superuser(
+    def test_issuedetailview_tracker_data_added_for_superuser(
         self, client, superuser, issue, mocker
     ):
-        """Test that GitHub data is added to context for superusers."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -282,7 +281,7 @@ class TestDbIssueDetailView:
         created_at = datetime(2023, 1, 1, 0, 0, 0)
         updated_at = datetime(2023, 1, 2, 0, 0, 0)
 
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -296,23 +295,22 @@ class TestDbIssueDetailView:
                 "updated_at": updated_at,  # Use datetime object
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
         response = client.get(url)
 
         assert response.status_code == 200
-        assert "github_issue" in response.context
+        assert "tracker_issue" in response.context
         assert response.context["issue_title"] == "Test Issue"
         assert response.context["issue_created_at"] == created_at
         assert response.context["issue_updated_at"] == updated_at
         mock_get_issue.assert_called_once_with(issue.number)
 
-    def test_issuedetailview_no_github_data_for_regular_user(
+    def test_issuedetailview_no_tracker_data_for_regular_user(
         self, client, regular_user, issue, mocker
     ):
-        """Test that GitHub data is NOT added to context for regular users."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -325,33 +323,30 @@ class TestDbIssueDetailView:
         response = client.get(url)
 
         assert response.status_code == 200
-        # Regular users should not have GitHub context data
         assert "issue_html_url" in response.context
-        assert "github_issue" not in response.context
+        assert "tracker_issue" not in response.context
         assert "issue_title" not in response.context
-        # GitHub API should not be called for regular users
         mock_get_issue.assert_not_called()
 
-    def test_issuedetailview_github_error_for_superuser(
+    def test_issuedetailview_tracker_error_for_superuser(
         self, client, superuser, issue, mocker
     ):
-        """Test that GitHub errors are handled for superusers."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {"success": False, "error": "Authentication failed"}
-        mock_get_issue.return_value = mock_github_data
+        mock_tracker_data = {"success": False, "error": "Authentication failed"}
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
         response = client.get(url)
 
         assert response.status_code == 200
-        assert response.context["github_error"] == "Authentication failed"
-        assert "github_issue" not in response.context
+        assert response.context["tracker_error"] == "Authentication failed"
+        assert "tracker_issue" not in response.context
 
     def test_issuedetailview_same_template_used_for_all_users(
         self, client, regular_user, superuser, issue
@@ -371,17 +366,16 @@ class TestDbIssueDetailView:
         assert "core/issue_detail.html" in regular_templates
         assert "core/issue_detail.html" in super_templates
 
-    def test_issuedetailview_github_api_called_with_correct_arguments(
+    def test_issuedetailview_tracker_api_called_with_correct_arguments(
         self, client, superuser, issue, mocker
     ):
-        """Test that GitHub API is called with correct user and issue number."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -395,7 +389,7 @@ class TestDbIssueDetailView:
                 "updated_at": "",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -405,17 +399,16 @@ class TestDbIssueDetailView:
         # Verify the function was called with correct arguments
         mock_get_issue.assert_called_once_with(issue.number)
 
-    def test_issuedetailview_context_data_includes_all_github_fields(
+    def test_issuedetailview_context_data_includes_all_tracker_fields(
         self, client, superuser, issue, mocker
     ):
-        """Test that all GitHub fields are included in context when successful."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -429,7 +422,7 @@ class TestDbIssueDetailView:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -438,8 +431,7 @@ class TestDbIssueDetailView:
         assert response.status_code == 200
         context = response.context
 
-        # Check all GitHub-related context variables
-        assert context["github_issue"] == mock_github_data["issue"]
+        assert context["tracker_issue"] == mock_tracker_data["issue"]
         assert context["issue_title"] == "Complete Test Issue"
         assert context["issue_body"] == "Complete test body with **markdown**"
         assert context["issue_state"] == "closed"
@@ -460,14 +452,13 @@ class TestIssueDetailViewWithForm:
     def test_issuedetailview_labels_form_in_context_for_superuser_and_open_issue(
         self, client, superuser, issue, mocker
     ):
-        """Test that labels form is in context for superusers when GitHub issue is open."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -481,7 +472,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -494,14 +485,13 @@ class TestIssueDetailViewWithForm:
     def test_issuedetailview_labels_form_not_in_context_for_superuser_and_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        """Test that labels form is NOT in context for superusers when GitHub issue is closed."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -515,7 +505,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -534,7 +524,7 @@ class TestIssueDetailViewWithForm:
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -548,7 +538,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(regular_user)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -557,18 +547,17 @@ class TestIssueDetailViewWithForm:
         assert response.status_code == 200
         assert "labels_form" not in response.context
 
-    def test_issuedetailview_labels_form_not_in_context_when_github_fails(
+    def test_issuedetailview_labels_form_not_in_context_when_tracker_fails(
         self, client, superuser, issue, mocker
     ):
-        """Test that labels form is NOT in context when GitHub data fetch fails."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {"success": False, "error": "GitHub API error"}
-        mock_get_issue.return_value = mock_github_data
+        mock_tracker_data = {"success": False, "error": "GitHub API error"}
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -576,7 +565,7 @@ class TestIssueDetailViewWithForm:
 
         assert response.status_code == 200
         assert "labels_form" not in response.context
-        assert "github_error" in response.context
+        assert "tracker_error" in response.context
 
     def test_issuedetailview_form_prepopulated_with_existing_labels(
         self, client, superuser, issue, mocker
@@ -591,7 +580,7 @@ class TestIssueDetailViewWithForm:
 
         # Mock GitHub issue with existing labels including priority
         # Use only labels that exist in ISSUE_CREATION_LABEL_CHOICES
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -610,7 +599,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -636,7 +625,7 @@ class TestIssueDetailViewWithForm:
         )
 
         # Mock GitHub issue with labels but no priority
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -650,7 +639,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -675,7 +664,7 @@ class TestIssueDetailViewWithForm:
         )
 
         # Mock GitHub issue with some unknown labels
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -689,7 +678,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -714,7 +703,7 @@ class TestIssueDetailViewWithForm:
         )
 
         # Mock GitHub issue with different priority label formats
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -731,7 +720,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -776,7 +765,7 @@ class TestIssueDetailViewWithForm:
         expected_url = reverse("issue_detail", kwargs={"pk": issue.pk})
         assert response.url == expected_url
 
-    def test_issuedetailview_post_request_handles_github_error(
+    def test_issuedetailview_post_request_handles_tracker_error(
         self, client, superuser, issue, mocker
     ):
         """Test that GitHub errors are handled when setting labels."""
@@ -831,7 +820,7 @@ class TestIssueDetailViewWithForm:
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
 
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -845,7 +834,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -868,7 +857,7 @@ class TestIssueDetailViewWithForm:
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -882,7 +871,7 @@ class TestIssueDetailViewWithForm:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -945,10 +934,9 @@ class TestIssueDetailViewSubmissionHandlers:
         )
         mocked_log_action.assert_called_once()
 
-    def test_issuedetailview_handle_labels_submission_github_failure(
+    def test_issuedetailview_handle_labels_submission_tracker_failure(
         self, client, superuser, issue, mocker
     ):
-        """Test labels form submission when GitHub operation fails."""
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1039,8 +1027,6 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_addressed_success(
         self, client, superuser, issue, mocker
     ):
-        """Test successful close as addressed submission."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1055,7 +1041,7 @@ class TestIssueDetailViewSubmissionHandlers:
             "core.views.process_allocations_for_contributions", return_value=(False, [])
         )
 
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1069,7 +1055,7 @@ class TestIssueDetailViewSubmissionHandlers:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1126,8 +1112,6 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_addressed_success_no_comment(
         self, client, superuser, issue, contribution, mocker
     ):
-        """Test successful close as addressed submission without comment."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1145,7 +1129,7 @@ class TestIssueDetailViewSubmissionHandlers:
             "core.views.process_allocations_for_contributions",
             return_value=("txid", ["addr1"]),
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1159,7 +1143,7 @@ class TestIssueDetailViewSubmissionHandlers:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1205,8 +1189,6 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_wontfix_success(
         self, client, superuser, issue, mocker
     ):
-        """Test successful close as wontfix submission."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1216,7 +1198,7 @@ class TestIssueDetailViewSubmissionHandlers:
         mock_close_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1230,7 +1212,7 @@ class TestIssueDetailViewSubmissionHandlers:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1290,11 +1272,9 @@ class TestIssueDetailViewSubmissionHandlers:
         messages = list(get_messages(response.wsgi_request))
         assert any("Invalid close action" in str(message) for message in messages)
 
-    def test_issuedetailview_handle_close_submission_github_fetch_failure(
+    def test_issuedetailview_handle_close_submission_tracker_fetch_failure(
         self, client, superuser, issue, mocker
     ):
-        """Test close submission when GitHub issue fetch fails."""
-        # Mock GitHub issue fetch failure
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1302,8 +1282,8 @@ class TestIssueDetailViewSubmissionHandlers:
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
 
-        mock_github_data = {"success": False, "error": "Authentication failed"}
-        mock_get_issue.return_value = mock_github_data
+        mock_tracker_data = {"success": False, "error": "Authentication failed"}
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -1323,22 +1303,20 @@ class TestIssueDetailViewSubmissionHandlers:
         # Check error message
         messages = list(get_messages(response.wsgi_request))
         assert any(
-            "Failed to fetch GitHub issue" in str(message) for message in messages
+            "Failed to fetch tracker issue" in str(message) for message in messages
         )
         assert any("Authentication failed" in str(message) for message in messages)
 
     def test_issuedetailview_handle_close_submission_already_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        """Test close submission when GitHub issue is already closed."""
-        # Mock GitHub issue as closed
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1352,7 +1330,7 @@ class TestIssueDetailViewSubmissionHandlers:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -1371,13 +1349,11 @@ class TestIssueDetailViewSubmissionHandlers:
 
         # Check error message
         messages = list(get_messages(response.wsgi_request))
-        assert any("already closed on GitHub" in str(message) for message in messages)
+        assert any("already closed on tracker" in str(message) for message in messages)
 
-    def test_issuedetailview_handle_close_submission_github_close_failure(
+    def test_issuedetailview_handle_close_submission_tracker_close_failure(
         self, client, superuser, issue, mocker
     ):
-        """Test close submission when GitHub close operation fails."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1387,7 +1363,7 @@ class TestIssueDetailViewSubmissionHandlers:
         mock_close_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1401,10 +1377,10 @@ class TestIssueDetailViewSubmissionHandlers:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {
             "success": False,
-            "error": "Failed to close issue on GitHub",
+            "error": "Failed to close issue on tracker",
         }
 
         client.force_login(superuser)
@@ -1429,14 +1405,12 @@ class TestIssueDetailViewSubmissionHandlers:
         # Check error message - the actual error message from the view
         messages = list(get_messages(response.wsgi_request))
         assert any(
-            "Failed to close issue on GitHub" in str(message) for message in messages
+            "Failed to close issue on tracker" in str(message) for message in messages
         )
 
     def test_issuedetailview_handle_close_submission_exception_handling(
         self, client, superuser, issue, mocker
     ):
-        """Test close submission when an unexpected exception occurs."""
-        # Mock GitHub function to raise an exception
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1468,8 +1442,6 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_labels_processing(
         self, client, superuser, issue, mocker
     ):
-        """Test that labels are properly processed (remove work in progress, add correct label)."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1479,7 +1451,7 @@ class TestIssueDetailViewSubmissionHandlers:
         mock_close_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1498,7 +1470,7 @@ class TestIssueDetailViewSubmissionHandlers:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1530,8 +1502,6 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_existing_label_not_duplicated(
         self, client, superuser, issue, mocker
     ):
-        """Test that existing addressed/wontfix label is not duplicated."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1541,7 +1511,7 @@ class TestIssueDetailViewSubmissionHandlers:
         mock_close_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1555,7 +1525,7 @@ class TestIssueDetailViewSubmissionHandlers:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1588,15 +1558,13 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_buttons_not_shown_for_regular_user(
         self, client, regular_user, issue, mocker
     ):
-        """Test that close buttons are not shown for regular users."""
-        # Mock GitHub issue as open
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1610,7 +1578,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(regular_user)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -1624,15 +1592,13 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_buttons_not_shown_for_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        """Test that close buttons are not shown for closed GitHub issues."""
-        # Mock GitHub issue as closed
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1646,7 +1612,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -1660,8 +1626,6 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_buttons_shown_for_open_issue_and_superuser(
         self, client, superuser, issue, mocker
     ):
-        """Test that close buttons are shown for open issues and superusers."""
-        # Mock GitHub issue as open
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1671,7 +1635,7 @@ class TestIssueDetailViewCloseFunctionality:
         mocker.patch(
             "core.views.process_allocations_for_contributions", return_value=(False, [])
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1685,7 +1649,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -1699,8 +1663,6 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_addressed_success(
         self, client, superuser, issue, mocker
     ):
-        """Test successful close as addressed action."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1713,7 +1675,7 @@ class TestIssueDetailViewCloseFunctionality:
         mock_process = mocker.patch(
             "core.views.process_allocations_for_contributions", return_value=(False, [])
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1727,7 +1689,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1764,8 +1726,6 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_addressed_success_and_claimable(
         self, client, superuser, issue, mocker
     ):
-        """Test successful close as addressed action."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1779,7 +1739,7 @@ class TestIssueDetailViewCloseFunctionality:
             "core.views.process_allocations_for_contributions",
             return_value=("txid", ["addr"]),
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1793,7 +1753,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1830,8 +1790,6 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_wontfix_success(
         self, client, superuser, issue, mocker
     ):
-        """Test successful close as wontfix action."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1842,7 +1800,7 @@ class TestIssueDetailViewCloseFunctionality:
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
 
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1856,7 +1814,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1889,8 +1847,6 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_wontfix_success_existing_label(
         self, client, superuser, issue, mocker
     ):
-        """Test successful close as wontfix action."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1901,7 +1857,7 @@ class TestIssueDetailViewCloseFunctionality:
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
 
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1915,7 +1871,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": True}
 
         client.force_login(superuser)
@@ -1945,11 +1901,9 @@ class TestIssueDetailViewCloseFunctionality:
         assert "wontfix" in call_args["labels_to_set"]
         assert "work in progress" not in call_args["labels_to_set"]
 
-    def test_issuedetailview_close_issue_github_failure(
+    def test_issuedetailview_close_issue_tracker_failure(
         self, client, superuser, issue, mocker
     ):
-        """Test that local status is reverted when GitHub operation fails."""
-        # Mock GitHub functions
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
@@ -1960,7 +1914,7 @@ class TestIssueDetailViewCloseFunctionality:
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
 
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -1974,7 +1928,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
         mock_close_issue.return_value = {"success": False, "error": "GitHub API error"}
 
         client.force_login(superuser)
@@ -1998,15 +1952,13 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_already_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        """Test closing an issue that is already closed on GitHub."""
-        # Mock GitHub issue as closed
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -2020,7 +1972,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -2063,15 +2015,13 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_labels_form_not_shown_for_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        """Test that labels form is not shown for closed GitHub issues."""
-        # Mock GitHub issue as closed
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -2085,7 +2035,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -2097,15 +2047,13 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_labels_form_shown_for_open_issue(
         self, client, superuser, issue, mocker
     ):
-        """Test that labels form is shown for open GitHub issues."""
-        # Mock GitHub issue as open
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number"
         )
-        mock_github_data = {
+        mock_tracker_data = {
             "success": True,
             "issue": {
                 "number": 123,
@@ -2119,7 +2067,7 @@ class TestIssueDetailViewCloseFunctionality:
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
-        mock_get_issue.return_value = mock_github_data
+        mock_get_issue.return_value = mock_tracker_data
 
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
@@ -2281,7 +2229,6 @@ class TestDbCreateIssueView:
 
         response = view.form_valid(mock_form)
 
-        # Verify GitHub issue creation was called with correct data
         mock_create_issue.assert_called_once_with(
             "Test issue title",
             "Test issue body",
@@ -2310,7 +2257,6 @@ class TestDbCreateIssueView:
         view.setup(request, contribution_id=contribution.id)
         view.contribution_id = contribution.id
 
-        # Mock GitHub issue creation to fail
         name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
         mocker.patch(f"issues.providers.{name}Provider._get_client")
         mocker.patch(f"issues.providers.{name}Provider._get_repository")

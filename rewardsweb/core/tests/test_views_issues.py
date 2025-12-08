@@ -417,30 +417,28 @@ class TestDbIssueDetailView:
                 "state": "closed",
                 "labels": ["bug", "feature", "urgent"],
                 "assignees": ["user1", "user2", "user3"],
-                "html_url": "https://github.com/asastats/rewards-suite/issues/123",
                 "created_at": "2023-01-01T10:00:00",
                 "updated_at": "2023-01-15T15:30:00",
             },
         }
         mock_get_issue.return_value = mock_tracker_data
 
+        mock_url = mocker.patch("issues.providers.BaseIssueProvider.issue_url")
+        issue_url = "full_issue_url"
+        mock_url.return_value = issue_url
         client.force_login(superuser)
         url = reverse("issue_detail", kwargs={"pk": issue.pk})
         response = client.get(url)
-
         assert response.status_code == 200
         context = response.context
-
+        mock_url.assert_called_once_with(123)
         assert context["tracker_issue"] == mock_tracker_data["issue"]
         assert context["issue_title"] == "Complete Test Issue"
         assert context["issue_body"] == "Complete test body with **markdown**"
         assert context["issue_state"] == "closed"
         assert context["issue_labels"] == ["bug", "feature", "urgent"]
         assert context["issue_assignees"] == ["user1", "user2", "user3"]
-        assert (
-            context["issue_html_url"]
-            == "https://github.com/asastats/rewards-suite/issues/123"
-        )
+        assert context["issue_html_url"] == issue_url
         assert context["issue_created_at"] == "2023-01-01T10:00:00"
         assert context["issue_updated_at"] == "2023-01-15T15:30:00"
 

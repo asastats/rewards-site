@@ -655,16 +655,12 @@ class IssueDetailView(DetailView):
     model = Issue
 
     def get_context_data(self, *args, **kwargs):
-        """Add tracker issue data and form to template context.
-
-        TODO: use settings' issue tracker URL
-        """
+        """Add tracker issue data and form to template context."""
         context = super().get_context_data(*args, **kwargs)
 
         issue = self.get_object()
-        context["issue_html_url"] = (
-            f"https://github.com/{settings.ISSUE_TRACKER_OWNER}/"
-            f"{settings.ISSUE_TRACKER_NAME}/issues/{issue.number}"
+        context["issue_html_url"] = IssueProvider(self.request.user).issue_url(
+            issue.number
         )
 
         # Only fetch tracker data and show form for superusers
@@ -679,7 +675,6 @@ class IssueDetailView(DetailView):
                 context["issue_state"] = issue_data["issue"]["state"]
                 context["issue_labels"] = issue_data["issue"]["labels"]
                 context["issue_assignees"] = issue_data["issue"]["assignees"]
-                context["issue_html_url"] = issue_data["issue"]["html_url"]
                 context["issue_created_at"] = issue_data["issue"]["created_at"]
                 context["issue_updated_at"] = issue_data["issue"]["updated_at"]
 

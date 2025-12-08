@@ -117,10 +117,10 @@
       <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Issue Details</h2>
     </div>
 
-    {% if github_error %}
+    {% if tracker_error %}
       <div class="alert alert-error shadow-lg">
         <i class="fas fa-exclamation-triangle mr-2"></i>
-        <span>Error fetching {{ ISSUE_TRACKER }} issue: {{ github_error }}</span>
+        <span>Error fetching {{ ISSUE_TRACKER }} issue: {{ tracker_error }}</span>
       </div>
     {% elif tracker_issue %}
 

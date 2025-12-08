@@ -150,6 +150,29 @@
 {% endblock %}
 
 {% block sidebar_content %}
+
+  <!-- Quick Stats -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-rocket text-info"></i>
+      <h2 class="text-xl font-bold">Quick Actions</h2>
+    </div>
+    <div class="space-y-3">
+      <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-list mr-2"></i>
+        View All Issues
+      </a>
+      <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-sync-alt mr-2"></i>
+        Active Cycles
+      </a>
+      <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-users mr-2"></i>
+        Contributors
+      </a>
+    </div>
+  </div>
+
   <!-- Contribution Info -->
   <div class="stat-card">
     <div class="flex items-center gap-2 mb-4">
@@ -191,25 +214,4 @@
     </div>
   </div>
 
-  <!-- Quick Stats -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-rocket text-info"></i>
-      <h2 class="text-xl font-bold">Quick Actions</h2>
-    </div>
-    <div class="space-y-3">
-      <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
-        <i class="fas fa-list mr-2"></i>
-        View All Issues
-      </a>
-      <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
-        <i class="fas fa-sync-alt mr-2"></i>
-        Active Cycles
-      </a>
-      <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-        <i class="fas fa-users mr-2"></i>
-        Contributors
-      </a>
-    </div>
-  </div>
 {% endblock %}

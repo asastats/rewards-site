@@ -84,34 +84,6 @@
 
     <!-- Sidebar Column -->
     <div class="space-y-6">
-      <!-- Quick Stats -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-chart-bar text-info"></i>
-          <h2 class="text-xl font-bold">Cycles Stats</h2>
-        </div>
-
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Total Cycles</span>
-            <span class="font-semibold text-primary">{{ total_cycles }}</span>
-          </div>
-
-          {% if total_contributions %}
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Total Contributions</span>
-            <span class="font-semibold text-secondary">{{ total_contributions }}</span>
-          </div>
-          {% endif %}
-
-          {% if total_rewards %}
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Total Rewards</span>
-            <span class="font-semibold text-success">{{ total_rewards|default:0|floatformat:"g" }}</span>
-          </div>
-          {% endif %}
-        </div>
-      </div>
 
       <!-- Quick Actions -->
       <div class="stat-card">
@@ -141,6 +113,36 @@
           {% endif %}
         </div>
       </div>
+
+      <!-- Quick Stats -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-bar text-info"></i>
+          <h2 class="text-xl font-bold">Cycles Stats</h2>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Cycles</span>
+            <span class="font-semibold text-primary">{{ total_cycles }}</span>
+          </div>
+
+          {% if total_contributions %}
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Contributions</span>
+            <span class="font-semibold text-secondary">{{ total_contributions }}</span>
+          </div>
+          {% endif %}
+
+          {% if total_rewards %}
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Rewards</span>
+            <span class="font-semibold text-success">{{ total_rewards|default:0|floatformat:"g" }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

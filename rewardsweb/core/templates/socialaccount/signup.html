@@ -113,6 +113,30 @@
 
     <!-- Sidebar -->
     <div class="space-y-6">
+
+      <!-- Quick Actions -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-rocket text-accent"></i>
+          <h2 class="text-xl font-bold">Quick Actions</h2>
+        </div>
+
+        <div class="space-y-3">
+          <a href="{% url 'account_login' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Login
+          </a>
+          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-home mr-2"></i>
+            Back to Home
+          </a>
+          <a href="{% url 'account_signup' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-user-plus mr-2"></i>
+            Different Signup Method
+          </a>
+        </div>
+      </div>
+
       <!-- Account Info -->
       <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
@@ -144,29 +168,6 @@
               <p class="text-base-content/70">Complete form and start exploring</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-rocket text-accent"></i>
-          <h2 class="text-xl font-bold">Quick Actions</h2>
-        </div>
-
-        <div class="space-y-3">
-          <a href="{% url 'account_login' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to Login
-          </a>
-          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-home mr-2"></i>
-            Back to Home
-          </a>
-          <a href="{% url 'account_signup' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-user-plus mr-2"></i>
-            Different Signup Method
-          </a>
         </div>
       </div>
 

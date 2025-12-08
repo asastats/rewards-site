@@ -85,33 +85,6 @@
 
     <!-- Sidebar -->
     <div class="space-y-6">
-      <!-- Account Stats -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-chart-bar text-info"></i>
-          <h2 class="text-xl font-bold">Account Stats</h2>
-        </div>
-
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Linked Accounts</span>
-            <span class="font-semibold text-primary">
-              {% get_social_accounts user as accounts %}
-              {{ accounts|length }}
-            </span>
-          </div>
-
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Status</span>
-            <span class="badge badge-success">Active</span>
-          </div>
-
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Last Updated</span>
-            <span class="font-semibold text-info">Now</span>
-          </div>
-        </div>
-      </div>
 
       <!-- Quick Actions -->
       <div class="stat-card">
@@ -137,6 +110,34 @@
             <i class="fas fa-key mr-2"></i>
             Change Password
           </a>
+        </div>
+      </div>
+
+      <!-- Account Stats -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-bar text-info"></i>
+          <h2 class="text-xl font-bold">Account Stats</h2>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Linked Accounts</span>
+            <span class="font-semibold text-primary">
+              {% get_social_accounts user as accounts %}
+              {{ accounts|length }}
+            </span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Status</span>
+            <span class="badge badge-success">Active</span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Last Updated</span>
+            <span class="font-semibold text-info">Now</span>
+          </div>
         </div>
       </div>
 

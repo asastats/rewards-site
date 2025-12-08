@@ -176,6 +176,37 @@
 {% endblock %}
 
 {% block sidebar_content %}
+
+  <!-- Quick Actions -->
+  <div class="space-y-6">
+    <!-- Quick Actions Card -->
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-rocket text-accent"></i>
+        <h2 class="text-xl font-bold">Quick Actions</h2>
+      </div>
+
+      <div class="space-y-3">
+        <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Back to Home
+        </a>
+        <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-users mr-2"></i>
+          All Contributors
+        </a>
+        <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-sync-alt mr-2"></i>
+          View Cycles
+        </a>
+        <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-tasks mr-2"></i>
+          Browse Issues
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- Quick Stats -->
   <div class="stat-card">
     <div class="flex items-center gap-2 mb-4">
@@ -252,33 +283,4 @@
     </div>
   </div>
 
-  <!-- Quick Actions -->
-  <div class="space-y-6">
-    <!-- Quick Actions Card -->
-    <div class="stat-card">
-      <div class="flex items-center gap-2 mb-4">
-        <i class="fas fa-rocket text-accent"></i>
-        <h2 class="text-xl font-bold">Quick Actions</h2>
-      </div>
-
-      <div class="space-y-3">
-        <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-          <i class="fas fa-arrow-left mr-2"></i>
-          Back to Home
-        </a>
-        <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-          <i class="fas fa-users mr-2"></i>
-          All Contributors
-        </a>
-        <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
-          <i class="fas fa-sync-alt mr-2"></i>
-          View Cycles
-        </a>
-        <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
-          <i class="fas fa-tasks mr-2"></i>
-          Browse Issues
-        </a>
-      </div>
-    </div>
-  </div>
 {% endblock %}

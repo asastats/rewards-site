@@ -1,26 +1,22 @@
-{% extends "base_generic.html" %}
+{% extends "core/base_form.html" %}
 
 {% block title %}
   <title>Confirm as {{ type|title }} - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Set Contribution as {{ type|title }}{% endblock %}
+{% block page_subtitle %}Mark this contribution as {{ type }} and provide additional context{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Mark this contribution as {{ type }} and provide additional context
-      </p>
-    </div>
-    <div class="badge badge-warning badge-lg">
-      <i class="fas fa-exclamation-triangle mr-1"></i>
-      Action Required
-    </div>
-  </div>
+{% block header_badge_content %}
+  <i class="fas fa-exclamation-triangle mr-1"></i>
+  Action Required
+{% endblock %}
 
+{% block header_badge_class %}badge-warning{% endblock %}
+
+{% block form_title %}Contribution Invalidation{% endblock %}
+
+{% block additional_content %}
   <!-- Warning Card -->
   <div class="stat-card bg-warning/5 border-warning/20">
     <div class="flex items-start gap-3">
@@ -36,226 +32,177 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Content -->
-    <div class="lg:col-span-2 space-y-6">
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-6">
-          <i class="fas fa-info-circle text-primary"></i>
-          <h2 class="text-xl font-bold">Contribution Details</h2>
-        </div>
-
-        <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="space-y-3">
-              <div class="flex flex-col">
-                <span class="text-sm font-semibold text-base-content/70 mb-1">Contributor</span>
-                <span class="font-semibold text-base-content">
-                  <i class="fas fa-user mr-2 text-primary"></i>
-                  {{ object.contributor }}
-                </span>
-              </div>
-
-              <div class="flex flex-col">
-                <span class="text-sm font-semibold text-base-content/70 mb-1">Cycle</span>
-                <span class="font-semibold text-base-content">
-                  <i class="fas fa-sync-alt mr-2 text-info"></i>
-                  {{ object.cycle }}
-                </span>
-              </div>
-
-              <div class="flex flex-col">
-                <span class="text-sm font-semibold text-base-content/70 mb-1">Platform</span>
-                <span class="font-semibold text-base-content">
-                  <i class="fas fa-plug mr-2 text-secondary"></i>
-                  {{ object.platform }}
-                </span>
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              <div class="flex flex-col">
-                <span class="text-sm font-semibold text-base-content/70 mb-1">Reward</span>
-                <span class="font-semibold text-base-content">
-                  <i class="fas fa-award mr-2 text-warning"></i>
-                  {{ object.reward }}
-                </span>
-              </div>
-
-              {% if object.url %}
-              <div class="flex flex-col">
-                <span class="text-sm font-semibold text-base-content/70 mb-1">URL</span>
-                <a href="{{ object.url }}" class="link link-accent font-semibold hover:no-underline truncate" target="_blank">
-                  <i class="fas fa-external-link-alt mr-2"></i>
-                  {{ object.url|truncatechars:40 }}
-                </a>
-              </div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <!-- Original Comment -->
-        {% if original_comment %}
-        <div class="mt-6">
-          <div class="flex items-center gap-2 mb-4">
-            <i class="fas fa-comment text-accent"></i>
-            <h3 class="text-lg font-semibold">Original Comment</h3>
-          </div>
-          <div class="bg-base-200 rounded-xl p-4 border-2 border-base-300">
-            <div class="prose prose-sm max-w-none text-base-content/80">
-              {{ original_comment|linebreaks|urlize }}
-            </div>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Reply Form -->
-        <form method="post" class="mt-6">
-          {% csrf_token %}
-          
-          {% if form.non_field_errors %}
-          <div class="alert alert-error shadow-lg mb-6">
-            <div class="flex items-start gap-3">
-              <i class="fas fa-exclamation-triangle text-xl mt-0.5"></i>
-              <div>
-                <h3 class="font-bold">Validation Error</h3>
-                {% for error in form.non_field_errors %}
-                <div class="text-sm">{{ error }}</div>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-          {% endif %}
-
-          <div class="form-control">
-            <div class="flex items-center gap-2 mb-4">
-              <i class="fas fa-reply text-info"></i>
-              <label class="label-text font-semibold text-lg">Reply (Optional)</label>
-            </div>
-            
-            <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-              <textarea name="comment" class="textarea textarea-ghost w-full h-32 text-base" 
-                      placeholder="Provide additional context or explanation for marking this contribution as {{ type }}..."></textarea>
-            </div>
-            
-            {% if form.comment.errors %}
-            <div class="text-error text-sm mt-2 flex items-center gap-2">
-              <i class="fas fa-exclamation-circle"></i>
-              {% for error in form.comment.errors %}
-                {{ error }}
-              {% endfor %}
-            </div>
-            {% endif %}
-            
-            <div class="text-xs text-base-content/60 mt-2">
-              This reply will be recorded along with the status change and may be visible to the contributor.
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex gap-4 mt-8 pt-6 border-t border-base-300">
-            <a href="{% url 'contribution_detail' object.pk %}" class="btn btn-outline flex-1">
-              <i class="fas fa-times mr-2"></i>
-              Cancel
-            </a>
-            <button type="submit" class="btn btn-warning flex-1">
-              <i class="fas fa-check-circle mr-2"></i>
-              Confirm as {{ type|title }}
-            </button>
-          </div>
-        </form>
+  <!-- Original Comment -->
+  {% if original_comment %}
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-comment text-accent"></i>
+      <h3 class="text-lg font-semibold">Original Comment</h3>
+    </div>
+    <div class="bg-base-200 rounded-xl p-4 border-2 border-base-300">
+      <div class="prose prose-sm max-w-none text-base-content/80">
+        {{ original_comment|linebreaks|urlize }}
       </div>
     </div>
+  </div>
+  {% endif %}
+{% endblock %}
 
-    <!-- Sidebar -->
-    <div class="space-y-6">
-      <!-- Action Info -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-info-circle text-info"></i>
-          <h2 class="text-xl font-bold">About This Action</h2>
-        </div>
-        
-        <div class="space-y-3 text-sm">
-          {% if type == "wontfix" %}
-          <div class="flex items-start gap-2">
-            <i class="fas fa-times-circle text-warning mt-1"></i>
-            <div>
-              <span class="font-semibold">Won't Fix:</span>
-              <p class="text-base-content/70">Indicates the issue won't be addressed due to technical constraints, design decisions, or other reasons.</p>
-            </div>
+{% block form_fields %}
+  <!-- Contribution Details -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-6">
+      <i class="fas fa-info-circle text-primary"></i>
+      <h2 class="text-xl font-bold">Contribution Details</h2>
+    </div>
+
+    <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-3">
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-base-content/70 mb-1">Contributor</span>
+            <span class="font-semibold text-base-content">
+              <i class="fas fa-user mr-2 text-primary"></i>
+              {{ object.contributor }}
+            </span>
           </div>
-          {% elif type == "duplicate" %}
-          <div class="flex items-start gap-2">
-            <i class="fas fa-copy text-warning mt-1"></i>
-            <div>
-              <span class="font-semibold">Duplicate:</span>
-              <p class="text-base-content/70">Marks this as a duplicate of an existing issue or contribution.</p>
-            </div>
+
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-base-content/70 mb-1">Cycle</span>
+            <span class="font-semibold text-base-content">
+              <i class="fas fa-sync-alt mr-2 text-info"></i>
+              {{ object.cycle }}
+            </span>
+          </div>
+
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-base-content/70 mb-1">Platform</span>
+            <span class="font-semibold text-base-content">
+              <i class="fas fa-plug mr-2 text-secondary"></i>
+              {{ object.platform }}
+            </span>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-base-content/70 mb-1">Reward</span>
+            <span class="font-semibold text-base-content">
+              <i class="fas fa-award mr-2 text-warning"></i>
+              {{ object.reward }}
+            </span>
+          </div>
+
+          {% if object.url %}
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-base-content/70 mb-1">URL</span>
+            <a href="{{ object.url }}" class="link link-accent font-semibold hover:no-underline truncate" target="_blank">
+              <i class="fas fa-external-link-alt mr-2"></i>
+              {{ object.url|truncatechars:40 }}
+            </a>
           </div>
           {% endif %}
-          
-          <div class="flex items-start gap-2">
-            <i class="fas fa-history text-info mt-1"></i>
-            <div>
-              <span class="font-semibold">Status Change:</span>
-              <p class="text-base-content/70">This action will update the contribution status and may affect reward calculations.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Guidelines -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-lightbulb text-warning"></i>
-          <h2 class="text-xl font-bold">Best Practices</h2>
-        </div>
-        
-        <div class="space-y-3 text-sm">
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Provide clear reasoning for the status change</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Reference related issues if applicable</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Be professional and constructive</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Consider the contributor's effort</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-rocket text-accent"></i>
-          <h2 class="text-xl font-bold">Quick Actions</h2>
-        </div>
-        
-        <div class="space-y-3">
-          <a href="{% url 'contribution_detail' object.pk %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-eye mr-2"></i>
-            View Contribution
-          </a>
-          <a href="{% url 'contribution_edit' object.pk %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-edit mr-2"></i>
-            Edit Contribution
-          </a>
-          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-home mr-2"></i>
-            Back to Home
-          </a>
         </div>
       </div>
     </div>
   </div>
-</div>
+
+  <!-- Reply Form -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-reply text-info"></i>
+      <h3 class="text-lg font-semibold">Reply (Optional)</h3>
+    </div>
+
+    {% include "includes/form_field.html" with field=form.comment help_text="This reply will be recorded along with the status change and may be visible to the contributor." %}
+  </div>
+{% endblock %}
+
+{% block form_actions %}
+  {% include "includes/action_buttons.html" with cancel_url='contribution_detail' cancel_args=object.id submit_text="Confirm as "|add:type|title %}
+{% endblock %}
+
+{% block sidebar_content %}
+  <!-- Action Info -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-info-circle text-info"></i>
+      <h2 class="text-xl font-bold">About This Action</h2>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      {% if type == "wontfix" %}
+      <div class="flex items-start gap-2">
+        <i class="fas fa-times-circle text-warning mt-1"></i>
+        <div>
+          <span class="font-semibold">Won't Fix:</span>
+          <p class="text-base-content/70">Indicates the issue won't be addressed due to technical constraints, design decisions, or other reasons.</p>
+        </div>
+      </div>
+      {% elif type == "duplicate" %}
+      <div class="flex items-start gap-2">
+        <i class="fas fa-copy text-warning mt-1"></i>
+        <div>
+          <span class="font-semibold">Duplicate:</span>
+          <p class="text-base-content/70">Marks this as a duplicate of an existing issue or contribution.</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="flex items-start gap-2">
+        <i class="fas fa-history text-info mt-1"></i>
+        <div>
+          <span class="font-semibold">Status Change:</span>
+          <p class="text-base-content/70">This action will update the contribution status and may affect reward calculations.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guidelines -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-lightbulb text-warning"></i>
+      <h2 class="text-xl font-bold">Best Practices</h2>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Provide clear reasoning for the status change</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Reference related issues if applicable</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Be professional and constructive</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Consider the contributor's effort</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="space-y-6">
+    <!-- Quick Actions Card -->
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-rocket text-accent"></i>
+        <h2 class="text-xl font-bold">Quick Actions</h2>
+      </div>
+
+      <div class="space-y-3">
+        {% include "includes/buttons/superuser_action.html" with url_name='contribution_detail' arg1=object.id text="View Contribution" icon="eye" color="outline" extra_classes="justify-start w-full" %}
+        {% include "includes/buttons/superuser_action.html" with url_name='contribution_edit' arg1=object.id text="Edit Contribution" icon="edit" color="outline" extra_classes="justify-start w-full" %}
+        <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-home mr-2"></i>
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
 {% endblock %}

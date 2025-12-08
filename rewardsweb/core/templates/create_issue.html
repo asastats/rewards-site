@@ -1,4 +1,4 @@
-{% extends "base_generic.html" %}
+{% extends "core/base_form.html" %}
 {% load static %}
 
 {% block title %}
@@ -6,24 +6,22 @@
 {% endblock %}
 
 {% block page_title %}Create Issue{% endblock %}
+{% block page_subtitle %}Submit a new issue for: <span class="font-semibold text-accent">{{ contribution_info }}</span>{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Submit a new issue for: <span class="font-semibold text-accent">{{ contribution_info }}</span>
-      </p>
-    </div>
-    <div class="badge badge-success badge-lg">
-      <i class="fas fa-plus-circle mr-1"></i>
-      New Issue
-    </div>
-  </div>
+{% block header_badge_content %}
+  <i class="fas fa-plus-circle mr-1"></i> New Issue
+{% endblock %}
+
+{% block header_badge_class %}badge-success{% endblock %}
+
+{% block form_title %}Issue Details{% endblock %}
+
+{% block form_fields %}
+  <!-- Hidden field for contribution_id -->
+  <input type="hidden" name="contribution_id" value="{{ contribution_id }}">
 
   <!-- Info Card -->
-  <div class="stat-card bg-info/5 border-info/20">
+  <div class="stat-card bg-info/5 border-info/20 mb-6">
     <div class="flex items-start gap-3">
       <i class="fas fa-info-circle text-info text-xl mt-1"></i>
       <div>
@@ -36,214 +34,184 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Form -->
-    <div class="lg:col-span-2">
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-6">
-          <i class="fas fa-ticket-alt text-primary"></i>
-          <h2 class="text-xl font-bold">Issue Details</h2>
-        </div>
+  <!-- Form Errors -->
+  {% include "includes/form_errors.html" %}
 
-        <form method="post" novalidate>
-          {% csrf_token %}
-          
-          {% if form.non_field_errors %}
-          <div class="alert alert-error shadow-lg mb-6">
-            <div class="flex items-start gap-3">
-              <i class="fas fa-exclamation-triangle text-xl mt-0.5"></i>
-              <div>
-                <h3 class="font-bold">Validation Error</h3>
-                {% for error in form.non_field_errors %}
-                <div class="text-sm">{{ error }}</div>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-          {% endif %}
+  <!-- Labels Section (Custom Layout) -->
+  <div class="form-control">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-tags text-secondary"></i>
+      <label class="label-text font-semibold text-lg">{{ form.labels.label }}</label>
+    </div>
 
-          <!-- Labels Section -->
-          <div class="mb-8">
-            <div class="flex items-center gap-2 mb-4">
-              <i class="fas fa-tags text-secondary"></i>
-              <label class="label-text font-semibold text-lg">{{ form.labels.label }}</label>
-            </div>
-            
-            <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {% for checkbox in form.labels %}
-                <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg bg-base-100 hover:bg-base-300 border border-base-300 transition-all duration-200 hover:shadow-sm">
-                  {{ checkbox.tag }}
-                  <span class="label-text font-medium text-sm">{{ checkbox.choice_label }}</span>
-                </label>
-                {% endfor %}
-              </div>
-            </div>
-            
-            {% if form.labels.errors %}
-            <div class="text-error text-sm mt-3 flex items-center gap-2">
-              <i class="fas fa-exclamation-circle"></i>
-              {% for error in form.labels.errors %}
-                {{ error }}
-              {% endfor %}
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Priority Section -->
-          <div class="mb-8">
-            <div class="flex items-center gap-2 mb-4">
-              <i class="fas fa-flag text-warning"></i>
-              <label class="label-text font-semibold text-lg">{{ form.priority.label }}</label>
-            </div>
-            
-            <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
-              <div class="flex flex-wrap gap-4">
-                {% for radio in form.priority %}
-                <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg bg-base-100 hover:bg-base-300 border-2 border-base-300 transition-all duration-200 hover:shadow-sm flex-1 min-w-[120px]">
-                  {{ radio.tag }}
-                  <span class="label-text font-semibold text-base">{{ radio.choice_label }}</span>
-                </label>
-                {% endfor %}
-              </div>
-            </div>
-            
-            {% if form.priority.errors %}
-            <div class="text-error text-sm mt-3 flex items-center gap-2">
-              <i class="fas fa-exclamation-circle"></i>
-              {% for error in form.priority.errors %}
-                {{ error }}
-              {% endfor %}
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Issue Title -->
-          <div class="mb-8">
-            <div class="flex items-center gap-2 mb-4">
-              <i class="fas fa-heading text-accent"></i>
-              <label class="label-text font-semibold text-lg">Issue Title</label>
-            </div>
-            
-            <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-              <input type="text" name="issue_title" 
-                  value="{% if form.issue_title.value %}{{ form.issue_title.value }}{% endif %}"
-                  class="input input-ghost w-full text-lg" 
-                  placeholder="Enter a clear and descriptive title for the issue...">
-            </div>
-            
-            {% if form.issue_title.errors %}
-            <div class="text-error text-sm mt-3 flex items-center gap-2">
-              <i class="fas fa-exclamation-circle"></i>
-              {% for error in form.issue_title.errors %}
-                {{ error }}
-              {% endfor %}
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Issue Body -->
-          <div class="mb-8">
-            <div class="flex items-center gap-2 mb-4">
-              <i class="fas fa-align-left text-info"></i>
-              <label class="label-text font-semibold text-lg">Issue Description</label>
-            </div>
-            
-            <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-              <textarea name="issue_body" class="textarea textarea-ghost w-full h-48 text-base" 
-                      placeholder="Provide detailed information about the issue. Include steps to reproduce, expected behavior, and any relevant context...">{% if form.issue_body.value %}{{ form.issue_body.value }}{% endif %}</textarea>
-            </div>
-            
-            {% if form.issue_body.errors %}
-            <div class="text-error text-sm mt-3 flex items-center gap-2">
-              <i class="fas fa-exclamation-circle"></i>
-              {% for error in form.issue_body.errors %}
-                {{ error }}
-              {% endfor %}
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Submit Button -->
-          <div class="flex gap-4 pt-4 border-t border-base-300">
-            <a href="{% url 'index' %}" class="btn btn-outline flex-1">
-              <i class="fas fa-arrow-left mr-2"></i>
-              Back to Home
-            </a>
-            <button type="submit" class="btn btn-success flex-1">
-              <i class="fas fa-plus-circle mr-2"></i>
-              Create Issue
-            </button>
-          </div>
-        </form>
+    <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {% for checkbox in form.labels %}
+        <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg bg-base-100 hover:bg-base-300 border border-base-300 transition-all duration-200 hover:shadow-sm">
+          {{ checkbox.tag }}
+          <span class="label-text font-medium text-sm">{{ checkbox.choice_label }}</span>
+        </label>
+        {% endfor %}
       </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="space-y-6">
-      <!-- Contribution Info -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-code-branch text-primary"></i>
-          <h2 class="text-xl font-bold">Contribution</h2>
-        </div>
-        <div class="p-4 bg-base-200 rounded-lg">
-          <p class="font-semibold text-base-content/80">{{ contribution_info }}</p>
-        </div>
-      </div>
+    {% if form.labels.errors %}
+    <div class="text-error text-sm mt-3 flex items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i>
+      {% for error in form.labels.errors %}
+        {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-      <!-- Guidelines -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-lightbulb text-warning"></i>
-          <h2 class="text-xl font-bold">Issue Guidelines</h2>
-        </div>
-        <div class="space-y-3 text-sm">
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Use clear and descriptive titles</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Include steps to reproduce</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Provide expected vs actual behavior</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Add relevant labels for categorization</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Set appropriate priority level</span>
-          </div>
-        </div>
-      </div>
+  <!-- Priority Section (Custom Layout) -->
+  <div class="form-control">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-flag text-warning"></i>
+      <label class="label-text font-semibold text-lg">{{ form.priority.label }}</label>
+    </div>
 
-      <!-- Quick Stats -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-rocket text-info"></i>
-          <h2 class="text-xl font-bold">Quick Actions</h2>
-        </div>
-        <div class="space-y-3">
-          <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-list mr-2"></i>
-            View All Issues
-          </a>
-          <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-sync-alt mr-2"></i>
-            Active Cycles
-          </a>
-          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-users mr-2"></i>
-            Contributors
-          </a>
-        </div>
+    <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
+      <div class="flex flex-wrap gap-4">
+        {% for radio in form.priority %}
+        <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg bg-base-100 hover:bg-base-300 border-2 border-base-300 transition-all duration-200 hover:shadow-sm flex-1 min-w-[120px]">
+          {{ radio.tag }}
+          <span class="label-text font-semibold text-base">{{ radio.choice_label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if form.priority.errors %}
+    <div class="text-error text-sm mt-3 flex items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i>
+      {% for error in form.priority.errors %}
+        {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Issue Title -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-heading text-accent"></i>
+      <label class="label-text font-semibold text-lg">{{ form.issue_title.label }}</label>
+    </div>
+
+    <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
+      {{ form.issue_title }}
+    </div>
+
+    {% if form.issue_title.errors %}
+    <div class="text-error text-sm mt-3 flex items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i>
+      {% for error in form.issue_title.errors %}
+        {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Issue Body -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-align-left text-info"></i>
+      <label class="label-text font-semibold text-lg">{{ form.issue_body.label }}</label>
+    </div>
+
+    <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
+      {{ form.issue_body }}
+    </div>
+
+    {% if form.issue_body.errors %}
+    <div class="text-error text-sm mt-3 flex items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i>
+      {% for error in form.issue_body.errors %}
+        {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block form_actions %}
+  <div class="flex gap-4 pt-4 border-t border-base-300">
+    <a href="{% url 'index' %}" class="btn btn-outline flex-1">
+      <i class="fas fa-arrow-left mr-2"></i>
+      Back to Home
+    </a>
+    <button type="submit" class="btn btn-success flex-1">
+      <i class="fas fa-plus-circle mr-2"></i>
+      Create Issue
+    </button>
+  </div>
+{% endblock %}
+
+{% block sidebar_content %}
+
+  <!-- Quick Stats -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-rocket text-info"></i>
+      <h2 class="text-xl font-bold">Quick Actions</h2>
+    </div>
+    <div class="space-y-3">
+      <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-list mr-2"></i>
+        View All Issues
+      </a>
+      <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-sync-alt mr-2"></i>
+        Active Cycles
+      </a>
+      <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-users mr-2"></i>
+        Contributors
+      </a>
+    </div>
+  </div>
+
+  <!-- Contribution Info -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-code-branch text-primary"></i>
+      <h2 class="text-xl font-bold">Contribution</h2>
+    </div>
+    <div class="p-4 bg-base-200 rounded-lg">
+      <p class="font-semibold text-base-content/80">{{ contribution_info }}</p>
+    </div>
+  </div>
+
+  <!-- Guidelines -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-lightbulb text-warning"></i>
+      <h2 class="text-xl font-bold">Issue Guidelines</h2>
+    </div>
+    <div class="space-y-3 text-sm">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Use clear and descriptive titles</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Include steps to reproduce</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Provide expected vs actual behavior</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Add relevant labels for categorization</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Set appropriate priority level</span>
       </div>
     </div>
   </div>
-</div>
+
 {% endblock %}

@@ -1,0 +1,13 @@
+{% if form.non_field_errors %}
+<div class="alert alert-error shadow-lg mb-6">
+  <div class="flex items-start gap-3">
+    <i class="fas fa-exclamation-triangle text-xl mt-0.5"></i>
+    <div>
+      <h3 class="font-bold">Validation Error</h3>
+      {% for error in form.non_field_errors %}
+        <div class="text-sm">{{ error }}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}

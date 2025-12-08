@@ -1,148 +1,172 @@
-{% extends "base_generic.html" %}
+{% extends "base_standard.html" %}
 
 {% block title %}
   <title>Open Issues - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Open GitHub issues{% endblock %}
+{% block page_subtitle %}Browse and manage all open issues in the system{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Browse and manage all open issues in the system
-      </p>
-    </div>
-    {% if issue_list %}
-    <div class="badge badge-warning badge-lg">
-      <i class="fas fa-exclamation-circle mr-1"></i>
-      {{ issue_list|length }} Open Issue{{ issue_list|length|pluralize }}
-    </div>
-    {% endif %}
-  </div>
+{% block header_badge_content %}
+  <i class="fas fa-exclamation-circle mr-1"></i>
+  {{ issue_list|length }} Open Issue{{ issue_list|length|pluralize }}
+{% endblock %}
 
-  <!-- Issues List -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-6">
-      <i class="fas fa-list text-primary"></i>
-      <h2 class="text-xl font-bold">All Open Issues</h2>
-    </div>
+{% block main_content %}
+<div class="space-y-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content Column -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Issues List -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-6">
+          <i class="fas fa-list text-primary"></i>
+          <h2 class="text-xl font-bold">All Open Issues</h2>
+        </div>
 
-    {% if issue_list %}
-      <div class="space-y-4">
-        {% for issue in issue_list %}
-        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
-          <div class="flex items-center gap-4">
-            <div class="p-3 rounded-lg bg-warning/10 text-warning">
-              <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div>
-              <a class="link link-accent text-xl font-semibold hover:no-underline" href="{{ issue.get_absolute_url }}">
-                {{ issue.info }}
-              </a>
-              <div class="flex items-center gap-4 mt-2 text-sm text-base-content/70">
-                <div class="flex items-center gap-2">
-                  <i class="fas fa-hashtag text-info"></i>
-                  <span>#{{ issue.number }}</span>
+        {% if issue_list %}
+          <div class="space-y-4">
+            {% for issue in issue_list %}
+            <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
+              <div class="flex items-center gap-4">
+                <div class="p-3 rounded-lg bg-warning/10 text-warning">
+                  <i class="fas fa-exclamation-circle"></i>
                 </div>
-                <div class="flex items-center gap-2">
-                  <i class="fas fa-calendar text-success"></i>
-                  <span>{{ issue.created_at|date:"M j, Y" }}</span>
+                <div>
+                  <a class="link link-accent text-xl font-semibold hover:no-underline" href="{{ issue.get_absolute_url }}">
+                    {{ issue.info }}
+                  </a>
+                  <div class="flex items-center gap-4 mt-2 text-sm text-base-content/70">
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-hashtag text-info"></i>
+                      <span>#{{ issue.number }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-calendar text-success"></i>
+                      <span>{{ issue.created_at|date:"M j, Y" }}</span>
+                    </div>
+                    {% if issue.updated_at and issue.updated_at != issue.created_at %}
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-sync-alt text-warning"></i>
+                      <span>{{ issue.updated_at|date:"M j, Y" }}</span>
+                    </div>
+                    {% endif %}
+                  </div>
                 </div>
-                {% if issue.updated_at and issue.updated_at != issue.created_at %}
-                <div class="flex items-center gap-2">
-                  <i class="fas fa-sync-alt text-warning"></i>
-                  <span>{{ issue.updated_at|date:"M j, Y" }}</span>
-                </div>
-                {% endif %}
               </div>
             </div>
+            {% endfor %}
           </div>
-        </div>
-        {% endfor %}
+
+          {% include "snippets/pagination.html" %}
+
+        {% else %}
+          <div class="text-center py-12">
+            <i class="fas fa-check-circle text-4xl text-success mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">No Open Issues</h3>
+            <p class="text-base-content/70 max-w-md mx-auto mb-6">
+              Great news! There are currently no open issues in the system. 
+              All issues have been addressed or closed.
+            </p>
+            <div class="flex gap-3 justify-center">
+              <a href="{% url 'index' %}" class="btn btn-primary">
+                <i class="fas fa-home mr-2"></i>
+                Back to Home
+              </a>
+              <a href="{% url 'contributors' %}" class="btn btn-outline">
+                <i class="fas fa-users mr-2"></i>
+                View Contributors
+              </a>
+            </div>
+          </div>
+        {% endif %}
       </div>
 
-      {% include "snippets/pagination.html" %}
+      <!-- Quick Stats -->
+      {% if issue_list %}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="stat-card text-center">
+          <div class="p-3 rounded-lg bg-warning/10 text-warning inline-block mb-3">
+            <i class="fas fa-exclamation-circle text-xl"></i>
+          </div>
+          <p class="text-sm font-medium text-base-content/70">Open Issues</p>
+          <p class="text-2xl font-bold text-warning">{{ issue_list|length }}</p>
+        </div>
 
-    {% else %}
-      <div class="text-center py-12">
-        <i class="fas fa-check-circle text-4xl text-success mb-4"></i>
-        <h3 class="text-xl font-semibold mb-2">No Open Issues</h3>
-        <p class="text-base-content/70 max-w-md mx-auto mb-6">
-          Great news! There are currently no open issues in the system. 
-          All issues have been addressed or closed.
-        </p>
-        <div class="flex gap-3 justify-center">
-          <a href="{% url 'index' %}" class="btn btn-primary">
-            <i class="fas fa-home mr-2"></i>
+        <div class="stat-card text-center">
+          <div class="p-3 rounded-lg bg-info/10 text-info inline-block mb-3">
+            <i class="fas fa-code-branch text-xl"></i>
+          </div>
+          <p class="text-sm font-medium text-base-content/70">Linked Contributions</p>
+          <span class="text-2xl font-semibold text-primary">{{ total_contributions }}</span>
+        </div>
+
+        <div class="stat-card text-center">
+          <div class="p-3 rounded-lg bg-primary/10 text-primary inline-block mb-3">
+            <i class="fas fa-calendar text-xl"></i>
+          </div>
+          <p class="text-sm font-medium text-base-content/70">Latest Issue</p>
+          <p class="text-2xl font-semibold text-primary">{{ latest_issue.created_at|date:"M j" }}</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="space-y-6">
+      <!-- Quick Actions -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-rocket text-accent"></i>
+          <h2 class="text-xl font-bold">Quick Actions</h2>
+        </div>
+
+        <div class="space-y-3">
+          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-arrow-left mr-2"></i>
             Back to Home
           </a>
-          <a href="{% url 'contributors' %}" class="btn btn-outline">
+          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
             <i class="fas fa-users mr-2"></i>
-            View Contributors
+            Contributors
           </a>
+          <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-sync-alt mr-2"></i>
+            View Cycles
+          </a>
+          {% if user.is_superuser %}
+          <a href="{% url 'unconfirmed_contributions' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-clock mr-2"></i>
+            Unconfirmed
+          </a>
+          {% endif %}
         </div>
       </div>
-    {% endif %}
-  </div>
 
-  <!-- Quick Stats -->
-  {% if issue_list %}
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="stat-card text-center">
-      <div class="p-3 rounded-lg bg-warning/10 text-warning inline-block mb-3">
-        <i class="fas fa-exclamation-circle text-xl"></i>
-      </div>
-      <p class="text-sm font-medium text-base-content/70">Open Issues</p>
-      <p class="text-2xl font-bold text-warning">{{ issue_list|length }}</p>
-    </div>
-    
-    <div class="stat-card text-center">
-      <div class="p-3 rounded-lg bg-info/10 text-info inline-block mb-3">
-        <i class="fas fa-code-branch text-xl"></i>
-      </div>
-      <p class="text-sm font-medium text-base-content/70">Linked Contributions</p>
-      <span class="text-2xl font-semibold text-primary">{{ total_contributions }}</span>
-    </div>
-    
-    <div class="stat-card text-center">
-      <div class="p-3 rounded-lg bg-primary/10 text-primary inline-block mb-3">
-        <i class="fas fa-calendar text-xl"></i>
-      </div>
-      <p class="text-sm font-medium text-base-content/70">Latest Issue</p>
-      <p class="text-2xl font-semibold text-primary">{{ latest_issue.created_at|date:"M j" }}</p>
-    </div>
-  </div>
-  {% endif %}
+      <!-- Issue Stats -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-bar text-info"></i>
+          <h2 class="text-xl font-bold">Issue Statistics</h2>
+        </div>
 
-  <!-- Quick Actions -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-rocket text-accent"></i>
-      <h2 class="text-xl font-bold">Quick Actions</h2>
-    </div>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Open</span>
+            <span class="font-semibold text-warning">{{ issue_list|length }}</span>
+          </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <a href="{% url 'index' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-arrow-left mr-2"></i>
-        Back to Home
-      </a>
-      <a href="{% url 'contributors' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-users mr-2"></i>
-        Contributors
-      </a>
-      <a href="{% url 'cycles' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-sync-alt mr-2"></i>
-        View Cycles
-      </a>
-      {% if user.is_superuser %}
-      <a href="{% url 'unconfirmed_contributions' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-clock mr-2"></i>
-        Unconfirmed
-      </a>
-      {% endif %}
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Linked Contributions</span>
+            <span class="font-semibold text-primary">{{ total_contributions }}</span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Latest Issue</span>
+            <span class="font-semibold text-success">{{ latest_issue.created_at|date:"M j, Y" }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

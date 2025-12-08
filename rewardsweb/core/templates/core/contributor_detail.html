@@ -1,73 +1,19 @@
-{% extends "base_generic.html" %}
-{% load partials %}
+{% extends "core/base_detail.html" %}
 
 {% block title %}
   <title>{{ contributor.name }} - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
-{% partialdef contributions %}
-<div class="stat-card">
-  <div class="flex items-center justify-between mb-4">
-    <div class="flex items-center gap-2">
-      <i class="fas fa-code-branch text-primary"></i>
-      <h2 class="text-xl font-bold">{{ group.name }} Contributions</h2>
-    </div>
-    {% if group.total %}
-    <div class="badge badge-primary badge-lg">
-      {{ group.total|floatformat:"g" }}
-    </div>
-    {% endif %}
-  </div>
-
-  <div class="space-y-4">
-    {% for contribution in group.query reversed %}
-    <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
-      <div class="flex items-center gap-4">
-        <div class="p-2 rounded-lg bg-primary/10 text-primary">
-          <i class="fas fa-gem"></i>
-        </div>
-        <div>
-          <div class="flex items-center gap-3 mb-1">
-            <span class="font-semibold text-base-content/70">Cycle:</span>
-            <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.cycle.get_absolute_url }}">
-              {{ contribution.cycle }}
-            </a>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="font-semibold text-base-content/70">Reward:</span>
-            <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.get_absolute_url }}">
-              {{ contribution.reward }}
-            </a>
-          </div>
-        </div>
-      </div>
-      <i class="fas fa-chevron-right text-base-content/30 group-hover:text-base-content/60 transition-colors"></i>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endpartialdef contributions %}
-
 {% block page_title %}{{ contributor.name }} info{% endblock %}
+{% block page_subtitle %}Contributor profile and contribution history{% endblock %}
 
-{% block content %}
-{% with total_rewards=contributor.total_rewards contribution_groups=contributor.contribution_groups handles_count=contributor.prefetched_handles|length %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Contributor profile and contribution history
-      </p>
-    </div>
-    <div class="badge badge-primary badge-lg">
-      <i class="fas fa-user-check mr-1"></i>
-      Contributor
-    </div>
-  </div>
+{% block header_badge_content %}
+  <i class="fas fa-user-check mr-1"></i>
+  Contributor
+{% endblock %}
 
+{% block alert_content %}
   <!-- Claimable Rewards Section -->
-
   {% if contributor == user.profile.contributor %}
     {% if contributor.claimable_contributions %}
     <div class="stat-card bg-gradient-to-r from-success/10 to-success/5 border border-success/20">
@@ -105,204 +51,236 @@
     </div>
     {% endif %}
   {% endif %}
+{% endblock %}
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Content -->
-    <div class="lg:col-span-2 space-y-6">
-      <!-- Contributor Information -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-6">
-          <i class="fas fa-user-circle text-primary"></i>
-          <h2 class="text-xl font-bold">Contributor Information</h2>
+{% block detail_title %}Contributor Information{% endblock %}
+
+{% block detail_content %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="space-y-4">
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Display Name</span>
+        <span class="font-semibold text-lg">
+          <i class="fas fa-signature mr-2 text-primary"></i>
+          {{ contributor.name }}
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Wallet Address</span>
+        <span class="font-semibold">
+          <i class="fas fa-wallet mr-2 {% if contributor.address %}text-success{% else %}text-warning{% endif %}"></i>
+          {% if contributor.address %}
+          <span class="font-mono text-sm">**********</span>
+          {% else %}
+          <span class="text-warning">No address provided</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Total Rewards</span>
+        <span class="font-semibold text-success text-2xl">
+          <i class="fas fa-coins mr-2"></i>
+          {{ contributor.total_rewards|floatformat:"g" }}
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Contribution Groups</span>
+        <span class="font-semibold text-info">
+          <i class="fas fa-layer-group mr-2"></i>
+          {{ contributor.contribution_groups|length }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Social Handles -->
+  {% if contributor.prefetched_handles %}
+  <div class="mt-6 pt-6 border-t border-base-300">
+    <h3 class="font-semibold text-lg mb-4">Social Handles</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {% for handle in contributor.prefetched_handles %}
+      <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+        <div class="p-2 rounded-lg bg-secondary/10 text-secondary">
+          <i class="fab fa-{{ handle.platform.name|lower }}"></i>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Display Name</span>
-              <span class="font-semibold text-lg">
-                <i class="fas fa-signature mr-2 text-primary"></i>
-                {{ contributor.name }}
-              </span>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Wallet Address</span>
-              <span class="font-semibold">
-                <i class="fas fa-wallet mr-2 {% if contributor.address %}text-success{% else %}text-warning{% endif %}"></i>
-                {% if contributor.address %}
-                <span class="font-mono text-sm">**********</span>
-                {% else %}
-                <span class="text-warning">No address provided</span>
-                {% endif %}
-              </span>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Total Rewards</span>
-              <span class="font-semibold text-success text-2xl">
-                <i class="fas fa-coins mr-2"></i>
-                {{ total_rewards|floatformat:"g" }}
-              </span>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Contribution Groups</span>
-              <span class="font-semibold text-info">
-                <i class="fas fa-layer-group mr-2"></i>
-                {{ contribution_groups|length }}
-              </span>
-            </div>
-          </div>
+        <div>
+          <span class="text-sm font-semibold text-base-content/70">{{ handle.platform.name }}</span>
+          <p class="font-medium">{{ handle.handle }}</p>
         </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
 
-        <!-- Social Handles -->
-        {% if contributor.prefetched_handles %}
-        <div class="mt-6 pt-6 border-t border-base-300">
-          <h3 class="font-semibold text-lg mb-4">Social Handles</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {% for handle in contributor.prefetched_handles %}
-            <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
-              <div class="p-2 rounded-lg bg-secondary/10 text-secondary">
-                <i class="fab fa-{{ handle.platform.name|lower }}"></i>
-              </div>
-              <div>
-                <span class="text-sm font-semibold text-base-content/70">{{ handle.platform.name }}</span>
-                <p class="font-medium">{{ handle.handle }}</p>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
+{% block additional_content %}
+  <!-- Contributions -->
+  {% for group in contributor.contribution_groups %}
+    {% if group.query %}
+    <div class="stat-card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-code-branch text-primary"></i>
+          <h2 class="text-xl font-bold">{{ group.name }} Contributions</h2>
+        </div>
+        {% if group.total %}
+        <div class="badge badge-primary badge-lg">
+          {{ group.total|floatformat:"g" }}
         </div>
         {% endif %}
       </div>
 
-      <!-- Contributions -->
-      <div class="space-y-6">
-        {% for group in contribution_groups %}
-          {% if group.query %}
-          {% partial contributions %}
-          {% endif %}
-        {% empty %}
-        <div class="stat-card text-center py-12">
-          <i class="fas fa-inbox text-4xl text-base-content/30 mb-4"></i>
-          <h3 class="text-xl font-semibold mb-2">No Contributions Found</h3>
-          <p class="text-base-content/70 max-w-md mx-auto">
-            This contributor doesn't have any recorded contributions yet.
-          </p>
+      <div class="space-y-4">
+        {% for contribution in group.query reversed %}
+        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
+          <div class="flex items-center gap-4">
+            <div class="p-2 rounded-lg bg-primary/10 text-primary">
+              <i class="fas fa-gem"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-3 mb-1">
+                <span class="font-semibold text-base-content/70">Cycle:</span>
+                <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.cycle.get_absolute_url }}">
+                  {{ contribution.cycle }}
+                </a>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="font-semibold text-base-content/70">Reward:</span>
+                <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.get_absolute_url }}">
+                  {{ contribution.reward }}
+                </a>
+              </div>
+            </div>
+          </div>
+          <i class="fas fa-chevron-right text-base-content/30 group-hover:text-base-content/60 transition-colors"></i>
         </div>
         {% endfor %}
       </div>
     </div>
+    {% endif %}
+  {% empty %}
+  <div class="stat-card text-center py-12">
+    <i class="fas fa-inbox text-4xl text-base-content/30 mb-4"></i>
+    <h3 class="text-xl font-semibold mb-2">No Contributions Found</h3>
+    <p class="text-base-content/70 max-w-md mx-auto">
+      This contributor doesn't have any recorded contributions yet.
+    </p>
+  </div>
+  {% endfor %}
+{% endblock %}
 
-    <!-- Sidebar -->
-    <div class="space-y-6">
-      <!-- Quick Stats -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-chart-bar text-info"></i>
-          <h2 class="text-xl font-bold">Contributor Stats</h2>
-        </div>
+{% block sidebar_content %}
 
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Total Rewards</span>
-            <span class="font-semibold text-success">{{ total_rewards|floatformat:"g" }}</span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Contribution Groups</span>
-            <span class="font-semibold text-primary">
-              {{ contribution_groups|length }}
-            </span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Social Platforms</span>
-            <span class="font-semibold text-secondary">
-              {{ handles_count }}
-            </span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Wallet Status</span>
-            <span class="badge {% if contributor.address %}badge-success{% else %}badge-warning{% endif %}">
-              {% if contributor.address %}Connected{% else %}Not Set{% endif %}
-            </span>
-          </div>
+  <!-- Quick Actions -->
+  <div class="space-y-6">
+    <!-- Quick Actions Card -->
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-rocket text-accent"></i>
+        <h2 class="text-xl font-bold">Quick Actions</h2>
+      </div>
+
+      <div class="space-y-3">
+        <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Back to Home
+        </a>
+        <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-users mr-2"></i>
+          All Contributors
+        </a>
+        <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-sync-alt mr-2"></i>
+          View Cycles
+        </a>
+        <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-tasks mr-2"></i>
+          Browse Issues
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-chart-bar text-info"></i>
+      <h2 class="text-xl font-bold">Contributor Stats</h2>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Total Rewards</span>
+        <span class="font-semibold text-success">{{ contributor.total_rewards|floatformat:"g" }}</span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Contribution Groups</span>
+        <span class="font-semibold text-primary">
+          {{ contributor.contribution_groups|length }}
+        </span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Social Platforms</span>
+        <span class="font-semibold text-secondary">
+          {{ contributor.prefetched_handles|length }}
+        </span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Wallet Status</span>
+        <span class="badge {% if contributor.address %}badge-success{% else %}badge-warning{% endif %}">
+          {% if contributor.address %}Connected{% else %}Not Set{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reward Information -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-award text-warning"></i>
+      <h2 class="text-xl font-bold">Reward Status</h2>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-coins text-success mt-1"></i>
+        <div>
+          <span class="font-semibold">Total Earned:</span>
+          <p class="text-base-content/70">{{ contributor.total_rewards|floatformat:"g" }} rewards</p>
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-rocket text-accent"></i>
-          <h2 class="text-xl font-bold">Quick Actions</h2>
-        </div>
-
-        <div class="space-y-3">
-          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to Home
-          </a>
-          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-users mr-2"></i>
-            All Contributors
-          </a>
-          <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-sync-alt mr-2"></i>
-            View Cycles
-          </a>
-          <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-tasks mr-2"></i>
-            Browse Issues
-          </a>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-wallet {% if contributor.address %}text-success{% else %}text-warning{% endif %} mt-1"></i>
+        <div>
+          <span class="font-semibold">Wallet:</span>
+          <p class="text-base-content/70">
+            {% if contributor.address %}
+            Address registered
+            {% else %}
+            Not connected
+            {% endif %}
+          </p>
         </div>
       </div>
 
-      <!-- Reward Information -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-award text-warning"></i>
-          <h2 class="text-xl font-bold">Reward Status</h2>
-        </div>
-
-        <div class="space-y-3 text-sm">
-          <div class="flex items-start gap-2">
-            <i class="fas fa-coins text-success mt-1"></i>
-            <div>
-              <span class="font-semibold">Total Earned:</span>
-              <p class="text-base-content/70">{{ total_rewards|floatformat:"g" }} rewards</p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-2">
-            <i class="fas fa-wallet {% if contributor.address %}text-success{% else %}text-warning{% endif %} mt-1"></i>
-            <div>
-              <span class="font-semibold">Wallet:</span>
-              <p class="text-base-content/70">
-                {% if contributor.address %}
-                Address registered
-                {% else %}
-                Not connected
-                {% endif %}
-              </p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check-circle text-info mt-1"></i>
-            <div>
-              <span class="font-semibold">Contributions:</span>
-              <p class="text-base-content/70">Active contributor</p>
-            </div>
-          </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check-circle text-info mt-1"></i>
+        <div>
+          <span class="font-semibold">Contributions:</span>
+          <p class="text-base-content/70">Active contributor</p>
         </div>
       </div>
     </div>
   </div>
-</div>
-{% endwith %}
+
 {% endblock %}

@@ -1,14 +1,36 @@
-{% extends "account/base.html" %}
+{% extends "base_standard.html" %}
+
+{% block title %}
+  <title>Account Inactive - {{ PROJECT_NAME }}</title>
+{% endblock %}
 
 {% block page_title %}Account Inactive{% endblock %}
+{% block page_subtitle %}This account is inactive{% endblock %}
 
-{% block inner_content %}
+{% block header_badge_content %}
+  <i class="fas fa-ban mr-1"></i> Inactive
+{% endblock %}
+
+{% block header_badge_class %}badge-error{% endblock %}
+
+{% block main_content %}
 <div class="space-y-6 fade-in text-center">
-  <div class="p-4 rounded-lg bg-info/10 text-info inline-block mb-4">
-    <i class="fas fa-ban text-error text-3xl"></i>
+  <div class="stat-card">
+    <div class="p-4 rounded-lg bg-error/10 text-error inline-block mb-4">
+      <i class="fas fa-ban text-3xl"></i>
+    </div>
+
+    <p class="text-lg text-base-content/70 mb-6">
+      This account has been deactivated or suspended. 
+      Please contact support if you believe this is an error.
+    </p>
+
+    <div class="border-t border-base-300 pt-6 mt-6">
+      <a href="{% url 'index' %}" class="btn btn-outline">
+        <i class="fas fa-home mr-2"></i>
+        Return to Home
+      </a>
+    </div>
   </div>
-  <p class="text-lg text-base-content/70 mb-6">
-    This account is inactive.
-  </p>
 </div>
 {% endblock %}

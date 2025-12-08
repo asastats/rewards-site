@@ -1,0 +1,14 @@
+<div class="flex gap-4 mt-8 pt-6 border-t border-base-300">
+  {% if cancel_args %}
+    <a href="{% url cancel_url|default:'index' cancel_args %}" class="btn btn-outline flex-1">
+  {% else %}
+    <a href="{% url cancel_url|default:'index' %}" class="btn btn-outline flex-1">
+  {% endif %}
+    <i class="fas fa-times mr-2"></i>
+    Cancel
+  </a>
+  <button type="submit" class="btn btn-primary flex-1">
+    <i class="fas fa-save mr-2"></i>
+    {{ submit_text|default:"Save Changes" }}
+  </button>
+</div>

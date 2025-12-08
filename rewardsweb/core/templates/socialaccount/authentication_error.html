@@ -1,29 +1,26 @@
-{% extends "account/base_entrance.html" %}
+{% extends "base_standard.html" %}
 {% load i18n %}
 
-{% block head_title %}
-  {% trans "Authentication Error - {{ PROJECT_NAME }}" %}
+{% block title %}
+  <title>Authentication Error - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Authentication Failed{% endblock %}
+{% block page_subtitle %}There was a problem with your social authentication{% endblock %}
 
-{% block inner_content %}
+{% block header_badge_content %}
+  <i class="fas fa-exclamation-triangle mr-1"></i> Error
+{% endblock %}
+
+{% block header_badge_class %}badge-error{% endblock %}
+
+{% block main_content %}
 <div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="text-center">
-    <div class="p-4 rounded-lg bg-error/10 text-error inline-block mb-4">
-      <i class="fas fa-exclamation-triangle text-3xl"></i>
-    </div>
-    <p class="text-lg text-base-content/70">
-      There was a problem with your social authentication
-    </p>
-  </div>
-
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
     <!-- Main Content -->
     <div class="lg:col-span-2 space-y-6">
       <!-- Error Details -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           {% if provider.id == "discord" %}
             <i class="fab fa-discord text-[#5865F2] text-2xl"></i>
@@ -63,12 +60,12 @@
       </div>
 
       <!-- Troubleshooting Tips -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-lightbulb text-warning text-xl"></i>
           <h2 class="text-xl font-bold">Troubleshooting Tips</h2>
         </div>
-        
+
         <div class="space-y-3 text-sm">
           <div class="flex items-start gap-2">
             <i class="fas fa-check text-success mt-1"></i>
@@ -93,7 +90,7 @@
     <!-- Sidebar -->
     <div class="space-y-6">
       <!-- Quick Actions -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-rocket text-accent"></i>
           <h2 class="text-xl font-bold">Quick Actions</h2>
@@ -116,7 +113,7 @@
       </div>
 
       <!-- Support Info -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300 bg-info/5 border-info/20">
+      <div class="stat-card bg-info/5 border-info/20">
         <div class="flex items-start gap-3">
           <i class="fas fa-life-ring text-info text-xl mt-1"></i>
           <div>
@@ -129,7 +126,7 @@
       </div>
 
       <!-- Alternative Methods -->
-      <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300">
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-key text-success"></i>
           <h2 class="text-xl font-bold">Other Options</h2>
@@ -143,7 +140,7 @@
               <p class="text-base-content/70">Use traditional email authentication</p>
             </div>
           </div>
-          
+
           <div class="flex items-start gap-2">
             <i class="fas fa-wallet text-secondary mt-1"></i>
             <div>

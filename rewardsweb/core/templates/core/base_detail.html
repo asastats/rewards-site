@@ -1,0 +1,29 @@
+{% extends "base_standard.html" %}
+
+{% block main_content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Main Content -->
+  <div class="lg:col-span-2 space-y-6">
+    {% block alert_content %}{% endblock %}
+    
+    <!-- Main Info Card -->
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-6">
+        <i class="fas fa-info-circle text-primary"></i>
+        <h2 class="text-xl font-bold">{% block detail_title %}Details{% endblock %}</h2>
+      </div>
+      
+      {% block detail_content %}{% endblock %}
+      
+      {% block detail_actions %}{% endblock %}
+    </div>
+    
+    {% block additional_content %}{% endblock %}
+  </div>
+  
+  <!-- Sidebar -->
+  <div class="space-y-6">
+    {% block sidebar_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

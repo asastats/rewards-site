@@ -1,22 +1,31 @@
-{% extends "account/base_entrance.html" %}
+{% extends "base_standard.html" %}
 {% load i18n %}
 
-{% block page_title %}Verify Your Email{% endblock %}
+{% block title %}
+  <title>Verify Your Email - {{ PROJECT_NAME }}</title>
+{% endblock %}
 
-{% block inner_content %}
+{% block page_title %}Verify Your Email{% endblock %}
+{% block page_subtitle %}{% trans "We have sent an email to you with a confirmation link" %}{% endblock %}
+
+{% block header_badge_content %}
+  <i class="fas fa-envelope mr-1"></i> Verification
+{% endblock %}
+
+{% block header_badge_class %}badge-info{% endblock %}
+
+{% block main_content %}
 <div class="space-y-6 fade-in text-center">
-  <div class="p-4 rounded-lg bg-info/10 text-info inline-block mb-4">
-    <i class="fas fa-envelope text-3xl"></i>
-  </div>
-  <div class="bg-base-100 p-6 rounded-xl border-2 border-base-300 max-w-md mx-auto">
-    <p class="text-lg text-base-content/70 mb-4">
-      {% trans "We have sent an email to you with a confirmation link." %}
-    </p>
-    <p class="text-base-content/70 mb-6">
+  <div class="stat-card">
+    <div class="p-4 rounded-lg bg-info/10 text-info inline-block mb-4">
+      <i class="fas fa-envelope text-3xl"></i>
+    </div>
+    
+    <p class="text-lg text-base-content/70 mb-6">
       {% trans "Please click the link in the email to activate your account and complete your registration." %}
     </p>
 
-    <div class="border-t border-base-300 pt-4">
+    <div class="border-t border-base-300 pt-4 mt-6">
       <p class="text-sm text-base-content/60 mb-3">
         {% trans "Did not receive the email?" %}
       </p>
@@ -25,13 +34,13 @@
         {% trans "Request Another" %}
       </a>
     </div>
-  </div>
 
-  <div class="text-center">
-    <a href="{% url 'index' %}" class="btn btn-ghost">
-      <i class="fas fa-home mr-2"></i>
-      {% trans "Return to Home" %}
-    </a>
+    <div class="mt-6 pt-6 border-t border-base-300">
+      <a href="{% url 'index' %}" class="btn btn-ghost">
+        <i class="fas fa-home mr-2"></i>
+        {% trans "Return to Home" %}
+      </a>
+    </div>
   </div>
 </div>
 {% endblock %}

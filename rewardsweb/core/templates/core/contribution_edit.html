@@ -1,294 +1,199 @@
-{% extends "base_generic.html" %}
+{% extends "core/base_form.html" %}
 
 {% block title %}
   <title>Edit Contribution - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Edit Contribution{% endblock %}
+{% block page_subtitle %}Update contribution details and rewards information{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Update contribution details and rewards information
-      </p>
+{% block header_badge_content %}
+  <i class="fas fa-edit mr-1"></i>
+  Editing Mode
+{% endblock %}
+
+{% block header_badge_class %}badge-warning{% endblock %}
+
+{% block form_title %}Edit Contribution Details{% endblock %}
+
+{% block form_fields %}
+  {% include "includes/form_errors.html" %}
+
+  <!-- Reward Field -->
+  {% include "includes/form_field.html" with field=form.reward icon="award" %}
+
+  <!-- Percentage Field -->
+  {% include "includes/form_field.html" with field=form.percentage icon="percentage" help_text="Enter a value between 0 and 1 (e.g., 0.5 for 50%)" %}
+
+  <!-- Comment Field -->
+  {% include "includes/form_field.html" with field=form.comment icon="comment" %}
+
+  <!-- GitHub Issue Section -->
+  <div class="form-control">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fab fa-github text-base-content"></i>
+      <label class="label-text font-semibold text-lg">GitHub Issue</label>
     </div>
-    <div class="badge badge-warning badge-lg">
-      <i class="fas fa-edit mr-1"></i>
-      Editing Mode
-    </div>
-  </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Form -->
-    <div class="lg:col-span-2">
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-6">
-          <i class="fas fa-edit text-primary"></i>
-          <h2 class="text-xl font-bold">Contribution Details</h2>
-        </div>
-
-        <form method="post">
-          {% csrf_token %}
-          
-          {% if form.non_field_errors %}
-          <div class="alert alert-error shadow-lg mb-6">
-            <div class="flex items-start gap-3">
-              <i class="fas fa-exclamation-triangle text-xl mt-0.5"></i>
-              <div>
-                <h3 class="font-bold">Validation Error</h3>
-                {% for error in form.non_field_errors %}
-                <div class="text-sm">{{ error }}</div>
-                {% endfor %}
-              </div>
-            </div>
+    <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Issue Number -->
+        <div class="lg:col-span-1">
+          <label class="label py-0 mb-2" for="{{ form.issue_number.id_for_label }}">
+            <span class="label-text font-semibold text-base-content/80">Issue Number</span>
+          </label>
+          <div class="bg-base-100 p-1 rounded-lg border border-base-300">
+            {{ form.issue_number }}
+          </div>
+          {% if form.issue_number.errors %}
+          <div class="text-error text-sm mt-2 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i>
+            {% for error in form.issue_number.errors %}
+              <span>{{ error }}</span>
+            {% endfor %}
           </div>
           {% endif %}
-
-          <div class="space-y-6">
-            <!-- Reward Field -->
-            <div class="form-control">
-              <div class="flex items-center gap-2 mb-3">
-                <i class="fas fa-award text-warning"></i>
-                <label class="label-text font-semibold text-lg">{{ form.reward.label }}</label>
-              </div>
-              <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-                {{ form.reward }}
-              </div>
-              {% if form.reward.errors %}
-              <div class="text-error text-sm mt-2 flex items-center gap-2">
-                <i class="fas fa-exclamation-circle"></i>
-                {% for error in form.reward.errors %}
-                  <span>{{ error }}</span>
-                {% endfor %}
-              </div>
-              {% endif %}
-            </div>
-
-            <!-- Percentage Field -->
-            <div class="form-control">
-              <div class="flex items-center gap-2 mb-3">
-                <i class="fas fa-percentage text-info"></i>
-                <label class="label-text font-semibold text-lg">{{ form.percentage.label }}</label>
-              </div>
-              <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-                {{ form.percentage }}
-              </div>
-              {% if form.percentage.errors %}
-              <div class="text-error text-sm mt-2 flex items-center gap-2">
-                <i class="fas fa-exclamation-circle"></i>
-                {% for error in form.percentage.errors %}
-                  <span>{{ error }}</span>
-                {% endfor %}
-              </div>
-              {% endif %}
-              <div class="text-xs text-base-content/60 mt-2">
-                Enter a value between 0 and 1 (e.g., 0.5 for 50%)
-              </div>
-            </div>
-
-            <!-- Comment Field -->
-            <div class="form-control">
-              <div class="flex items-center gap-2 mb-3">
-                <i class="fas fa-comment text-accent"></i>
-                <label class="label-text font-semibold text-lg">{{ form.comment.label }}</label>
-              </div>
-              <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-                {{ form.comment }}
-              </div>
-              {% if form.comment.errors %}
-              <div class="text-error text-sm mt-2 flex items-center gap-2">
-                <i class="fas fa-exclamation-circle"></i>
-                {% for error in form.comment.errors %}
-                  <span>{{ error }}</span>
-                {% endfor %}
-              </div>
-              {% endif %}
-            </div>
-
-            <!-- GitHub Issue Section -->
-            <div class="form-control">
-              <div class="flex items-center gap-2 mb-4">
-                <i class="fab fa-github text-base-content"></i>
-                <label class="label-text font-semibold text-lg">GitHub Issue</label>
-              </div>
-
-              <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <!-- Issue Number -->
-                  <div class="lg:col-span-1">
-                    <label class="label py-0 mb-2" for="{{ form.issue_number.id_for_label }}">
-                      <span class="label-text font-semibold text-base-content/80">Issue Number</span>
-                    </label>
-                    <div class="bg-base-100 p-1 rounded-lg border border-base-300">
-                      {{ form.issue_number }}
-                    </div>
-                    {% if form.issue_number.errors %}
-                    <div class="text-error text-sm mt-2 flex items-center gap-2">
-                      <i class="fas fa-exclamation-circle"></i>
-                      {% for error in form.issue_number.errors %}
-                        <span>{{ error }}</span>
-                      {% endfor %}
-                    </div>
-                    {% endif %}
-                  </div>
-
-                  <!-- Issue Status -->
-                  <div class="lg:col-span-3">
-                    <label class="label py-0 mb-2">
-                      <span class="label-text font-semibold text-base-content/80">Issue Status</span>
-                    </label>
-
-                    <div class="flex gap-2 p-1 rounded-lg items-stretch bg-base-100 border border-base-300">
-                      {% for radio in form.issue_status %}
-                      <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-200 px-4 py-3 rounded transition-colors duration-200 flex-1 justify-center">
-                        {{ radio.tag }}
-                        <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
-                      </label>
-                      {% endfor %}
-                    </div>
-
-                    {% if form.issue_status.errors %}
-                    <div class="text-error text-sm mt-2 flex items-center gap-2">
-                      <i class="fas fa-exclamation-circle"></i>
-                      {% for error in form.issue_status.errors %}
-                        <span>{{ error }}</span>
-                      {% endfor %}
-                    </div>
-                    {% endif %}
-                  </div>
-                </div>
-
-                <!-- Helper text -->
-                <div class="mt-4 pt-4 border-t border-base-300">
-                  <div class="flex items-start gap-2">
-                    <i class="fas fa-info-circle text-info mt-0.5"></i>
-                    <span class="text-sm text-base-content/70">
-                      Leave issue number empty to remove GitHub association. Status applies to both new and existing issues.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex gap-4 mt-8 pt-6 border-t border-base-300">
-            <a href="{% url 'contribution_detail' object.pk %}" class="btn btn-outline flex-1">
-              <i class="fas fa-times mr-2"></i>
-              Cancel
-            </a>
-            <button type="submit" class="btn btn-primary flex-1">
-              <i class="fas fa-save mr-2"></i>
-              Save Changes
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Sidebar -->
-    <div class="space-y-6">
-      <!-- Contribution Info -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-info-circle text-info"></i>
-          <h2 class="text-xl font-bold">Editing Contribution</h2>
         </div>
-        
-        <div class="space-y-3 text-sm">
-          <div class="flex items-start gap-2">
-            <i class="fas fa-user text-primary mt-1"></i>
-            <div>
-              <span class="font-semibold">Contributor:</span>
-              <p class="text-base-content/80">{{ object.contributor }}</p>
-            </div>
+
+        <!-- Issue Status -->
+        <div class="lg:col-span-3">
+          <label class="label py-0 mb-2">
+            <span class="label-text font-semibold text-base-content/80">Issue Status</span>
+          </label>
+
+          <div class="flex gap-2 p-1 rounded-lg items-stretch bg-base-100 border border-base-300">
+            {% for radio in form.issue_status %}
+            <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-200 px-4 py-3 rounded transition-colors duration-200 flex-1 justify-center">
+              {{ radio.tag }}
+              <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
+            </label>
+            {% endfor %}
           </div>
-          
-          <div class="flex items-start gap-2">
-            <i class="fas fa-sync-alt text-info mt-1"></i>
-            <div>
-              <span class="font-semibold">Cycle:</span>
-              <p class="text-base-content/80">{{ object.cycle }}</p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-2">
-            <i class="fas fa-plug text-secondary mt-1"></i>
-            <div>
-              <span class="font-semibold">Platform:</span>
-              <p class="text-base-content/80">{{ object.platform }}</p>
-            </div>
-          </div>
-          
-          {% if object.url %}
-          <div class="flex items-start gap-2">
-            <i class="fas fa-link text-accent mt-1"></i>
-            <div>
-              <span class="font-semibold">URL:</span>
-              <p class="text-base-content/80 truncate">{{ object.url }}</p>
-            </div>
+
+          {% if form.issue_status.errors %}
+          <div class="text-error text-sm mt-2 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i>
+            {% for error in form.issue_status.errors %}
+              <span>{{ error }}</span>
+            {% endfor %}
           </div>
           {% endif %}
         </div>
       </div>
 
-      <!-- Guidelines -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-lightbulb text-warning"></i>
-          <h2 class="text-xl font-bold">Editing Guidelines</h2>
-        </div>
-        
-        <div class="space-y-3 text-sm">
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Update reward levels based on contribution impact</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Adjust percentage for partial contributions</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Add comments to explain changes</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Link GitHub issues when applicable</span>
-          </div>
-          <div class="flex items-start gap-2">
-            <i class="fas fa-check text-success mt-1"></i>
-            <span>Set appropriate issue status</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-rocket text-accent"></i>
-          <h2 class="text-xl font-bold">Quick Actions</h2>
-        </div>
-        
-        <div class="space-y-3">
-          <a href="{% url 'contribution_detail' object.pk %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-eye mr-2"></i>
-            View Contribution
-          </a>
-          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-users mr-2"></i>
-            All Contributors
-          </a>
-          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-home mr-2"></i>
-            Back to Home
-          </a>
+      <!-- Helper text -->
+      <div class="mt-4 pt-4 border-t border-base-300">
+        <div class="flex items-start gap-2">
+          <i class="fas fa-info-circle text-info mt-0.5"></i>
+          <span class="text-sm text-base-content/70">
+            Leave issue number empty to remove GitHub association. Status applies to both new and existing issues.
+          </span>
         </div>
       </div>
     </div>
   </div>
-</div>
+{% endblock %}
+
+{% block form_actions %}
+  {% include "includes/action_buttons.html" with cancel_url='contribution_detail' cancel_args=object.id submit_text="Save Changes" %}
+{% endblock %}
+
+{% block sidebar_content %}
+  <!-- Contribution Info -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-info-circle text-info"></i>
+      <h2 class="text-xl font-bold">Editing Contribution</h2>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-user text-primary mt-1"></i>
+        <div>
+          <span class="font-semibold">Contributor:</span>
+          <p class="text-base-content/80">{{ object.contributor }}</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-2">
+        <i class="fas fa-sync-alt text-info mt-1"></i>
+        <div>
+          <span class="font-semibold">Cycle:</span>
+          <p class="text-base-content/80">{{ object.cycle }}</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-2">
+        <i class="fas fa-plug text-secondary mt-1"></i>
+        <div>
+          <span class="font-semibold">Platform:</span>
+          <p class="text-base-content/80">{{ object.platform }}</p>
+        </div>
+      </div>
+
+      {% if object.url %}
+      <div class="flex items-start gap-2">
+        <i class="fas fa-link text-accent mt-1"></i>
+        <div>
+          <span class="font-semibold">URL:</span>
+          <p class="text-base-content/80 truncate">{{ object.url }}</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Guidelines -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-lightbulb text-warning"></i>
+      <h2 class="text-xl font-bold">Editing Guidelines</h2>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Update reward levels based on contribution impact</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Adjust percentage for partial contributions</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Add comments to explain changes</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Link GitHub issues when applicable</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-check text-success mt-1"></i>
+        <span>Set appropriate issue status</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="space-y-6">
+    <!-- Quick Actions Card -->
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-rocket text-accent"></i>
+        <h2 class="text-xl font-bold">Quick Actions</h2>
+      </div>
+
+      <div class="space-y-3">
+        {% include "includes/buttons/superuser_action.html" with url_name='contribution_detail' arg1=object.id text="View Contribution" icon="eye" color="outline" extra_classes="justify-start w-full" %}
+        <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-users mr-2"></i>
+          All Contributors
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-home mr-2"></i>
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
 {% endblock %}

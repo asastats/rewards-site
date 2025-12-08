@@ -1,249 +1,227 @@
-{% extends "base_generic.html" %}
+{% extends "core/base_detail.html" %}
 
 {% block title %}
   <title>Cycle: {{ cycle }} - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Cycle {{ cycle }}{% endblock %}
+{% block page_subtitle %}Reward cycle details and contributions{% endblock %}
 
-{% block content %}
-{% with contributions_count=cycle.contributions_count total_rewards=cycle.total_rewards_amount|default:0 %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Reward cycle details and contributions
-      </p>
+{% block header_badge_content %}
+  <i class="fas fa-sync-alt mr-1"></i>
+  Cycle
+{% endblock %}
+
+{% block detail_title %}Cycle Information{% endblock %}
+
+{% block detail_content %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="space-y-4">
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Start Date</span>
+        <span class="font-semibold text-lg">
+          <i class="fas fa-play-circle mr-2 text-success"></i>
+          {{ cycle.start }}
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">End Date</span>
+        <span class="font-semibold text-lg">
+          <i class="fas fa-stop-circle mr-2 text-warning"></i>
+          {{ cycle.end }}
+        </span>
+      </div>
     </div>
-    <div class="badge badge-primary badge-lg">
-      <i class="fas fa-sync-alt mr-1"></i>
-      Cycle
+
+    <div class="space-y-4">
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Total Rewards</span>
+        <span class="font-semibold text-success text-2xl">
+          <i class="fas fa-coins mr-2"></i>
+          {{ cycle.total_rewards_amount|default:0|floatformat:"g" }}
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Contributions</span>
+        <span class="font-semibold text-info text-lg">
+          <i class="fas fa-code-branch mr-2"></i>
+          {{ cycle.contributions_count }}
+        </span>
+      </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Content -->
-    <div class="lg:col-span-2 space-y-6">
-      <!-- Cycle Information -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-6">
-          <i class="fas fa-info-circle text-primary"></i>
-          <h2 class="text-xl font-bold">Cycle Information</h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Start Date</span>
-              <span class="font-semibold text-lg">
-                <i class="fas fa-play-circle mr-2 text-success"></i>
-                {{ cycle.start }}
-              </span>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">End Date</span>
-              <span class="font-semibold text-lg">
-                <i class="fas fa-stop-circle mr-2 text-warning"></i>
-                {{ cycle.end }}
-              </span>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Total Rewards</span>
-              <span class="font-semibold text-success text-2xl">
-                <i class="fas fa-coins mr-2"></i>
-                {{ total_rewards|floatformat:"g" }}
-              </span>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Contributions</span>
-              <span class="font-semibold text-info text-lg">
-                <i class="fas fa-code-branch mr-2"></i>
-                {{ contributions_count }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Timeline Information -->
-        <div class="mt-6 pt-6 border-t border-base-300">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="flex justify-between">
-              <span class="text-sm font-semibold text-base-content/70">Created</span>
-              <span class="text-sm text-base-content">{{ cycle.created_at }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-sm font-semibold text-base-content/70">Updated</span>
-              <span class="text-sm text-base-content">{{ cycle.updated_at }}</span>
-            </div>
-          </div>
-        </div>
+  <!-- Timeline Information -->
+  <div class="mt-6 pt-6 border-t border-base-300">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="flex justify-between">
+        <span class="text-sm font-semibold text-base-content/70">Created</span>
+        <span class="text-sm text-base-content">{{ cycle.created_at }}</span>
       </div>
-
-      <!-- Contributions -->
-      <div class="stat-card">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-code-branch text-primary"></i>
-            <h2 class="text-xl font-bold">Contributions</h2>
-          </div>
-          <div class="badge badge-primary badge-lg">
-            {{ contributions_count }} total
-          </div>
-        </div>
-
-        {% if cycle.prefetched_contributions %}
-          <div class="space-y-4">
-            {% for contribution in cycle.prefetched_contributions %}
-            <div class="flex flex-wrap items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
-
-              <!-- Left section -->
-              <div class="flex items-center gap-4">
-                <div class="p-3 rounded-lg bg-primary/10 text-primary">
-                  <i class="fas fa-user-check"></i>
-                </div>
-                <div>
-                  <div class="flex items-center gap-3 mb-1">
-                    <span class="font-semibold text-base-content/70">Contributor:</span>
-                    <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.contributor.get_absolute_url }}">
-                      {{ contribution.contributor }}
-                    </a>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <span class="font-semibold text-base-content/70">Reward:</span>
-                    <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.get_absolute_url }}">
-                      {{ contribution.reward }}
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right section — fixed for mobile -->
-              <div class="flex items-center gap-4 mt-4 w-full justify-end sm:mt-0 sm:w-auto">
-                {% if contribution.reward.amount %}
-                <div class="text-right">
-                  <div class="text-sm font-semibold text-base-content/70">Amount</div>
-                  <div class="text-success font-bold">{{ contribution.reward.amount|floatformat:"g" }}</div>
-                </div>
-                {% endif %}
-                <i class="fas fa-chevron-right text-base-content/30 group-hover:text-base-content/60 transition-colors"></i>
-              </div>
-
-            </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="text-center py-12">
-            <i class="fas fa-inbox text-4xl text-base-content/30 mb-4"></i>
-            <h3 class="text-xl font-semibold mb-2">No Contributions</h3>
-            <p class="text-base-content/70 max-w-md mx-auto">
-              This cycle doesn't have any contributions yet. Contributions will appear here once they are submitted and confirmed.
-            </p>
-          </div>
-        {% endif %}
+      <div class="flex justify-between">
+        <span class="text-sm font-semibold text-base-content/70">Updated</span>
+        <span class="text-sm text-base-content">{{ cycle.updated_at }}</span>
       </div>
+    </div>
+  </div>
+{% endblock %}
 
+{% block additional_content %}
+  <!-- Contributions -->
+  <div class="stat-card">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-code-branch text-primary"></i>
+        <h2 class="text-xl font-bold">Contributions</h2>
+      </div>
+      <div class="badge badge-primary badge-lg">
+        {{ cycle.contributions_count }} total
+      </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="space-y-6">
-      <!-- Cycle Stats -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-chart-bar text-info"></i>
-          <h2 class="text-xl font-bold">Cycle Stats</h2>
-        </div>
+    {% if cycle.prefetched_contributions %}
+      <div class="space-y-4">
+        {% for contribution in cycle.prefetched_contributions %}
+        <div class="flex flex-wrap items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
 
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Duration</span>
-            <span class="font-semibold">{{ cycle.start }} - {{ cycle.end }}</span>
+          <!-- Left section -->
+          <div class="flex items-center gap-4">
+            <div class="p-3 rounded-lg bg-primary/10 text-primary">
+              <i class="fas fa-user-check"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-3 mb-1">
+                <span class="font-semibold text-base-content/70">Contributor:</span>
+                <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.contributor.get_absolute_url }}">
+                  {{ contribution.contributor }}
+                </a>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="font-semibold text-base-content/70">Reward:</span>
+                <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.get_absolute_url }}">
+                  {{ contribution.reward }}
+                </a>
+              </div>
+            </div>
           </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Total Rewards</span>
-            <span class="font-semibold text-success">{{ total_rewards|floatformat:"g" }}</span>
+
+          <!-- Right section -->
+          <div class="flex items-center gap-4 mt-4 w-full justify-end sm:mt-0 sm:w-auto">
+            {% if contribution.reward.amount %}
+            <div class="text-right">
+              <div class="text-sm font-semibold text-base-content/70">Amount</div>
+              <div class="text-success font-bold">{{ contribution.reward.amount|floatformat:"g" }}</div>
+            </div>
+            {% endif %}
+            <i class="fas fa-chevron-right text-base-content/30 group-hover:text-base-content/60 transition-colors"></i>
           </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Contributions</span>
-            <span class="font-semibold text-primary">{{ contributions_count }}</span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Status</span>
-            <span class="badge badge-info">Completed</span>
-          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-12">
+        <i class="fas fa-inbox text-4xl text-base-content/30 mb-4"></i>
+        <h3 class="text-xl font-semibold mb-2">No Contributions</h3>
+        <p class="text-base-content/70 max-w-md mx-auto">
+          This cycle doesn't have any contributions yet. Contributions will appear here once they are submitted and confirmed.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block sidebar_content %}
+  <!-- Cycle Stats -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-chart-bar text-info"></i>
+      <h2 class="text-xl font-bold">Cycle Stats</h2>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Duration</span>
+        <span class="font-semibold">{{ cycle.start }} - {{ cycle.end }}</span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Total Rewards</span>
+        <span class="font-semibold text-success">{{ cycle.total_rewards_amount|default:0|floatformat:"g" }}</span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Contributions</span>
+        <span class="font-semibold text-primary">{{ cycle.contributions_count }}</span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Status</span>
+        <span class="badge badge-info">Completed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-rocket text-accent"></i>
+      <h2 class="text-xl font-bold">Quick Actions</h2>
+    </div>
+
+    <div class="space-y-3">
+      <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-arrow-left mr-2"></i>
+        Back to Home
+      </a>
+      <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-sync-alt mr-2"></i>
+        All Cycles
+      </a>
+      <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-users mr-2"></i>
+        Contributors
+      </a>
+      <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+        <i class="fas fa-tasks mr-2"></i>
+        Browse Issues
+      </a>
+    </div>
+  </div>
+
+  <!-- Cycle Timeline -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-history text-warning"></i>
+      <h2 class="text-xl font-bold">Cycle Timeline</h2>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-calendar-plus text-success mt-1"></i>
+        <div>
+          <span class="font-semibold">Created:</span>
+          <p class="text-base-content/70">{{ cycle.created_at|date:"M j, Y" }}</p>
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-rocket text-accent"></i>
-          <h2 class="text-xl font-bold">Quick Actions</h2>
-        </div>
-
-        <div class="space-y-3">
-          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to Home
-          </a>
-          <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-sync-alt mr-2"></i>
-            All Cycles
-          </a>
-          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-users mr-2"></i>
-            Contributors
-          </a>
-          <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-tasks mr-2"></i>
-            Browse Issues
-          </a>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-calendar-check text-info mt-1"></i>
+        <div>
+          <span class="font-semibold">Last Updated:</span>
+          <p class="text-base-content/70">{{ cycle.updated_at|date:"M j, Y" }}</p>
         </div>
       </div>
 
-      <!-- Cycle Timeline -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-history text-warning"></i>
-          <h2 class="text-xl font-bold">Cycle Timeline</h2>
-        </div>
-
-        <div class="space-y-3 text-sm">
-          <div class="flex items-start gap-2">
-            <i class="fas fa-calendar-plus text-success mt-1"></i>
-            <div>
-              <span class="font-semibold">Created:</span>
-              <p class="text-base-content/70">{{ cycle.created_at|date:"M j, Y" }}</p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-2">
-            <i class="fas fa-calendar-check text-info mt-1"></i>
-            <div>
-              <span class="font-semibold">Last Updated:</span>
-              <p class="text-base-content/70">{{ cycle.updated_at|date:"M j, Y" }}</p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-2">
-            <i class="fas fa-clock text-warning mt-1"></i>
-            <div>
-              <span class="font-semibold">Period:</span>
-              <p class="text-base-content/70">{{ cycle.start|date:"M j" }} - {{ cycle.end|date:"M j, Y" }}</p>
-            </div>
-          </div>
+      <div class="flex items-start gap-2">
+        <i class="fas fa-clock text-warning mt-1"></i>
+        <div>
+          <span class="font-semibold">Period:</span>
+          <p class="text-base-content/70">{{ cycle.start|date:"M j" }} - {{ cycle.end|date:"M j, Y" }}</p>
         </div>
       </div>
     </div>
   </div>
-</div>
-{% endwith %}
 {% endblock %}

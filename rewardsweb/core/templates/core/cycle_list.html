@@ -1,118 +1,146 @@
-{% extends "base_generic.html" %}
+{% extends "base_standard.html" %}
 
 {% block title %}
   <title>Cycles - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}{{ PROJECT_OWNER }} Reward Cycles{% endblock %}
+{% block page_subtitle %}Browse all reward cycles and their contributions{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Browse all reward cycles and their contributions
-      </p>
-    </div>
-    {% if cycle_list %}
-    <div class="badge badge-primary badge-lg">
-      <i class="fas fa-sync-alt mr-1"></i>
-      {{ total_cycles }} Cycle{{ total_cycles|pluralize }}
-    </div>
-    {% endif %}
-  </div>
+{% block header_badge_content %}
+  <i class="fas fa-sync-alt mr-1"></i>
+  {{ total_cycles }} Cycle{{ total_cycles|pluralize }}
+{% endblock %}
 
-  <!-- Cycles List -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-6">
-      <i class="fas fa-list text-primary"></i>
-      <h2 class="text-xl font-bold">All Cycles</h2>
-    </div>
+{% block main_content %}
+<div class="space-y-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content Column -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Cycles List -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-6">
+          <i class="fas fa-list text-primary"></i>
+          <h2 class="text-xl font-bold">All Cycles</h2>
+        </div>
 
-    {% if cycle_list %}
-      <div class="space-y-4">
-        {% for cycle in cycle_list %}
-        <div class="flex flex-wrap items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
-          <div class="flex items-center gap-4">
-            <div class="p-3 rounded-lg bg-primary/10 text-primary">
-              <i class="fas fa-sync-alt"></i>
-            </div>
-            <div>
-              <a class="link link-accent text-xl font-semibold hover:no-underline" href="{{ cycle.get_absolute_url }}">
-                {{ cycle.info }}
-              </a>
-              <div class="flex items-center gap-4 mt-2 text-sm text-base-content/70">
-                <div class="flex items-center gap-2">
-                  <i class="fas fa-play-circle text-success"></i>
-                  <span>{{ cycle.start }}</span>
+        {% if cycle_list %}
+          <div class="space-y-4">
+            {% for cycle in cycle_list %}
+            <div class="flex flex-wrap items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
+              <div class="flex items-center gap-4">
+                <div class="p-3 rounded-lg bg-primary/10 text-primary">
+                  <i class="fas fa-sync-alt"></i>
                 </div>
-                <div class="flex items-center gap-2">
-                  <i class="fas fa-stop-circle text-warning"></i>
-                  <span>{{ cycle.end }}</span>
+                <div>
+                  <a class="link link-accent text-xl font-semibold hover:no-underline" href="{{ cycle.get_absolute_url }}">
+                    {{ cycle.info }}
+                  </a>
+                  <div class="flex items-center gap-4 mt-2 text-sm text-base-content/70">
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-play-circle text-success"></i>
+                      <span>{{ cycle.start }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-stop-circle text-warning"></i>
+                      <span>{{ cycle.end }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
+              <div class="flex items-center gap-4 mt-4 w-full justify-end sm:mt-0 sm:w-auto">
+                <div class="text-right">
+                  <div class="text-sm font-semibold text-base-content/70">Total Rewards</div>
+                  <div class="text-success font-bold">{{ cycle.total_rewards_amount|default:0|floatformat:"g" }}</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-semibold text-base-content/70">Contributions</div>
+                  <div class="text-info font-bold">{{ cycle.contributions_count }}</div>
+                </div>
+                <i class="fas fa-chevron-right text-base-content/30 group-hover:text-base-content/60 transition-colors"></i>
+              </div>
             </div>
+            {% endfor %}
           </div>
-          <div class="flex items-center gap-4 mt-4 w-full justify-end sm:mt-0 sm:w-auto">
-            <div class="text-right">
-              <div class="text-sm font-semibold text-base-content/70">Total Rewards</div>
-              <div class="text-success font-bold">{{ cycle.total_rewards_amount|default:0|floatformat:"g" }}</div>
-            </div>
-            <div class="text-right">
-              <div class="text-sm font-semibold text-base-content/70">Contributions</div>
-              <div class="text-info font-bold">{{ cycle.contributions_count }}</div>
-            </div>
-            <i class="fas fa-chevron-right text-base-content/30 group-hover:text-base-content/60 transition-colors"></i>
+
+          {% include "snippets/pagination.html" %}
+
+        {% else %}
+          <div class="text-center py-12">
+            <i class="fas fa-sync-alt text-4xl text-base-content/30 mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">No Cycles Found</h3>
+            <p class="text-base-content/70 max-w-md mx-auto mb-6">
+              There are no reward cycles in the database yet. 
+              Cycles will appear here once they are created and contributions are recorded.
+            </p>
+            <a href="{% url 'index' %}" class="btn btn-primary">
+              <i class="fas fa-home mr-2"></i>
+              Back to Home
+            </a>
           </div>
-        </div>
-        {% endfor %}
+        {% endif %}
       </div>
-
-      {% include "snippets/pagination.html" %}
-
-    {% else %}
-      <div class="text-center py-12">
-        <i class="fas fa-sync-alt text-4xl text-base-content/30 mb-4"></i>
-        <h3 class="text-xl font-semibold mb-2">No Cycles Found</h3>
-        <p class="text-base-content/70 max-w-md mx-auto mb-6">
-          There are no reward cycles in the database yet. 
-          Cycles will appear here once they are created and contributions are recorded.
-        </p>
-        <a href="{% url 'index' %}" class="btn btn-primary">
-          <i class="fas fa-home mr-2"></i>
-          Back to Home
-        </a>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-rocket text-accent"></i>
-      <h2 class="text-xl font-bold">Quick Actions</h2>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <a href="{% url 'index' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-arrow-left mr-2"></i>
-        Back to Home
-      </a>
-      <a href="{% url 'contributors' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-users mr-2"></i>
-        Contributors
-      </a>
-      <a href="{% url 'issues' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-tasks mr-2"></i>
-        Browse Issues
-      </a>
-      {% if user.is_superuser %}
-      <a href="{% url 'unconfirmed_contributions' %}" class="btn btn-outline justify-start">
-        <i class="fas fa-clock mr-2"></i>
-        Unconfirmed
-      </a>
-      {% endif %}
+    <!-- Sidebar Column -->
+    <div class="space-y-6">
+      <!-- Quick Stats -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-bar text-info"></i>
+          <h2 class="text-xl font-bold">Cycles Stats</h2>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Cycles</span>
+            <span class="font-semibold text-primary">{{ total_cycles }}</span>
+          </div>
+
+          {% if total_contributions %}
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Contributions</span>
+            <span class="font-semibold text-secondary">{{ total_contributions }}</span>
+          </div>
+          {% endif %}
+
+          {% if total_rewards %}
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Rewards</span>
+            <span class="font-semibold text-success">{{ total_rewards|default:0|floatformat:"g" }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-rocket text-accent"></i>
+          <h2 class="text-xl font-bold">Quick Actions</h2>
+        </div>
+
+        <div class="space-y-3">
+          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Home
+          </a>
+          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-users mr-2"></i>
+            Contributors
+          </a>
+          <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-tasks mr-2"></i>
+            Browse Issues
+          </a>
+          {% if user.is_superuser %}
+          <a href="{% url 'unconfirmed_contributions' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-clock mr-2"></i>
+            Unconfirmed
+          </a>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </div>

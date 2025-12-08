@@ -1,0 +1,21 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<div class="space-y-6 fade-in">
+  <!-- Standard Page Header -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">{% block page_title %}{{ PROJECT_NAME }}{% endblock %}</h1>
+      <p class="mt-2 text-lg text-base-content/70">
+        {% block page_subtitle %}{% endblock %}
+      </p>
+    </div>
+    <div class="badge {% block header_badge_class %}badge-primary{% endblock %} badge-lg">
+      {% block header_badge_content %}{% endblock %}
+    </div>
+  </div>
+  
+  <!-- Main Content Area -->
+  {% block main_content %}{% endblock %}
+</div>
+{% endblock %}

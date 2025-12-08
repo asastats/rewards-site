@@ -1,0 +1,27 @@
+<div class="form-control">
+  {% if icon %}
+  <div class="flex items-center gap-2 mb-3">
+    <i class="fas fa-{{ icon }} text-primary"></i>
+    <label class="label-text font-semibold text-lg">{{ field.label }}</label>
+  </div>
+  {% else %}
+  <label class="label-text font-semibold text-lg">{{ field.label }}</label>
+  {% endif %}
+  
+  <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
+    {{ field }}
+  </div>
+  
+  {% if field.errors %}
+  <div class="text-error text-sm mt-2 flex items-center gap-2">
+    <i class="fas fa-exclamation-circle"></i>
+    {% for error in field.errors %}
+      <span>{{ error }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+  
+  {% if help_text %}
+  <div class="text-xs text-base-content/60 mt-2">{{ help_text }}</div>
+  {% endif %}
+</div>

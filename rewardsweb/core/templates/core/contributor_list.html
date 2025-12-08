@@ -1,4 +1,4 @@
-{% extends "base_generic.html" %}
+{% extends "base_standard.html" %}
 {% load partials %}
 
 {% block title %}
@@ -6,22 +6,15 @@
 {% endblock %}
 
 {% block page_title %}{{ PROJECT_OWNER }} Contributors{% endblock %}
+{% block page_subtitle %}Browse and search all contributors in the system{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Browse and search all contributors in the system
-      </p>
-    </div>
-    <div class="badge badge-primary badge-lg">
-      <i class="fas fa-users mr-1"></i>
-      {{ page_obj.paginator.count }} Contributors
-    </div>
-  </div>
+{% block header_badge_content %}
+  <i class="fas fa-users mr-1"></i>
+  {{ page_obj.paginator.count }} Contributors
+{% endblock %}
 
+{% block main_content %}
+<div class="space-y-6">
   <!-- Search Card -->
   <div class="stat-card">
     <div class="flex items-center gap-2 mb-4">
@@ -74,8 +67,75 @@
     </form>
   </div>
 
-  <div id="results-container">
-    {% partial results_partial %}
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Results Column -->
+    <div class="lg:col-span-2">
+      <div id="results-container">
+        {% partial results_partial %}
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="space-y-6">
+      <!-- Quick Actions -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-rocket text-accent"></i>
+          <h2 class="text-xl font-bold">Quick Actions</h2>
+        </div>
+
+        <div class="space-y-3">
+          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Home
+          </a>
+          <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-sync-alt mr-2"></i>
+            View Cycles
+          </a>
+          <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-tasks mr-2"></i>
+            Browse Issues
+          </a>
+          {% if user.is_superuser %}
+          <a href="{% url 'unconfirmed_contributions' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-clock mr-2"></i>
+            Unconfirmed
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Stats Card -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-bar text-info"></i>
+          <h2 class="text-xl font-bold">Contributors Stats</h2>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Total Contributors</span>
+            <span class="font-semibold text-primary">{{ page_obj.paginator.count }}</span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Per Page</span>
+            <span class="font-semibold text-secondary">{{ paginate_by|default:20 }}</span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Pages</span>
+            <span class="font-semibold text-accent">{{ paginator.num_pages|default:1 }}</span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Current Page</span>
+            <span class="font-semibold text-success">{{ page_obj.number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -191,7 +251,7 @@
           Showing <span class="font-semibold">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span> 
           of <span class="font-semibold">{{ paginator.count }}</span> items
         </div>
-        
+
         <div class="join">
           <!-- First Page -->
           {% if page_obj.has_previous %}
@@ -204,7 +264,7 @@
               <i class="fas fa-angle-double-left"></i>
             </a>
           {% endif %}
-          
+
           <!-- Previous Page -->
           {% if page_obj.has_previous %}
             <a hx-get="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}"
@@ -216,12 +276,12 @@
               <i class="fas fa-angle-left"></i>
             </a>
           {% endif %}
-          
+
           <!-- Current Page Indicator -->
           <div class="join-item btn btn-sm btn-outline btn-active pointer-events-none">
             Page {{ page_obj.number }} of {{ paginator.num_pages }}
           </div>
-          
+
           <!-- Next Page -->
           {% if page_obj.has_next %}
             <a hx-get="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}"
@@ -233,7 +293,7 @@
               <i class="fas fa-angle-right"></i>
             </a>
           {% endif %}
-          
+
           <!-- Last Page -->
           {% if page_obj.has_next %}
             <a hx-get="?{% if has_query_params %}{{ query_string }}&{% endif %}page={{ paginator.num_pages }}"
@@ -249,5 +309,4 @@
       </div>
     </div>
   {% endif %}
-
 {% endpartialdef %}

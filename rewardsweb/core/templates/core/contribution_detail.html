@@ -1,26 +1,163 @@
-{% extends "base_generic.html" %}
+{% extends "core/base_detail.html" %}
 
 {% block title %}
   <title>Contribution Details - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Contribution Details{% endblock %}
+{% block page_subtitle %}Detailed information about this contribution{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Detailed information about this contribution
-      </p>
+{% block header_badge_content %}
+  <i class="fas {% if contribution.confirmed %}fa-check-circle{% else %}fa-clock{% endif %} mr-1"></i>
+  {% if contribution.confirmed %}Confirmed{% else %}Pending{% endif %}
+{% endblock %}
+
+{% block header_badge_class %}
+  {% if contribution.confirmed %}badge-success{% else %}badge-warning{% endif %}
+{% endblock %}
+
+{% block detail_title %}Contribution Information{% endblock %}
+
+{% block detail_content %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Left Column -->
+    <div class="space-y-4">
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Contributor</span>
+        <a class="link link-accent font-semibold text-lg hover:no-underline" href="{{ contribution.contributor.get_absolute_url }}">
+          <i class="fas fa-user mr-2"></i>
+          {{ contribution.contributor }}
+        </a>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Cycle</span>
+        <span class="font-semibold text-base-content">
+          <i class="fas fa-sync-alt mr-2 text-info"></i>
+          {{ contribution.cycle }}
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Platform</span>
+        <span class="font-semibold text-base-content">
+          <i class="fas fa-plug mr-2 text-secondary"></i>
+          {{ contribution.platform }}
+        </span>
+      </div>
+
+      {% if contribution.url %}
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">URL</span>
+        <a href="{{ contribution.url }}" class="link link-accent font-semibold hover:no-underline truncate" target="_blank">
+          <i class="fas fa-external-link-alt mr-2"></i>
+          {{ contribution.url|urlizetrunc:40 }}
+        </a>
+      </div>
+      {% endif %}
     </div>
-    <div class="badge {% if contribution.confirmed %}badge-success{% else %}badge-warning{% endif %} badge-lg">
-      <i class="fas {% if contribution.confirmed %}fa-check-circle{% else %}fa-clock{% endif %} mr-1"></i>
-      {% if contribution.confirmed %}Confirmed{% else %}Pending{% endif %}
+
+    <!-- Right Column -->
+    <div class="space-y-4">
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Type</span>
+        <span class="font-semibold text-base-content">
+          <i class="fas fa-tag mr-2 text-accent"></i>
+          {{ contribution.reward.type }}
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Reward Level</span>
+        <span class="font-semibold text-base-content">
+          <i class="fas fa-star mr-2 text-warning"></i>
+          {{ contribution.reward.level }}
+        </span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Reward Amount</span>
+        <span class="font-semibold text-success text-lg">
+          <i class="fas fa-coins mr-2"></i>
+          {{ contribution.reward.amount|floatformat:"g" }}
+        </span>
+      </div>
+
+      {% if contribution.percentage != 1 %}
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-1">Percentage</span>
+        <span class="font-semibold text-base-content">
+          <i class="fas fa-percentage mr-2 text-info"></i>
+          {% widthratio contribution.percentage 1 100 %}%
+        </span>
+      </div>
+      {% endif %}
     </div>
   </div>
 
+  <!-- Additional Information -->
+  <div class="mt-6 pt-6 border-t border-base-300">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% if contribution.comment %}
+      <div class="flex flex-col">
+        <span class="text-sm font-semibold text-base-content/70 mb-2">Comment</span>
+        <div class="bg-base-200 p-4 rounded-lg">
+          <p class="text-base-content/80 italic">{{ contribution.comment }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="space-y-2">
+        <div class="flex justify-between">
+          <span class="text-sm font-semibold text-base-content/70">Created</span>
+          <span class="text-sm text-base-content">{{ contribution.created_at }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-sm font-semibold text-base-content/70">Updated</span>
+          <span class="text-sm text-base-content">{{ contribution.updated_at }}</span>
+        </div>
+        {% if contribution.issue %}
+        <div class="flex justify-between">
+          <span class="text-sm font-semibold text-base-content/70">Linked Issue</span>
+          <a class="link link-accent text-sm hover:no-underline" href="{{ contribution.issue.get_absolute_url }}">
+            {{ contribution.issue }}
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block detail_actions %}
+  <!-- Admin Actions Section -->
+  {% if user.is_superuser %}
+  <div class="mt-6 pt-6 border-t border-base-300">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-tools text-warning"></i>
+      <h3 class="text-lg font-semibold">Administrator Actions</h3>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3">
+      {% if not contribution.confirmed %}
+        {% include "includes/buttons/superuser_action.html" with url_name='create_issue' arg1=contribution.id text="Create Issue" icon="plus-circle" color="success" %}
+      {% endif %}
+
+      {% include "includes/buttons/superuser_action.html" with url_name='contribution_edit' arg1=contribution.id text="Edit Contribution" icon="edit" color="primary" %}
+
+      {% if not contribution.confirmed %}
+      <div class="flex gap-2 ml-auto">
+        {% include "includes/buttons/superuser_action.html" with url_name='contribution_invalidate' arg1=contribution.id arg2='wontfix' text="Mark as Wontfix" icon="times-circle" %}
+        {% include "includes/buttons/superuser_action.html" with url_name='contribution_invalidate' arg1=contribution.id arg2='duplicate' text="Mark as Duplicate" icon="copy" %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+{% endblock %}
+
+{% block additional_content %}
   <!-- Status Alert -->
   {% if not contribution.confirmed %}
   <div class="stat-card bg-warning/5 border-warning/20">
@@ -36,259 +173,100 @@
     </div>
   </div>
   {% endif %}
+{% endblock %}
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Content -->
-    <div class="lg:col-span-2 space-y-6">
-      <!-- Contribution Information -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-6">
-          <i class="fas fa-info-circle text-primary"></i>
-          <h2 class="text-xl font-bold">Contribution Information</h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Left Column -->
-          <div class="space-y-4">
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Contributor</span>
-              <a class="link link-accent font-semibold text-lg hover:no-underline" href="{{ contribution.contributor.get_absolute_url }}">
-                <i class="fas fa-user mr-2"></i>
-                {{ contribution.contributor }}
-              </a>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Cycle</span>
-              <span class="font-semibold text-base-content">
-                <i class="fas fa-sync-alt mr-2 text-info"></i>
-                {{ contribution.cycle }}
-              </span>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Platform</span>
-              <span class="font-semibold text-base-content">
-                <i class="fas fa-plug mr-2 text-secondary"></i>
-                {{ contribution.platform }}
-              </span>
-            </div>
-
-            {% if contribution.url %}
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">URL</span>
-              <a href="{{ contribution.url }}" class="link link-accent font-semibold hover:no-underline truncate" target="_blank">
-                <i class="fas fa-external-link-alt mr-2"></i>
-                {{ contribution.url|urlizetrunc:40 }}
-              </a>
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Right Column -->
-          <div class="space-y-4">
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Type</span>
-              <span class="font-semibold text-base-content">
-                <i class="fas fa-tag mr-2 text-accent"></i>
-                {{ contribution.reward.type }}
-              </span>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Reward Level</span>
-              <span class="font-semibold text-base-content">
-                <i class="fas fa-star mr-2 text-warning"></i>
-                {{ contribution.reward.level }}
-              </span>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Reward Amount</span>
-              <span class="font-semibold text-success text-lg">
-                <i class="fas fa-coins mr-2"></i>
-                {{ contribution.reward.amount|floatformat:"g" }}
-              </span>
-            </div>
-
-            {% if contribution.percentage != 1 %}
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-1">Percentage</span>
-              <span class="font-semibold text-base-content">
-                <i class="fas fa-percentage mr-2 text-info"></i>
-                {% widthratio contribution.percentage 1 100 %}%
-              </span>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Additional Information -->
-        <div class="mt-6 pt-6 border-t border-base-300">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {% if contribution.comment %}
-            <div class="flex flex-col">
-              <span class="text-sm font-semibold text-base-content/70 mb-2">Comment</span>
-              <div class="bg-base-200 p-4 rounded-lg">
-                <p class="text-base-content/80 italic">{{ contribution.comment }}</p>
-              </div>
-            </div>
-            {% endif %}
-
-            <div class="space-y-2">
-              <div class="flex justify-between">
-                <span class="text-sm font-semibold text-base-content/70">Created</span>
-                <span class="text-sm text-base-content">{{ contribution.created_at }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-sm font-semibold text-base-content/70">Updated</span>
-                <span class="text-sm text-base-content">{{ contribution.updated_at }}</span>
-              </div>
-              {% if contribution.issue %}
-              <div class="flex justify-between">
-                <span class="text-sm font-semibold text-base-content/70">Linked Issue</span>
-                <a class="link link-accent text-sm hover:no-underline" href="{{ contribution.issue.get_absolute_url }}">
-                  {{ contribution.issue }}
-                </a>
-              </div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Admin Actions -->
-      {% if user.is_superuser %}
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-tools text-warning"></i>
-          <h2 class="text-xl font-bold">Administrator Actions</h2>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-3">
-          {% if not contribution.confirmed %}
-          <a class="btn btn-success" href="{% url 'create_issue' contribution.id %}">
-            <i class="fas fa-plus-circle mr-2"></i>
-            Create Issue
-          </a>
-          {% endif %}
-          
-          <a href="{% url 'contribution_edit' contribution.id %}" class="btn btn-primary">
-            <i class="fas fa-edit mr-2"></i>
-            Edit Contribution
-          </a>
-
-          {% if not contribution.confirmed %}
-          <div class="flex gap-2 ml-auto">
-            <a class="btn btn-warning" href="{% url 'contribution_invalidate' contribution.id 'wontfix' %}">
-              <i class="fas fa-times-circle mr-2"></i>
-              Mark as Wontfix
-            </a>
-            <a class="btn btn-warning" href="{% url 'contribution_invalidate' contribution.id 'duplicate' %}">
-              <i class="fas fa-copy mr-2"></i>
-              Mark as Duplicate
-            </a>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
+{% block sidebar_content %}
+  <!-- Quick Stats -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-chart-bar text-info"></i>
+      <h2 class="text-xl font-bold">Contribution Stats</h2>
     </div>
 
-    <!-- Sidebar -->
-    <div class="space-y-6">
-      <!-- Quick Stats -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-chart-bar text-info"></i>
-          <h2 class="text-xl font-bold">Contribution Stats</h2>
-        </div>
-
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Status</span>
-            {% if not contribution.confirmed %}
-              <span class="badge badge-warning">Pending</span>
-            {% else %}
-              {% if not contribution.issue %}
-                <span class="badge badge-neutral">Dismissed</span>
+    <div class="space-y-4">
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Status</span>
+        {% if not contribution.confirmed %}
+          <span class="badge badge-warning">Pending</span>
+        {% else %}
+          {% if not contribution.issue %}
+            <span class="badge badge-neutral">Dismissed</span>
+          {% else %}
+            {% with status=contribution.issue.status %}
+              {% if status == 'wontfix' %}
+                <span class="badge badge-neutral">{{ status|title }}</span>
+              {% elif status == 'addressed' or status == 'claimable' %}
+                <span class="badge badge-success">{{ status|title }}</span>
+              {% elif status == 'archived' %}
+                <span class="badge badge-info">{{ status|title }}</span>
               {% else %}
-                {% with status=contribution.issue.status %}
-                  {% if status == 'wontfix' %}
-                    <span class="badge badge-neutral">{{ status|title }}</span>
-                  {% elif status == 'addressed' or status == 'claimable' %}
-                    <span class="badge badge-success">{{ status|title }}</span>
-                  {% elif status == 'archived' %}
-                    <span class="badge badge-info">{{ status|title }}</span>
-                  {% else %}
-                    <span class="badge badge-warning">{{ status|title }}</span>
-                  {% endif %}
-                {% endwith %}
+                <span class="badge badge-warning">{{ status|title }}</span>
               {% endif %}
-            {% endif %}
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Reward Type</span>
-            <span class="font-semibold">{{ contribution.reward.type }}</span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Level</span>
-            <span class="font-semibold">{{ contribution.reward.level }}</span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Platform</span>
-            <span class="font-semibold">{{ contribution.platform }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-rocket text-accent"></i>
-          <h2 class="text-xl font-bold">Quick Actions</h2>
-        </div>
-
-        <div class="space-y-3">
-          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to Home
-          </a>
-          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-users mr-2"></i>
-            All Contributors
-          </a>
-          <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-sync-alt mr-2"></i>
-            View Cycles
-          </a>
-          {% if contribution.issue %}
-          <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
-            <i class="fas fa-tasks mr-2"></i>
-            Browse Issues
-          </a>
+            {% endwith %}
           {% endif %}
-        </div>
+        {% endif %}
       </div>
 
-      <!-- Contributor Info -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-user-check text-primary"></i>
-          <h2 class="text-xl font-bold">Contributor</h2>
-        </div>
-        
-        <div class="text-center p-4 bg-base-200 rounded-lg">
-          <a class="link link-accent font-semibold text-lg hover:no-underline" href="{{ contribution.contributor.get_absolute_url }}">
-            {{ contribution.contributor }}
-          </a>
-          <p class="text-sm text-base-content/70 mt-2">View full contributor profile</p>
-        </div>
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Reward Type</span>
+        <span class="font-semibold">{{ contribution.reward.type }}</span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Level</span>
+        <span class="font-semibold">{{ contribution.reward.level }}</span>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Platform</span>
+        <span class="font-semibold">{{ contribution.platform }}</span>
       </div>
     </div>
   </div>
-</div>
+
+  <!-- Contributor Info -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-user-check text-primary"></i>
+      <h2 class="text-xl font-bold">Contributor</h2>
+    </div>
+
+    <div class="text-center p-4 bg-base-200 rounded-lg">
+      <a class="link link-accent font-semibold text-lg hover:no-underline" href="{{ contribution.contributor.get_absolute_url }}">
+        {{ contribution.contributor }}
+      </a>
+      <p class="text-sm text-base-content/70 mt-2">View full contributor profile</p>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="space-y-6">
+    <!-- Quick Actions Card -->
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-rocket text-accent"></i>
+        <h2 class="text-xl font-bold">Quick Actions</h2>
+      </div>
+      <div class="space-y-3">
+        <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Back to Home
+        </a>
+        <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-users mr-2"></i>
+          All Contributors
+        </a>
+        <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-sync-alt mr-2"></i>
+          View Cycles
+        </a>
+        {% if contribution.issue %}
+        <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+          <i class="fas fa-tasks mr-2"></i>
+          Browse Issues
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 {% endblock %}

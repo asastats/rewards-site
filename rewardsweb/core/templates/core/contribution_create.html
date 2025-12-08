@@ -1,121 +1,59 @@
-{% extends "base_generic.html" %}
+{% extends "core/base_form.html" %}
 
 {% block title %}
 <title>Add Contribution - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Add New Contribution{% endblock %}
+{% block page_subtitle %}Create a new contribution record{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
+{% block header_badge_content %}
+<i class="fas fa-plus mr-1"></i> New
+{% endblock %}
 
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-6">
-      <i class="fas fa-plus text-primary"></i>
-      <h2 class="text-xl font-bold">New Contribution</h2>
+{% block form_title %}New Contribution{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="q" value="{{ request.GET.q }}">
+
+  {% include "includes/form_field.html" with field=form.contributor icon="user" %}
+  {% include "includes/form_field.html" with field=form.cycle icon="sync-alt" %}
+  {% include "includes/form_field.html" with field=form.platform icon="plug" %}
+  {% include "includes/form_field.html" with field=form.reward icon="award" %}
+  {% include "includes/form_field.html" with field=form.percentage icon="percentage" help_text="Enter a value between 0 and 1 (e.g., 0.5 for 50%)" %}
+  {% include "includes/form_field.html" with field=form.comment icon="comment" %}
+
+  {% if not form.preselected_issue %}
+  <div class="form-control">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fab fa-github text-base-content"></i>
+      <label class="label-text font-semibold text-lg">GitHub Issue</label>
     </div>
 
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="q" value="{{ request.GET.q }}">
-
-      {% if form.non_field_errors %}
-      <div class="alert alert-error shadow-lg mb-6">
-        <div class="flex items-start gap-3">
-          <i class="fas fa-exclamation-triangle text-xl mt-0.5"></i>
-          <div>
-            <h3 class="font-bold">Validation Error</h3>
-            {% for error in form.non_field_errors %}
-              <div class="text-sm">{{ error }}</div>
-            {% endfor %}
-          </div>
+    <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
+      <div class="mb-4">
+        <label class="label py-0 mb-2">Issue Number</label>
+        <div class="bg-base-100 p-1 rounded-lg border border-base-300">
+          {{ form.issue_number }}
         </div>
       </div>
-      {% endif %}
 
-      <div class="space-y-6">
-
-        <div class="form-control">
-          <label class="label-text font-semibold text-lg">{{ form.contributor.label }}</label>
-          <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-            {{ form.contributor }}
-          </div>
+      <div>
+        <label class="label py-0 mb-2">Issue Status</label>
+        <div class="flex gap-2 p-1 rounded-lg items-stretch bg-base-100 border border-base-300">
+          {% for radio in form.issue_status %}
+          <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-200 px-4 py-3 rounded transition-colors duration-200 flex-1 justify-center">
+            {{ radio.tag }}
+            <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
+          </label>
+          {% endfor %}
         </div>
-
-        <div class="form-control">
-          <label class="label-text font-semibold text-lg">{{ form.cycle.label }}</label>
-          <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-            {{ form.cycle }}
-          </div>
-        </div>
-
-        <div class="form-control">
-          <label class="label-text font-semibold text-lg">{{ form.platform.label }}</label>
-          <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-            {{ form.platform }}
-          </div>
-        </div>
-
-        <div class="form-control">
-          <label class="label-text font-semibold text-lg">{{ form.reward.label }}</label>
-          <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-            {{ form.reward }}
-          </div>
-        </div>
-
-        <div class="form-control">
-          <label class="label-text font-semibold text-lg">{{ form.percentage.label }}</label>
-          <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-            {{ form.percentage }}
-          </div>
-        </div>
-
-        <div class="form-control">
-          <label class="label-text font-semibold text-lg">{{ form.comment.label }}</label>
-          <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300">
-            {{ form.comment }}
-          </div>
-        </div>
-
-        {% if not form.preselected_issue %}
-        <div class="form-control">
-          <label class="label-text font-semibold text-lg">GitHub Issue</label>
-
-          <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
-
-            <label class="label py-0 mb-2">Issue Number</label>
-            <div class="bg-base-100 p-1 rounded-lg border border-base-300">
-              {{ form.issue_number }}
-            </div>
-
-            <label class="label py-0 mb-2 mt-4">Issue Status</label>
-            <div class="flex gap-2 p-1 rounded-lg items-stretch bg-base-100 border border-base-300">
-              {% for radio in form.issue_status %}
-              <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-200 px-4 py-3 rounded transition-colors duration-200 flex-1 justify-center">
-                {{ radio.tag }}
-                <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
-              </label>
-              {% endfor %}
-            </div>
-
-          </div>
-        </div>
-        {% endif %}
-
       </div>
-
-      <div class="flex gap-4 mt-8 pt-6 border-t border-base-300">
-        <a href="{% url 'index' %}" class="btn btn-outline flex-1">
-          <i class="fas fa-times mr-2"></i>
-          Cancel
-        </a>
-        <button type="submit" class="btn btn-primary flex-1">
-          <i class="fas fa-save mr-2"></i>
-          Create Contribution
-        </button>
-      </div>
-
-    </form>
+    </div>
   </div>
-</div>
+  {% endif %}
+{% endblock %}
+
+{% block form_actions %}
+  {% include "includes/action_buttons.html" with cancel_url='index' submit_text="Create Contribution" %}
 {% endblock %}

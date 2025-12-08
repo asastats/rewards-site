@@ -1,37 +1,32 @@
-{% extends "account/base_entrance.html" %}
+{% extends "base_standard.html" %}
 {% load i18n allauth account %}
 
-{% block head_title %}
-  {% trans "Complete Signup - {{ PROJECT_NAME }}" %}
+{% block title %}
+  <title>Complete Signup - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
-{% block page_title %}Complete Your {{ provider_name }} Signup{% endblock %}
+{% block page_title %}Complete Your {{ account.get_provider.name }} Signup{% endblock %}
+{% block page_subtitle %}Finalize your account creation with additional details{% endblock %}
 
-{% block inner_content %}
+{% block header_badge_content %}
+  {% if account.get_provider.id == "discord" %}
+    <i class="fab fa-discord mr-1"></i>
+  {% elif account.get_provider.id == "google" %}
+    <i class="fab fa-google mr-1"></i>
+  {% elif account.get_provider.id == "github" %}
+    <i class="fab fa-github mr-1"></i>
+  {% elif account.get_provider.id == "reddit" %}
+    <i class="fab fa-reddit mr-1"></i>
+  {% elif account.get_provider.id == "twitter_oauth2" %}
+    <i class="fab fa-x-twitter mr-1"></i>
+  {% endif %}
+  Complete Signup
+{% endblock %}
+
+{% block header_badge_class %}badge-primary{% endblock %}
+
+{% block main_content %}
 <div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Finalize your account creation with additional details
-      </p>
-    </div>
-    <div class="badge badge-primary badge-lg">
-      {% if account.get_provider.id == "discord" %}
-        <i class="fab fa-discord mr-1"></i>
-      {% elif account.get_provider.id == "google" %}
-        <i class="fab fa-google mr-1"></i>
-      {% elif account.get_provider.id == "github" %}
-        <i class="fab fa-github mr-1"></i>
-      {% elif account.get_provider.id == "reddit" %}
-        <i class="fab fa-reddit mr-1"></i>
-      {% elif account.get_provider.id == "twitter_oauth2" %}
-        <i class="fab fa-x-twitter mr-1"></i>
-      {% endif %}
-      Complete Signup
-    </div>
-  </div>
-
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Content -->
     <div class="lg:col-span-2">
@@ -124,7 +119,7 @@
           <i class="fas fa-info-circle text-info"></i>
           <h2 class="text-xl font-bold">Account Information</h2>
         </div>
-        
+
         <div class="space-y-3 text-sm">
           <div class="flex items-start gap-2">
             <i class="fas fa-share-alt text-primary mt-1"></i>
@@ -133,7 +128,7 @@
               <p class="text-base-content/70">{{ account.get_provider.name }}</p>
             </div>
           </div>
-          
+
           <div class="flex items-start gap-2">
             <i class="fas fa-user-check text-success mt-1"></i>
             <div>
@@ -141,7 +136,7 @@
               <p class="text-base-content/70">Finalizing registration</p>
             </div>
           </div>
-          
+
           <div class="flex items-start gap-2">
             <i class="fas fa-rocket text-warning mt-1"></i>
             <div>

@@ -136,6 +136,25 @@
           </div>
         </div>
       </div>
+
+      <!-- Help Links (Added back from original template) -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-question-circle text-accent text-xl"></i>
+          <h2 class="text-xl font-bold">Help Links</h2>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <a href="{% url 'account_login' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-sign-in-alt mr-2"></i>
+            Already have an account?
+          </a>
+          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-home mr-2"></i>
+            Back to Home
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>

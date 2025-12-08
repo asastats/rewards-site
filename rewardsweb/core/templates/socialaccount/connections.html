@@ -1,27 +1,21 @@
-{% extends "account/base_entrance.html" %}
+{% extends "base_standard.html" %}
 {% load socialaccount i18n %}
 
-{% block head_title %}
-  {% trans "Linked Accounts - {{ PROJECT_NAME }}" %}
+{% block title %}
+  <title>Linked Accounts - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Linked Accounts{% endblock %}
+{% block page_subtitle %}Manage your connected social media accounts{% endblock %}
 
-{% block inner_content %}
+{% block header_badge_content %}
+  <i class="fas fa-share-alt mr-1"></i> Social Accounts
+{% endblock %}
+
+{% block header_badge_class %}badge-primary{% endblock %}
+
+{% block main_content %}
 <div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Manage your connected social media accounts
-      </p>
-    </div>
-    <div class="badge badge-primary badge-lg">
-      <i class="fas fa-share-alt mr-1"></i>
-      Social Accounts
-    </div>
-  </div>
-
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Content -->
     <div class="lg:col-span-2 space-y-6">
@@ -106,12 +100,12 @@
               {{ accounts|length }}
             </span>
           </div>
-          
+
           <div class="flex justify-between items-center">
             <span class="text-base-content/70">Status</span>
             <span class="badge badge-success">Active</span>
           </div>
-          
+
           <div class="flex justify-between items-center">
             <span class="text-base-content/70">Last Updated</span>
             <span class="font-semibold text-info">Now</span>
@@ -189,4 +183,4 @@
     </div>
   </div>
 </div>
-{% endblock inner_content %}
+{% endblock %}

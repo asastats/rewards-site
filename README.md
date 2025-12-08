@@ -50,7 +50,7 @@ Please check the [setup section](https://rewards-suite.readthedocs.io/en/latest/
 - [x] Create smart contract for rewards allocation and claiming
 - [x] Develop UI for rewards allocation and claiming
 - [x] Implement additional issue trackers besides GitHub
-- [ ] Create trackers and related parsers for mentions in social media messages (X and Reddit)
+- [x] Create trackers and related parsers for mentions in social media messages (X and Reddit)
+- [x] Enable automatic generation of transparency report snippets based on Mainnet allocations
 - [ ] Setup a server and deploy the application
-- [ ] Enable automatic generation of transparency report snippets based on Mainnet allocations
 - [ ] Deploy the smart contract on Mainnet

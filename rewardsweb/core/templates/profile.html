@@ -1,31 +1,26 @@
-{% extends "base_generic.html" %}
+{% extends "core/base_form.html" %}
 
 {% block title %}
   <title>Profile Settings - {{ PROJECT_NAME }}</title>
 {% endblock %}
 
 {% block page_title %}Profile Settings{% endblock %}
+{% block page_subtitle %}Manage your personal information and account preferences{% endblock %}
 
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Manage your personal information and account preferences
-      </p>
-    </div>
-    {% if user.profile.contributor %}
-    <div class="badge badge-primary badge-lg">
-      <i class="fas fa-user-check mr-1"></i>
-      Contributor
-    </div>
-    {% endif %}
-  </div>
+{% block header_badge_content %}
+  {% if user.profile.contributor %}
+    <i class="fas fa-user-check mr-1"></i> Contributor
+  {% endif %}
+{% endblock %}
 
+{% block header_badge_class %}{% if user.profile.contributor %}badge-primary{% endif %}{% endblock %}
+
+{% block form_title %}Personal Information{% endblock %}
+
+{% block form_fields %}
   <!-- Contributor Info Card -->
   {% if user.profile.contributor %}
-  <div class="stat-card bg-primary/5 border-primary/20">
+  <div class="stat-card bg-primary/5 border-primary/20 mb-6">
     <div class="flex items-start gap-3">
       <i class="fas fa-code-branch text-primary text-xl mt-1"></i>
       <div class="flex-1">
@@ -42,197 +37,179 @@
   </div>
   {% endif %}
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Content -->
-    <div class="lg:col-span-2 space-y-6">
-      <!-- Personal Information Form -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-6">
-          <i class="fas fa-user-edit text-primary"></i>
-          <h2 class="text-xl font-bold">Personal Information</h2>
-        </div>
+  <!-- Main Form Fields -->
+  <div class="space-y-6 mb-6">
+    {% for field in form.visible_fields %}
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text font-semibold text-base-content/80">{{ field.label }}</span>
+      </label>
+      {{ field }}
 
-        <form method="POST" enctype="multipart/form-data" action="." id="id_form">
-          {% csrf_token %}
+      {% if field.help_text %}
+      <label class="label">
+        <span class="label-text-alt text-base-content/60">{{ field.help_text }}</span>
+      </label>
+      {% endif %}
 
-          <!-- Main Form Fields -->
-          <div class="space-y-6 mb-6">
-            {% for field in form.visible_fields %}
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text font-semibold text-base-content/80">{{ field.label }}</span>
-              </label>
-              {{ field }}
-
-              {% if field.help_text %}
-              <label class="label">
-                <span class="label-text-alt text-base-content/60">{{ field.help_text }}</span>
-              </label>
-              {% endif %}
-
-              {% if field.errors %}
-              <div class="text-error text-sm mt-2 flex items-center gap-2">
-                <i class="fas fa-exclamation-circle"></i>
-                {{ field.errors|escape }}
-              </div>
-              {% endif %}
-            </div>
-            {% endfor %}
-          </div>
-
-          <!-- Non-field Errors -->
-          {% if form.non_field_errors %}
-          <div class="alert alert-error mb-6">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
-            {{ form.non_field_errors }}
-          </div>
-          {% endif %}
-
-          <!-- Profile Formset -->
-          <div class="border-2 border-base-300 rounded-xl p-6 mb-6 bg-base-200/50">
-            <div class="flex items-center gap-2 mb-4">
-              <i class="fas fa-id-card text-secondary"></i>
-              <h2 class="text-xl font-bold">Profile Information</h2>
-            </div>
-
-            {{ profile_form.management_form }}
-
-            {% for form in profile_form %}
-            <div class="space-y-6">
-              {% for field in form.visible_fields %}
-                {% if field.name != 'DELETE' %}
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text font-semibold text-base-content/80">{{ field.label }}</span>
-                  </label>
-                  {{ field }}
-
-                  {% if field.help_text %}
-                  <label class="label">
-                    <span class="label-text-alt text-base-content/60">{{ field.help_text }}</span>
-                  </label>
-                  {% endif %}
-
-                  {% if field.errors %}
-                  <div class="text-error text-sm mt-2 flex items-center gap-2">
-                    <i class="fas fa-exclamation-circle"></i>
-                    {{ field.errors|escape }}
-                  </div>
-                  {% endif %}
-                </div>
-                {% endif %}
-              {% endfor %}
-
-              {% for field in form.hidden_fields %}
-                {{ field }}
-              {% endfor %}
-            </div>
-            {% endfor %}
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex gap-4 mb-6">
-            <a class="btn btn-outline flex-1" href="{% url 'index' %}">
-              <i class="fas fa-arrow-left mr-2"></i>
-              Back to Home
-            </a>
-            <button class="btn btn-primary flex-1" id="id_submit" type="submit">
-              <i class="fas fa-save mr-2"></i>
-              Update Profile
-            </button>
-          </div>
-        </form>
+      {% if field.errors %}
+      <div class="text-error text-sm mt-2 flex items-center gap-2">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ field.errors|escape }}
       </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Non-field Errors -->
+  {% if form.non_field_errors %}
+  <div class="alert alert-error mb-6">
+    <i class="fas fa-exclamation-triangle mr-2"></i>
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
+
+  <!-- Profile Formset -->
+  <div class="border-2 border-base-300 rounded-xl p-6 mb-6 bg-base-200/50">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-id-card text-secondary"></i>
+      <h2 class="text-xl font-bold">Profile Information</h2>
     </div>
 
-    <!-- Sidebar - Account Management -->
+    {{ profile_form.management_form }}
+
+    {% for form in profile_form %}
     <div class="space-y-6">
-      <!-- Account Management Card -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-cog text-accent"></i>
-          <h2 class="text-xl font-bold">Account Management</h2>
+      {% for field in form.visible_fields %}
+        {% if field.name != 'DELETE' %}
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold text-base-content/80">{{ field.label }}</span>
+          </label>
+          {{ field }}
+
+          {% if field.help_text %}
+          <label class="label">
+            <span class="label-text-alt text-base-content/60">{{ field.help_text }}</span>
+          </label>
+          {% endif %}
+
+          {% if field.errors %}
+          <div class="text-error text-sm mt-2 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ field.errors|escape }}
+          </div>
+          {% endif %}
         </div>
+        {% endif %}
+      {% endfor %}
 
-        <div class="space-y-3">
-          <a class="btn btn-outline justify-start w-full" href="{% url 'account_change_password' %}" id="id_changepassword">
-            <i class="fas fa-key mr-3"></i>
-            <div class="text-left">
-              <div class="font-semibold">Change Password</div>
-              <div class="text-xs text-base-content/60">Update your account password</div>
-            </div>
-          </a>
+      {% for field in form.hidden_fields %}
+        {{ field }}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+{% endblock %}
 
-          <a class="btn btn-outline justify-start w-full" href="{% url 'account_email' %}" id="id_emails">
-            <i class="fas fa-envelope mr-3"></i>
-            <div class="text-left">
-              <div class="font-semibold">Email Addresses</div>
-              <div class="text-xs text-base-content/60">Manage your email preferences</div>
-            </div>
-          </a>
+{% block form_actions %}
+  <div class="flex gap-4">
+    <a class="btn btn-outline flex-1" href="{% url 'index' %}">
+      <i class="fas fa-arrow-left mr-2"></i>
+      Back to Home
+    </a>
+    <button class="btn btn-primary flex-1" id="id_submit" type="submit">
+      <i class="fas fa-save mr-2"></i>
+      Update Profile
+    </button>
+  </div>
+{% endblock %}
 
-          <a class="btn btn-outline justify-start w-full" href="{% url 'socialaccount_connections' %}" id="id_connections">
-            <i class="fas fa-share-alt mr-3"></i>
-            <div class="text-left">
-              <div class="font-semibold">Social Accounts</div>
-              <div class="text-xs text-base-content/60">Connect social media accounts</div>
-            </div>
-          </a>
+{% block sidebar_content %}
+  <!-- Account Management Card -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-cog text-accent"></i>
+      <h2 class="text-xl font-bold">Account Management</h2>
+    </div>
+
+    <div class="space-y-3">
+      <a class="btn btn-outline justify-start w-full" href="{% url 'account_change_password' %}" id="id_changepassword">
+        <i class="fas fa-key mr-3"></i>
+        <div class="text-left">
+          <div class="font-semibold">Change Password</div>
+          <div class="text-xs text-base-content/60">Update your account password</div>
         </div>
+      </a>
+
+      <a class="btn btn-outline justify-start w-full" href="{% url 'account_email' %}" id="id_emails">
+        <i class="fas fa-envelope mr-3"></i>
+        <div class="text-left">
+          <div class="font-semibold">Email Addresses</div>
+          <div class="text-xs text-base-content/60">Manage your email preferences</div>
+        </div>
+      </a>
+
+      <a class="btn btn-outline justify-start w-full" href="{% url 'socialaccount_connections' %}" id="id_connections">
+        <i class="fas fa-share-alt mr-3"></i>
+        <div class="text-left">
+          <div class="font-semibold">Social Accounts</div>
+          <div class="text-xs text-base-content/60">Connect social media accounts</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Profile Overview -->
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-chart-bar text-info"></i>
+      <h2 class="text-xl font-bold">Profile Overview</h2>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Member since</span>
+        <span class="font-semibold">{{ user.date_joined|date:"M j, Y" }}</span>
       </div>
 
-      <!-- Profile Overview -->
-      <div class="stat-card">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-chart-bar text-info"></i>
-          <h2 class="text-xl font-bold">Profile Overview</h2>
-        </div>
-
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Member since</span>
-            <span class="font-semibold">{{ user.date_joined|date:"M j, Y" }}</span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Last login</span>
-            <span class="font-semibold">{{ user.last_login|date:"M j, Y" }}</span>
-          </div>
-          
-          <div class="flex justify-between items-center">
-            <span class="text-base-content/70">Status</span>
-            <span class="badge badge-success">Active</span>
-          </div>
-        </div>
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Last login</span>
+        <span class="font-semibold">{{ user.last_login|date:"M j, Y" }}</span>
       </div>
 
-      <!-- Account Actions Card -->
-      <div class="stat-card border-error/20 bg-error/5">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-exclamation-triangle text-error"></i>
-          <h2 class="text-xl font-bold text-error">Account Actions</h2>
-        </div>
-
-        <div class="space-y-3">
-          <a class="btn btn-error btn-outline justify-start w-full" href="{% url 'deactivate_profile' %}" id="id_deactivate">
-            <i class="fas fa-ban mr-3"></i>
-            <div class="text-left">
-              <div class="font-semibold">Deactivate Account</div>
-              <div class="text-xs text-error/70">Permanently delete your account</div>
-            </div>
-          </a>
-        </div>
-
-        <div class="mt-4 p-3 bg-error/10 rounded-lg">
-          <div class="flex items-start gap-2">
-            <i class="fas fa-info-circle text-error mt-0.5"></i>
-            <p class="text-sm text-error/80">
-              This action cannot be undone. Your account and all associated data will be permanently deleted.
-            </p>
-          </div>
-        </div>
+      <div class="flex justify-between items-center">
+        <span class="text-base-content/70">Status</span>
+        <span class="badge badge-success">Active</span>
       </div>
     </div>
   </div>
-</div>
+
+  <!-- Account Actions Card -->
+  <div class="stat-card border-error/20 bg-error/5">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-exclamation-triangle text-error"></i>
+      <h2 class="text-xl font-bold text-error">Account Actions</h2>
+    </div>
+
+    <div class="space-y-3">
+      <a class="btn btn-error btn-outline justify-start w-full" href="{% url 'deactivate_profile' %}" id="id_deactivate">
+        <i class="fas fa-ban mr-3"></i>
+        <div class="text-left">
+          <div class="font-semibold">Deactivate Account</div>
+          <div class="text-xs text-error/70">Permanently delete your account</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="mt-4 p-3 bg-error/10 rounded-lg">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-info-circle text-error mt-0.5"></i>
+        <p class="text-sm text-error/80">
+          This action cannot be undone. Your account and all associated data will be permanently deleted.
+        </p>
+      </div>
+    </div>
+  </div>
 {% endblock %}

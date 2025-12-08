@@ -1,9 +1,26 @@
-{% extends "base_generic.html" %}
+{% extends "base_standard.html" %}
 {% load partials %}
 {% load static %}
 
 {% block title %}
   <title>Claim Rewards - {{ PROJECT_NAME }}</title>
+{% endblock %}
+
+{% block page_title %}Claim Rewards{% endblock %}
+{% block page_subtitle %}Collect your earned rewards from the smart contract{% endblock %}
+
+{% block header_badge_content %}
+  {% if amount %}
+    <i class="fas fa-coins mr-1"></i>
+    Rewards Available
+  {% else %}
+    <i class="fas fa-check-circle mr-1"></i>
+    No Rewards
+  {% endif %}
+{% endblock %}
+
+{% block header_badge_class %}
+  {% if amount %}badge-success{% else %}badge-neutral{% endif %}
 {% endblock %}
 
 {% partialdef claim_partial %}
@@ -19,7 +36,7 @@
       <div class="text-sm font-medium text-base-content/70 mb-2">Available Rewards</div>
       <div class="text-3xl font-bold text-success">{{ amount|floatformat:"g" }}</div>
     </div>
-    
+
     <button
       id="claim-button"
       type="button"
@@ -33,7 +50,7 @@
       <div class="text-sm font-medium text-base-content/70 mb-2">Available Rewards</div>
       <div class="text-2xl font-bold text-base-content/50">0</div>
     </div>
-    
+
     <button
       id="claim-button"
       type="button"
@@ -59,30 +76,7 @@
 </div>
 {% endpartialdef claim_partial %}
 
-{% block page_title %}Claim Rewards{% endblock %}
-
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Collect your earned rewards from the smart contract
-      </p>
-    </div>
-    {% if amount %}
-    <div class="badge badge-success badge-lg">
-      <i class="fas fa-coins mr-1"></i>
-      Rewards Available
-    </div>
-    {% else %}
-    <div class="badge badge-neutral badge-lg">
-      <i class="fas fa-check-circle mr-1"></i>
-      No Rewards
-    </div>
-    {% endif %}
-  </div>
-
+{% block main_content %}
   <!-- Info Card -->
   <div class="stat-card bg-info/5 border-info/20">
     <div class="flex items-start gap-3">
@@ -124,7 +118,7 @@
         {% endif %}
       </p>
     </div>
-    
+
     <div class="stat-card text-center">
       <div class="p-3 rounded-lg bg-primary/10 text-primary inline-block mb-3">
         <i class="fas fa-user text-xl"></i>
@@ -134,7 +128,7 @@
         {% if user.is_authenticated %}{{ user.username }}{% else %}Guest{% endif %}
       </p>
     </div>
-    
+
     <div class="stat-card text-center">
       <div class="p-3 rounded-lg bg-accent/10 text-accent inline-block mb-3">
         <i class="fas fa-wallet text-xl"></i>
@@ -143,5 +137,4 @@
       <p class="text-lg font-semibold text-info">Yes</p>
     </div>
   </div>
-</div>
-{% endblock content %}
+{% endblock %}

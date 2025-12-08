@@ -1,10 +1,20 @@
-{% extends "base_generic.html" %}
+{% extends "base_standard.html" %}
 {% load partials %}
 {% load static %}
 
 {% block title %}
   <title>Add Allocations - {{ PROJECT_NAME }}</title>
 {% endblock %}
+
+{% block page_title %}Add Allocations{% endblock %}
+{% block page_subtitle %}Superuser administration panel{% endblock %}
+
+{% block header_badge_content %}
+  <i class="fas fa-shield-alt mr-1"></i>
+  Superuser Only
+{% endblock %}
+
+{% block header_badge_class %}badge-warning{% endblock %}
 
 {% partialdef allocations_table_partial %}
 <div class="stat-card">
@@ -58,7 +68,7 @@
       Add allocations
     </button>
     {% endif %}
-    
+
     <a href="{% url 'index' %}" class="btn btn-outline">
       <i class="fas fa-arrow-left mr-2"></i>
       Back to Home
@@ -67,23 +77,7 @@
 </div>
 {% endpartialdef %}
 
-{% block page_title %}Add Allocations{% endblock %}
-
-{% block content %}
-<div class="space-y-6 fade-in">
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <p class="mt-2 text-lg text-base-content/70">
-        Superuser administration panel
-      </p>
-    </div>
-    <div class="badge badge-warning badge-lg">
-      <i class="fas fa-shield-alt mr-1"></i>
-      Superuser Only
-    </div>
-  </div>
-
+{% block main_content %}
   <!-- Warning Card -->
   <div class="stat-card bg-warning/5 border-warning/20">
     <div class="flex items-start gap-3">
@@ -115,6 +109,4 @@
     </p>
   </div>
   {% endif %}
-
-</div>
-{% endblock content %}
+{% endblock %}

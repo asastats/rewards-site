@@ -235,50 +235,10 @@
       </div>
 
       <div class="flex justify-between items-center">
-        <span class="text-base-content/70">Wallet Status</span>
+        <span class="text-base-content/70">Address Status</span>
         <span class="badge {% if contributor.address %}badge-success{% else %}badge-warning{% endif %}">
-          {% if contributor.address %}Connected{% else %}Not Set{% endif %}
+          {% if contributor.address %}Registered{% else %}Not Set{% endif %}
         </span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Reward Information -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-award text-warning"></i>
-      <h2 class="text-xl font-bold">Reward Status</h2>
-    </div>
-
-    <div class="space-y-3 text-sm">
-      <div class="flex items-start gap-2">
-        <i class="fas fa-coins text-success mt-1"></i>
-        <div>
-          <span class="font-semibold">Total Earned:</span>
-          <p class="text-base-content/70">{{ contributor.total_rewards|floatformat:"g" }} rewards</p>
-        </div>
-      </div>
-
-      <div class="flex items-start gap-2">
-        <i class="fas fa-wallet {% if contributor.address %}text-success{% else %}text-warning{% endif %} mt-1"></i>
-        <div>
-          <span class="font-semibold">Wallet:</span>
-          <p class="text-base-content/70">
-            {% if contributor.address %}
-            Address registered
-            {% else %}
-            Not connected
-            {% endif %}
-          </p>
-        </div>
-      </div>
-
-      <div class="flex items-start gap-2">
-        <i class="fas fa-check-circle text-info mt-1"></i>
-        <div>
-          <span class="font-semibold">Contributions:</span>
-          <p class="text-base-content/70">Active contributor</p>
-        </div>
       </div>
     </div>
   </div>

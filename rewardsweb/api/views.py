@@ -34,16 +34,20 @@ class IsLocalhostPermission(BasePermission):
 
         :param request: HTTP request object
         :type request: :class:`rest_framework.request.Request`
+        :var xff_address: forwarded address
+        :type xff_address: str
+        :var remote_addr: address that called the endpoint
+        :type remote_addr: str
         :return: Boolean
         """
-        remote_addr = request.META.get("REMOTE_ADDR")
-        # # You might also want to check HTTP_X_FORWARDED_FOR if behind proxy
-        # x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        # if x_forwarded_for:
-        #     # X-Forwarded-For can contain multiple IPs, the first is original client
-        #     remote_addr = x_forwarded_for.split(',')[0].strip()
-
-        return remote_addr in ["127.0.0.1", "localhost", "::1"]
+        xff_address = request.META.get("HTTP_X_FORWARDED_FOR")
+        # xff_address could be: "127.0.0.1, 10.0.0.1"
+        remote_addr = (
+            xff_address.split(",")[0].strip()
+            if xff_address
+            else request.META.get("REMOTE_ADDR")
+        )
+        return remote_addr in ["127.0.0.1", "::1"]
 
 
 # # HELPERS

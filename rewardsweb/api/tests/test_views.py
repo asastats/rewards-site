@@ -35,11 +35,10 @@ class TestIsLocalhostPermission:
         "meta",
         [
             {"REMOTE_ADDR": "127.0.0.1"},
-            {"REMOTE_ADDR": "localhost"},
             {"REMOTE_ADDR": "::1"},
         ],
     )
-    def test_api_permissions_islocalhostpermission_has_permission_for_true(
+    def test_api_permissions_islocalhostpermission_has_permission_no_xff_for_true(
         self, meta, mocker
     ):
         request = mocker.MagicMock()
@@ -58,13 +57,45 @@ class TestIsLocalhostPermission:
             {"REMOTE_ADDR": "192.168.1.100"},
         ],
     )
-    def test_api_permissions_islocalhostpermission_has_permission_for_false(
+    def test_api_permissions_islocalhostpermission_has_permission_no_xff_for_false(
         self, meta, mocker
     ):
         request = mocker.MagicMock()
         request.META = meta
         permission = IsLocalhostPermission()
         assert permission.has_permission(request, mocker.MagicMock()) is False
+
+    @pytest.mark.parametrize(
+        "meta",
+        [
+            {"HTTP_X_FORWARDED_FOR": "192.168.0.1"},
+            {"HTTP_X_FORWARDED_FOR": "192.168.1.100"},
+            {"HTTP_X_FORWARDED_FOR": "192.168.1.100, 127.0.0.1"},
+        ],
+    )
+    def test_api_permissions_islocalhostpermission_has_permission_for_xff_false(
+        self, meta, mocker
+    ):
+        request = mocker.MagicMock()
+        request.META = meta
+        permission = IsLocalhostPermission()
+        assert permission.has_permission(request, mocker.MagicMock()) is False
+
+    @pytest.mark.parametrize(
+        "meta",
+        [
+            {"HTTP_X_FORWARDED_FOR": "127.0.0.1"},
+            {"HTTP_X_FORWARDED_FOR": "127.0.0.1, 192.168.1.100"},
+            {"HTTP_X_FORWARDED_FOR": "::1"},
+        ],
+    )
+    def test_api_permissions_islocalhostpermission_has_permission_for_xff_true(
+        self, meta, mocker
+    ):
+        request = mocker.MagicMock()
+        request.META = meta
+        permission = IsLocalhostPermission()
+        assert permission.has_permission(request, mocker.MagicMock()) is True
 
 
 class TestApiViewsHelpers:

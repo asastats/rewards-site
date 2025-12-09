@@ -5,7 +5,6 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 import requests
-from asgiref.sync import sync_to_async
 
 from trackers.base import BaseMentionTracker
 from trackers.models import Mention
@@ -26,6 +25,8 @@ class TwitterapiioTracker(BaseMentionTracker):
     :type TwitterapiioTracker.target_handle: str
     :var TwitterapiioTracker.batch_size: number of mentions to collect in a batch
     :type TwitterapiioTracker.batch_size: int
+    :var TwitterapiioTracker.starting_timestamp: timestamp to start fetching mentions
+    :type TwitterapiioTracker.starting_timestamp: int
     """
 
     def __init__(self, parse_message_callback, config):
@@ -40,6 +41,7 @@ class TwitterapiioTracker(BaseMentionTracker):
         self.api_key = config["api_key"]
         self.target_handle = config["target_handle"]
         self.batch_size = config["batch_size"]
+        self.starting_timestamp = config["starting_timestamp"]
 
         self.logger.info("TwitterAPI.io tracker initialized")
         self.log_action(
@@ -255,7 +257,10 @@ class TwitterapiioTracker(BaseMentionTracker):
         :var data: Standardized mention data prepared for processing.
         :type data: dict
         """
-        last_timestamp = Mention.objects.last_processed_timestamp(self.platform_name)
+        last_timestamp = (
+            Mention.objects.last_processed_timestamp(self.platform_name)
+            or self.starting_timestamp
+        )
         if not last_timestamp:
             self.logger.info(
                 "No previous timestamp found. Fetching all available mentions."

@@ -147,6 +147,9 @@ def twitterapiio_config():
         "api_key": get_env_variable("TRACKER_TWITTERAPIIO_API_KEY", ""),
         "target_handle": get_env_variable("TRACKER_TWITTERAPIIO_TARGET_HANDLE", ""),
         "batch_size": int(get_env_variable("TRACKER_TWITTERAPIIO_BATCH_SIZE", 10)),
+        "starting_timestamp": int(
+            get_env_variable("TRACKER_TWITTERAPIIO_STARTING_TIMESTAMP", 0)
+        ),
         "poll_interval": int(
             get_env_variable("TRACKER_TWITTERAPIIO_POLL_INTERVAL", 15)
         ),

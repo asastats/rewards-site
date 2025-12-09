@@ -15,6 +15,14 @@ Prior to playbook invocation:
 Django errors
 -------------
 
+Django logging is configured in settings and it defaults to logging to
+the `logs/django-warning.log` file:
+
+.. code-block:: bash
+
+  sudo tail -n 50 /var/www/rewards.asastats.com/logs/django-warning.log
+
+
 Invalid HTTP_HOST header
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

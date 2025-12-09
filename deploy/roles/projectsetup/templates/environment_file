@@ -1,7 +1,3 @@
-SECRET_KEY={{ hostvars['localhost'].env_vars.SECRET_KEY }}
-DATABASE_NAME={{ hostvars['localhost'].env_vars.DATABASE_NAME }}
-DATABASE_USER={{ hostvars['localhost'].env_vars.DATABASE_USER }}
-DATABASE_PASSWORD={{ hostvars['localhost'].env_vars.DATABASE_PASSWORD }}
-INITIAL_SUPERUSERS={{ hostvars['localhost'].env_vars.INITIAL_SUPERUSERS }}
-INITIAL_SUPERUSER_PASSWORDS={{ hostvars['localhost'].env_vars.INITIAL_SUPERUSER_PASSWORDS }}
-INITIAL_SUPERUSER_ADDRESSES={{ hostvars['localhost'].env_vars.INITIAL_SUPERUSER_ADDRESSES }}
+{% for key in env_var_keys if key in hostvars['localhost'].env_vars %}
+{{ key }}={{ hostvars['localhost'].env_vars[key] }}
+{% endfor %}

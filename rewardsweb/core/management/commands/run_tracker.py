@@ -20,7 +20,7 @@ class Command(BaseCommand):
         """
         provider = options.get("provider")
         if not provider or not hasattr(runners, f"run_{provider}_tracker"):
-            self.stdout.write("Invalid providr name: %s" % (provider,))
+            self.stdout.write("Invalid provider name: %s" % (provider,))
             return None
 
         getattr(runners, f"run_{provider}_tracker")()

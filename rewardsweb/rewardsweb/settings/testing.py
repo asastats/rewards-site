@@ -18,9 +18,6 @@ DATABASES = {
     }
 }
 
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = 'default'
-
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
 COOKIE_ARGUMENTS = {"domain": PROJECT_DOMAIN}

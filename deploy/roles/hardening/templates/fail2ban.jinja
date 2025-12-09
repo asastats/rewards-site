@@ -3,12 +3,12 @@
 [DEFAULT]
 
 # ignoreip = 127.0.0.1/8
-ignoreip = 127.0.0.1 192.168.1.0/24 8.8.8.8
+ignoreip = 127.0.0.1 192.168.1.0/24 8.8.8.8 46.4.59.234
 
 bantime = 120m
 maxretry = 3
 destemail = {{ admin_email }}
-sendername = fail2ban.{{ ansible_hostname }}
+sendername = fail2ban.{{ ansible_facts.hostname }}
 mta = sendmail
 protocol = tcp
 

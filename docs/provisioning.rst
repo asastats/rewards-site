@@ -110,12 +110,12 @@ Project provisioning
   Before using in production, you need to update the content of the error pages in the ``rewardsweb/templates/`` directory,
   as well as the ``static/auth_privacy.html`` and ``static/auth_terms.html`` HTML pages to reflect your company name.
 
-Use the following commands to deploy the Rewards Suite on your testing server:
+Use the following commands from the `deploy` directory to provision the Rewards Suite on your testing server:
 
 .. code-block:: bash
 
   # testing (virtual machine)
-  ansible-playbook -i hosts --limit=testing site_playbook.yml
+  ansible-playbook --limit=testing site_playbook.yml
 
 
 Similarly, for your production server use:
@@ -123,14 +123,14 @@ Similarly, for your production server use:
 .. code-block:: bash
 
   # production
-  ansible-playbook -i hosts --limit=production site_playbook.yml
+  ansible-playbook --limit=production site_playbook.yml
 
 
 For debugging purpose, add `-vv` or `-vvvv` for more verbose output:
 
 .. code-block:: bash
 
-  ansible-playbook -vv -i hosts --limit=testing site_playbook.yml
+  ansible-playbook -vv --limit=testing site_playbook.yml
 
 
 Upgrade system and project
@@ -140,7 +140,7 @@ Issue the following command if you want to fully upgrade system and Python packa
 
 .. code-block:: bash
 
-  ansible-playbook -i hosts --limit=production --tags=upgrade site_playbook.yml
+  ansible-playbook --limit=production --tags=upgrade site_playbook.yml
 
 
 Update project code
@@ -150,4 +150,4 @@ After code has changed, issue the following command to apply those changes:
 
 .. code-block:: bash
 
-  ansible-playbook -i hosts --limit=production --tags=update-project-code site_playbook.yml
+  ansible-playbook --limit=production --tags=update-project-code site_playbook.yml

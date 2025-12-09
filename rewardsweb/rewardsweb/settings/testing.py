@@ -19,12 +19,14 @@ DATABASES = {
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = 'default'
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
 COOKIE_ARGUMENTS = {"domain": PROJECT_DOMAIN}
 
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 LOGGING = {
     "version": 1,

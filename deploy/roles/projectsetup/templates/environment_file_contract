@@ -1,0 +1,10 @@
+ALGOD_TOKEN_TESTNET={{ hostvars['localhost'].env_vars.ALGOD_TOKEN_TESTNET }}
+ALGOD_TOKEN_MAINNET={{ hostvars['localhost'].env_vars.ALGOD_TOKEN_MAINNET }}
+ALGOD_ADDRESS_TESTNET={{ hostvars['localhost'].env_vars.ALGOD_ADDRESS_TESTNET }}
+ALGOD_ADDRESS_MAINNET={{ hostvars['localhost'].env_vars.ALGOD_ADDRESS_MAINNET }}
+ADMIN_TESTNET_MNEMONIC={{ hostvars['localhost'].env_vars.ADMIN_TESTNET_MNEMONIC }}
+USER_TESTNET_MNEMONIC={{ hostvars['localhost'].env_vars.USER_TESTNET_MNEMONIC }}
+REWARDS_TOKEN_ID_TESTNET={{ hostvars['localhost'].env_vars.REWARDS_TOKEN_ID_TESTNET }}
+REWARDS_TOKEN_ID_MAINNET={{ hostvars['localhost'].env_vars.REWARDS_TOKEN_ID_MAINNET }}
+REWARDS_DAPP_NAME={{ hostvars['localhost'].env_vars.REWARDS_DAPP_NAME }}
+CLAIM_PERIOD_DURATION={{ hostvars['localhost'].env_vars.CLAIM_PERIOD_DURATION }}

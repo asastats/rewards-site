@@ -6,3 +6,4 @@
       - "{{ playbook_dir }}/../../.env.testing"
       - "{{ playbook_dir }}/../../../rewardsweb/.env.testing"
       - "{{ playbook_dir }}/../../../rewardsweb/rewardsbot/.env"
+      - "{{ playbook_dir }}/../../../rewardsweb/contract/.env"

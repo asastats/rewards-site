@@ -22,3 +22,6 @@
 
 - name: Import Discord bot service setup tasks
   ansible.builtin.import_tasks: bot_service.yml
+
+- name: Import social media trackers setup tasks
+  ansible.builtin.import_tasks: trackers.yml

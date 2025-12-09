@@ -34,3 +34,48 @@
     enabled: true
   become: true
   listen: "Enable and restart Discord bot"
+
+- name: Enable and restart Discord tracker
+  ansible.builtin.systemd:
+    name: discord-tracker
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  listen: "Enable and restart discord-tracker"
+
+- name: Enable and restart Reddit tracker
+  ansible.builtin.systemd:
+    name: reddit-tracker
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  listen: "Enable and restart reddit-tracker"
+
+- name: Enable and restart Telegram tracker
+  ansible.builtin.systemd:
+    name: telegram-tracker
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  listen: "Enable and restart telegram-tracker"
+
+- name: Enable and restart Twitter tracker
+  ansible.builtin.systemd:
+    name: twitter-tracker
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  listen: "Enable and restart twitter-tracker"
+
+- name: Enable and restart TwitterAPI.io tracker
+  ansible.builtin.systemd:
+    name: twitterapiio-tracker
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  become: true
+  listen: "Enable and restart twitterapiio-tracker"

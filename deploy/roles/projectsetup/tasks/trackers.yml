@@ -1,0 +1,12 @@
+---
+- name: Write social media trackers SystemD service scripts
+  ansible.builtin.template:
+    src: tracker_systemd.service
+    dest: "/etc/systemd/system/{{ item }}-tracker.service"
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: "Enable and restart {{ item }}-tracker"
+  loop: "{{ hostvars['localhost'].env_vars.ACTIVE_TRACKERS.split(',') }}"
+  tags: [project-setup, create-scripts, trackers]

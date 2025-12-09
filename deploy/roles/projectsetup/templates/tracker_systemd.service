@@ -1,0 +1,20 @@
+[Unit]
+Description=Social media mention tracker for {{ item }}
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+User={{ webapp_user }}
+Group={{ webapp_group }}
+OOMScoreAdjust=-999
+Nice=-15
+Restart=always
+RestartSec=30
+RuntimeMaxSec=168h
+WorkingDirectory={{ site_path }}/source/{{ app_name }}
+Environment="SECRET_KEY={{ hostvars['localhost'].env_vars.SECRET_KEY }}"
+ExecStart={{ site_path }}/venv/bin/python manage.py run_tracker {{ item }} \
+        --settings={{ django_settings }}
+
+[Install]
+WantedBy=multi-user.target

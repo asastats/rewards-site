@@ -239,7 +239,7 @@ class TestRunTrackerCommand:
             "django.core.management.base.OutputWrapper.write"
         ) as output_log:
             call_command("run_tracker", provider="foobar")
-            output_log.assert_called_once_with("Invalid providr name: foobar")
+            output_log.assert_called_once_with("Invalid provider name: foobar")
 
     @pytest.mark.parametrize(
         "provider",

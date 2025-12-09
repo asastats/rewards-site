@@ -20,3 +20,14 @@
   become: true
   become_user: "{{ webapp_user }}"
   tags: [repository, update-project-code]
+
+- name: Create contract's environment file
+  ansible.builtin.template:
+    src: environment_file_contract
+    dest: "{{ site_path }}/source/{{ app_name }}/contract/.env"
+    owner: "{{ webapp_user }}"
+    group: "{{ webapp_group }}"
+    mode: '0600'
+  become: true
+  become_user: "{{ webapp_user }}"
+  tags: [repository, update-project-code]

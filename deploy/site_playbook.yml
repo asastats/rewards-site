@@ -15,6 +15,7 @@
       - ".env.{{ env_name }}"
       - "{{ playbook_dir }}/../rewardsweb/.env.{{ env_name }}"
       - "{{ playbook_dir }}/../rewardsweb/rewardsbot/.env"
+      - "{{ playbook_dir }}/../rewardsweb/contract/.env"
 
   tasks:
     - name: Verify env files exist (ignore missing optional ones)
@@ -102,7 +103,7 @@
     ansible_user: "{{ hostvars['localhost'].env_vars.ADMIN_USER }}"
   roles:
     - role: setuphost
-    - role: redis
+    # - role: redis
     - role: postgresql
     - role: projectsetup
     - role: gunicorn

@@ -64,5 +64,6 @@ def twitterapiio_config():
         "api_key": "test_api_key",
         "target_handle": "test_target_handle",
         "batch_size": 10,
+        "starting_timestamp": 12345,
         "poll_interval": 15,
     }

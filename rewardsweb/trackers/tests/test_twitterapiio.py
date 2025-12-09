@@ -505,6 +505,21 @@ class TestTrackersTwitterApiIOTracker:
         tracker._get_all_mentions.assert_called_with(since_time=12350)
         mock_last_processed.assert_called_once_with(tracker.platform_name)
 
+    def test_trackers_twitterapiiotracker_check_mentions_last_timestamp_0(
+        self, mocker, twitterapiio_config
+    ):
+        mock_last_processed = mocker.patch(
+            "trackers.models.Mention.objects.last_processed_timestamp",
+            new=mocker.MagicMock(return_value=None),
+        )
+        tracker = TwitterapiioTracker(
+            lambda x: True, {**twitterapiio_config, "starting_timestamp": 0}
+        )
+        mocker.patch.object(tracker, "_get_all_mentions", return_value=[])
+        tracker.check_mentions()
+        tracker._get_all_mentions.assert_called_with(since_time=None)
+        mock_last_processed.assert_called_once_with(tracker.platform_name)
+
     def test_trackers_twitterapiiotracker_check_mentions_no_last_timestamp(
         self, mocker, twitterapiio_config
     ):
@@ -515,7 +530,7 @@ class TestTrackersTwitterApiIOTracker:
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mocker.patch.object(tracker, "_get_all_mentions", return_value=[])
         tracker.check_mentions()
-        tracker._get_all_mentions.assert_called_with(since_time=None)
+        tracker._get_all_mentions.assert_called_with(since_time=12346)
         mock_last_processed.assert_called_once_with(tracker.platform_name)
 
     def test_trackers_twitterapiiotracker_run_mentions_found_logging(

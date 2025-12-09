@@ -292,7 +292,9 @@ class TestTrackersConfig:
     ):
         def mock_get_env_variable(key, default=None):
             if key == "TRACKER_TWITTERAPIIO_BATCH_SIZE":
-                return 20
+                return 10
+            if key == "TRACKER_TWITTERAPIIO_STARTING_TIMESTAMP":
+                return 0
             if key == "TRACKER_TWITTERAPIIO_POLL_INTERVAL":
                 return 15
             return ""
@@ -304,7 +306,8 @@ class TestTrackersConfig:
         expected_config = {
             "api_key": "",
             "target_handle": "",
-            "batch_size": 20,
+            "batch_size": 10,
+            "starting_timestamp": 0,
             "poll_interval": 15,
         }
         assert result == expected_config
@@ -315,6 +318,7 @@ class TestTrackersConfig:
             "TRACKER_TWITTERAPIIO_API_KEY": "test_api",
             "TRACKER_TWITTERAPIIO_TARGET_HANDLE": "test_handle",
             "TRACKER_TWITTERAPIIO_BATCH_SIZE": "10",
+            "TRACKER_TWITTERAPIIO_STARTING_TIMESTAMP": "12345",
             "TRACKER_TWITTERAPIIO_POLL_INTERVAL": "30",
         }.get(key, default)
         result = twitterapiio_config()
@@ -322,6 +326,7 @@ class TestTrackersConfig:
             "api_key": "test_api",
             "target_handle": "test_handle",
             "batch_size": 10,
+            "starting_timestamp": 12345,
             "poll_interval": 30,
         }
         assert result == expected_config
@@ -329,7 +334,8 @@ class TestTrackersConfig:
             mocker.call("TRACKER_TWITTERAPIIO_API_KEY", ""),
             mocker.call("TRACKER_TWITTERAPIIO_TARGET_HANDLE", ""),
             mocker.call("TRACKER_TWITTERAPIIO_BATCH_SIZE", 10),
+            mocker.call("TRACKER_TWITTERAPIIO_STARTING_TIMESTAMP", 0),
             mocker.call("TRACKER_TWITTERAPIIO_POLL_INTERVAL", 15),
         ]
         mock_env.assert_has_calls(calls, any_order=True)
-        assert mock_env.call_count == 4
+        assert mock_env.call_count == 5

@@ -41,8 +41,3 @@
   become: true
   become_user: "{{ admin_user }}"
   tags: [create-user]
-
-# - name: Set created admin_user as ansible_user
-#   ansible.builtin.set_fact:
-#     ansible_user: "{{ admin_user }}"
-#   tags: [create-user]

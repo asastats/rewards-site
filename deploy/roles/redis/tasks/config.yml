@@ -9,7 +9,7 @@
   notify: Restart redis
   loop:
     - regexp: "^bind 127.0.0.1 ::1"
-      line: "bind 127.0.0.1 {{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+      line: "bind 127.0.0.1 {{ ansible_facts.default_ipv4.address | default('127.0.0.1') }}"
     - regexp: "^daemonize yes"
       line: "# daemonize yes"
     - regexp: "^protected-mode yes"

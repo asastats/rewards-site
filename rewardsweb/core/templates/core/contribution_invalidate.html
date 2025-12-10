@@ -39,13 +39,29 @@
       <i class="fas fa-comment text-accent"></i>
       <h3 class="text-lg font-semibold">Original Comment</h3>
     </div>
-    <div class="rounded-xl p-4 border-2 border-base-300">
+    <div class="bg-base-200 rounded-xl p-4 border-2 border-base-300">
       <div class="prose prose-sm max-w-none text-base-content/80">
         {{ original_comment|linebreaks|urlize }}
       </div>
     </div>
   </div>
   {% endif %}
+
+  <!-- Suggester's comment -->
+  {% if object.comment %}
+  <div class="stat-card">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-comment text-accent"></i>
+      <h3 class="text-lg font-semibold">Suggester's Comment</h3>
+    </div>
+    <div class="rounded-xl p-4 border-2 border-base-300">
+      <div class="prose prose-sm max-w-none text-base-content/80">
+        {{ object.comment|safe }}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 {% endblock %}
 
 {% block form_fields %}
@@ -108,14 +124,7 @@
   </div>
 
   <!-- Reply Form -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-reply text-info"></i>
-      <h3 class="text-lg font-semibold">Reply (Optional)</h3>
-    </div>
-
-    {% include "includes/form_field.html" with field=form.comment help_text="This reply will be recorded along with the status change and may be visible to the contributor." %}
-  </div>
+  {% include "includes/form_field.html" with field=form.comment icon="reply" help_text="This reply will be recorded along with the status change and may be visible to the contributor." %}
 {% endblock %}
 
 {% block form_actions %}

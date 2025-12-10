@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @plugin "./daisyui" {
-  themes: light --default, dark --prefersdark, abyss, bumblebee, caramellate, cmyk, coffee, corporate, cupcake, cyberpunk, fantasy, lofi, nord, pastel, synthwave, wireframe;
+  /* themes: light --default, dark --prefersdark, abyss, acid, aqua, autumn, black, bumblebee, business, caramellate, cmyk, coffee, corporate, cupcake, cyberpunk, dim, dracula, emerald, fantasy, forest, garden, halloween, lemonade, lofi, luxury, night, nord, pastel, retro, silk, sunset, synthwave, valentine, winter, wireframe; */
+  themes: light --default, dark --prefersdark, abyss, acid, aqua, autumn, bumblebee, business, caramellate, cmyk, coffee, corporate, cupcake, cyberpunk, dim, emerald, fantasy, forest, garden, halloween, lemonade, lofi, luxury, night, nord, pastel, retro, silk, sunset, synthwave, valentine, winter;
 }
 @source "../../templates";
 

@@ -117,8 +117,6 @@ export class AddAllocationsComponent {
     this.element.addEventListener('click', (e: Event) => {
       const target = e.target as HTMLElement
       if (target.id === 'add-allocations-button') {
-        // No longer reading from textareas, using pre-populated data
-        // or data fetched after a successful transaction.
         this.handleAddAllocations()
       }
     })

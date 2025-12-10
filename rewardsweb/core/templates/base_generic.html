@@ -44,60 +44,18 @@
 
           <!-- Right Side: Theme Changer + User Menu -->
           <div class="flex-none flex items-center gap-2">
+
             <!-- Theme Changer -->
             <div class="dropdown dropdown-end">
               <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
                 <i class="fas fa-palette"></i>
               </div>
               <ul tabindex="0" class="dropdown-content z-[1] p-2 shadow-2xl bg-base-300 rounded-box w-52">
+                {% for theme in AVAILABLE_THEMES %}
                 <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Light" value="light"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Dark" value="dark"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Abyss" value="abyss"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Bumblebee" value="bumblebee"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Caramellate" value="caramellate"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Cmyk" value="cmyk"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Coffee" value="coffee"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Corporate" value="corporate"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Cupcake" value="cupcake"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Cyberpunk" value="cyberpunk"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Fantasy" value="fantasy"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Lofi" value="lofi"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Nord" value="nord"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Pastel" value="pastel"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Synthwave" value="synthwave"/>
-                </li>
-                <li>
-                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="Wireframe" value="wireframe"/>
-                </li>
+                  <input type="radio" name="theme-dropdown" class="theme-controller btn btn-sm btn-block btn-justify content-start" aria-label="{{ theme|title }}" value="{{ theme }}"/>
+                </li>                
+                {% endfor %}                
               </ul>
             </div>
 

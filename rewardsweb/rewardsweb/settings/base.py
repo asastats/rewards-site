@@ -278,7 +278,7 @@ AVAILABLE_THEMES = [
     "dim",
     # "dracula",
     # "emerald",
-    "fantasy",
+    # "fantasy",
     # "forest",
     # "garden",
     # "halloween",

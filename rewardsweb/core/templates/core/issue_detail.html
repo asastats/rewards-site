@@ -1,4 +1,4 @@
-{% extends "core/base_detail.html" %}
+{% extends "base_standard.html" %}
 {% load partials %}
 
 {% block title %}
@@ -14,425 +14,436 @@
 {% endblock %}
 
 {% block header_badge_class %}
-  {% if issue_state == 'open' %}badge-success{% else %}badge-error{% endif %}
+  {% if issue_state == 'open' %}badge-success{% else %}badge-neutral{% endif %}
 {% endblock %}
 
-{% block detail_title %}Local Issue Information{% endblock %}
-
-{% block detail_content %}
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="space-y-4">
-      <div class="flex flex-col">
-        <span class="text-sm font-semibold text-base-content/70 mb-1">Issue Number</span>
-        <span class="font-semibold text-lg">#{{ issue.number }}</span>
-      </div>
-
-      <div class="flex flex-col">
-        <span class="text-sm font-semibold text-base-content/70 mb-1">Status</span>
-        <span class="badge {% if issue.status == 'open' %}badge-success{% else %}badge-error{% endif %}">
-          {{ issue.status|title }}
-        </span>
-      </div>
-    </div>
-
-    <div class="space-y-4">
-      <div class="flex flex-col">
-        <span class="text-sm font-semibold text-base-content/70 mb-1">Created</span>
-        <span class="font-semibold">{{ issue.created_at }}</span>
-      </div>
-
-      <div class="flex flex-col">
-        <span class="text-sm font-semibold text-base-content/70 mb-1">Updated</span>
-        <span class="font-semibold">{{ issue.updated_at }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Linked Contributions -->
-  {% if issue.contribution_set.all %}
-  <div class="mt-6 pt-6 border-t border-base-300">
-    <h3 class="font-semibold text-lg mb-4">Linked Contributions</h3>
-    <div class="space-y-3">
-      {% for contribution in issue.contribution_set.all reversed %}
-      <div class="flex items-center justify-between p-3 rounded-lg hover:bg-base-200 transition-colors">
-        <div class="flex items-center gap-3">
-          <i class="fas fa-code-branch text-primary"></i>
-          <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.get_absolute_url }}">
-            {{ contribution }}
+{% block main_content %}
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Action Buttons -->
+      <div class="stat-card">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a href="{{ issue_html_url }}" target="_blank" class="btn btn-outline flex-1">
+            <i class="fab fa-ticket-alt mr-2"></i>
+            View on {{ ISSUE_TRACKER }}
           </a>
-        </div>
-        <div class="text-sm text-base-content/70">
-          {{ contribution.contributor }}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 
-  <!-- Action Button -->
-  <div class="mt-6">
-    <a href="{% url 'contribution_add_from_issue' issue.number %}"
-      class="btn btn-outline btn-primary w-full md:w-auto gap-2">
-      <i class="fas fa-plus"></i>
-      Add Contribution
-    </a>
-  </div>
-{% endblock %}
+          <!-- Close Issue Buttons - Only for superusers and if tracker issue is open -->
+          {% if user.is_superuser and tracker_issue and issue_state == 'open' %}
+            <button class="btn btn-outline btn-success flex-1"
+                    hx-get="{% url 'issue_modal' issue.pk %}?action=addressed"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML transition:true">
+              <i class="fas fa-check-circle mr-2"></i>
+              Close as addressed
+            </button>
 
-{% block additional_content %}
-  <!-- Action Buttons -->
-  <div class="stat-card">
-    <div class="flex flex-col sm:flex-row gap-3">
-      <a href="{{ issue_html_url }}" class="btn btn-outline" target="_blank" rel="noopener noreferrer">
-        <i class="fas fa-ticket-alt mr-2"></i>View on {{ ISSUE_TRACKER }}
-      </a>
-
-      <!-- Close Issue Buttons - Only for superusers and if issue is open -->
-      {% if user.is_superuser and tracker_issue and issue_state == 'open' %}
-        <button class="btn btn-outline btn-success flex-1"
-                hx-get="{% url 'issue_modal' issue.pk %}?action=addressed"
-                hx-target="#modal-container"
-                hx-swap="innerHTML transition:true">
-          <i class="fas fa-check-circle mr-2"></i>
-          Close as addressed
-        </button>
-
-        <button class="btn btn-outline btn-warning flex-1"
-                hx-get="{% url 'issue_modal' issue.pk %}?action=wontfix"
-                hx-target="#modal-container"
-                hx-swap="innerHTML transition:true">
-          <i class="fas fa-times-circle mr-2"></i>
-          Close as wontfix
-        </button>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Issue Section -->
-  {% if tracker_issue or tracker_error %}
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-6">
-      <i class="fab fa-ticket-alt text-base-content"></i>
-      <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Issue Details</h2>
-    </div>
-
-    {% if tracker_error %}
-      <div class="alert alert-error shadow-lg">
-        <i class="fas fa-exclamation-triangle mr-2"></i>
-        <span>Error fetching {{ ISSUE_TRACKER }} issue: {{ tracker_error }}</span>
-      </div>
-    {% elif tracker_issue %}
-
-      <!-- Add Labels Form - Only for superusers and if tracker issue is open -->
-      {% if user.is_superuser and issue_state == 'open' and labels_form %}
-      <div id="labels-form-container">
-          {% partial labels_form_partial %}
-      </div>
-      {% endif %}
-
-      <!-- Issue Header -->
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold mb-2">{{ issue_title }}</h2>
-        <div class="flex flex-wrap items-center gap-4 text-sm text-base-content/70">
-          <span class="badge badge-{% if issue_state == 'open' %}success{% else %}error{% endif %}">
-            {{ issue_state|title }}
-          </span>
-          <span>Opened on {{ issue_created_at|date:"M j, Y" }}</span>
-          {% if issue_updated_at and issue_updated_at != issue_created_at %}
-            <span>• Updated on {{ issue_updated_at|date:"M j, Y" }}</span>
+            <button class="btn btn-outline btn-warning flex-1"
+                    hx-get="{% url 'issue_modal' issue.pk %}?action=wontfix"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML transition:true">
+              <i class="fas fa-times-circle mr-2"></i>
+              Close as wontfix
+            </button>
           {% endif %}
         </div>
       </div>
 
-      <!-- Labels -->
-      {% if issue_labels %}
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-tags text-secondary"></i>
-          <span class="font-semibold text-lg">Labels:</span>
-          <div class="flex flex-wrap gap-2">
-            {% for label in issue_labels %}
-              <span class="badge badge-outline badge-lg">{{ label }}</span>
-            {% empty %}
-              <span class="text-base-content/60 text-sm">No labels assigned</span>
+      <!-- Local Issue Information -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-6">
+          <i class="fas fa-info-circle text-primary"></i>
+          <h2 class="text-xl font-bold">Local Issue Information</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-base-content/70 mb-1">Issue Number</span>
+              <span class="font-semibold text-lg">#{{ issue.number }}</span>
+            </div>
+
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-base-content/70 mb-1">Status</span>
+              <span class="font-semibold text-lg">{{ issue.status|title }}</span>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-base-content/70 mb-1">Created</span>
+              <span class="font-semibold">{{ issue.created_at }}</span>
+            </div>
+
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-base-content/70 mb-1">Updated</span>
+              <span class="font-semibold">{{ issue.updated_at }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Linked Contributions -->
+        {% if issue.contribution_set.all %}
+        <div class="mt-6 pt-6">
+          <h3 class="font-semibold text-lg mb-4">Linked Contributions</h3>
+          <div class="space-y-3">
+            {% for contribution in issue.contribution_set.all reversed %}
+            <div class="flex items-center justify-between p-3 rounded-lg hover:bg-base-200 transition-colors">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-code-branch text-primary"></i>
+                <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.get_absolute_url }}">
+                  {{ contribution }}
+                </a>
+              </div>
+              <div class="text-sm text-base-content/70">
+                {{ contribution.contributor }}
+              </div>
+            </div>
             {% endfor %}
           </div>
         </div>
-      {% endif %}
+        {% endif %}
 
-      <!-- Assignees -->
-      {% if issue_assignees %}
-      <div class="mb-6">
-        <div class="flex items-center gap-2 mb-3">
-          <i class="fas fa-user-check text-info"></i>
-          <span class="font-semibold text-lg">Assignees</span>
+        <!-- Action Button -->
+        <div class="mt-6">
+          <a href="{% url 'contribution_add_from_issue' issue.number %}"
+            class="btn btn-outline btn-primary w-full md:w-auto gap-2">
+            <i class="fas fa-plus"></i>
+            Add Contribution
+          </a>
         </div>
-        <div class="flex flex-wrap gap-2">
-          {% for assignee in issue_assignees %}
-          <span class="badge badge-primary badge-lg">{{ assignee }}</span>
-          {% endfor %}
+
+      </div>
+
+      <!-- Tracker Issue Section -->
+      {% if tracker_issue or tracker_error %}
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-6">
+          <i class="fab fa-ticket-alt text-base-content"></i>
+          <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Issue Details</h2>
         </div>
+
+        {% if tracker_error %}
+          <div class="alert alert-error shadow-lg">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <span>Error fetching {{ ISSUE_TRACKER }} issue: {{ tracker_error }}</span>
+          </div>
+        {% elif tracker_issue %}
+
+          <!-- Add Labels Form - Only for superusers and if tracker issue is open -->
+          {% if user.is_superuser and issue_state == 'open' and labels_form %}
+          <div id="labels-form-container">
+              {% partial labels_form_partial %}
+          </div>
+          {% endif %}
+
+          <!-- Issue Header -->
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold mb-2">{{ issue_title }}</h2>
+            <div class="flex flex-wrap items-center gap-4 text-sm text-base-content/70">
+              <span class="badge badge-{% if issue_state == 'open' %}success{% else %}neutral{% endif %}">
+                {{ issue_state|title }}
+              </span>
+              <span>Opened on {{ issue_created_at|date:"M j, Y" }}</span>
+              {% if issue_updated_at and issue_updated_at != issue_created_at %}
+                <span>• Updated on {{ issue_updated_at|date:"M j, Y" }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Labels -->
+          {% if issue_labels %}
+            <div class="flex items-center gap-2 mb-4">
+              <i class="fas fa-tags text-secondary"></i>
+              <span class="font-semibold text-lg">Labels:</span>
+              <div class="flex flex-wrap gap-2">
+                {% for label in issue_labels %}
+                  <span class="badge badge-outline badge-lg">{{ label }}</span>
+                {% empty %}
+                  <span class="text-base-content/60 text-sm">No labels assigned</span>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Assignees -->
+          {% if issue_assignees %}
+          <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-user-check text-info"></i>
+              <span class="font-semibold text-lg">Assignees</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {% for assignee in issue_assignees %}
+              <span class="badge badge-primary badge-lg">{{ assignee }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Issue Body -->
+          <div class="mt-6">
+            <div class="flex items-center gap-2 mb-4">
+              <i class="fas fa-align-left text-accent"></i>
+              <h3 class="text-lg font-semibold">Description</h3>
+            </div>
+            <div class="rounded-xl p-6">
+              <div class="prose prose-sm max-w-none text-base-content/80">
+                {{ issue_body|linebreaks|urlize }}
+              </div>
+            </div>
+          </div>
+        {% endif %}
       </div>
       {% endif %}
+    </div>
 
-      <!-- Issue Body -->
-      <div class="mt-6">
+    <!-- Sidebar -->
+    <div class="space-y-6">
+      <!-- Quick Stats -->
+      <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-align-left text-accent"></i>
-          <h3 class="text-lg font-semibold">Description</h3>
+          <i class="fas fa-chart-bar text-info"></i>
+          <h2 class="text-xl font-bold">Issue Stats</h2>
         </div>
-        <div class="rounded-xl p-6 border-2 border-base-300">
-          <div class="prose prose-sm max-w-none text-base-content/80">
-            {{ issue_body|linebreaks|urlize }}
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Status</span>
+            <span class="badge {% if issue_state == 'open' %}badge-success{% else %}badge-neutral{% endif %}">
+              {{ issue_state|title }}
+            </span>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Linked Contributions</span>
+            <span class="font-semibold text-primary">{{ issue.contribution_set.all|length }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Labels</span>
+            <span class="font-semibold text-secondary">{{ issue_labels|length }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/70">Assignees</span>
+            <span class="font-semibold text-accent">{{ issue_assignees|length }}</span>
           </div>
         </div>
       </div>
-    {% endif %}
-  </div>
-  {% endif %}
-{% endblock %}
 
-{% block sidebar_content %}
-  <!-- Quick Stats -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-chart-bar text-info"></i>
-      <h2 class="text-xl font-bold">Issue Stats</h2>
-    </div>
+      <!-- Quick Actions -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-rocket text-accent"></i>
+          <h2 class="text-xl font-bold">Quick Actions</h2>
+        </div>
 
-    <div class="space-y-4">
-      <div class="flex justify-between items-center">
-        <span class="text-base-content/70">Status</span>
-        <span class="badge {% if issue_state == 'open' %}badge-success{% else %}badge-error{% endif %}">
-          {{ issue_state|title }}
-        </span>
-      </div>
-
-      <div class="flex justify-between items-center">
-        <span class="text-base-content/70">Linked Contributions</span>
-        <span class="font-semibold text-primary">{{ issue.contribution_set.all|length }}</span>
-      </div>
-
-      <div class="flex justify-between items-center">
-        <span class="text-base-content/70">Labels</span>
-        <span class="font-semibold text-secondary">{{ issue_labels|length }}</span>
-      </div>
-
-      <div class="flex justify-between items-center">
-        <span class="text-base-content/70">Assignees</span>
-        <span class="font-semibold text-accent">{{ issue_assignees|length }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-rocket text-accent"></i>
-      <h2 class="text-xl font-bold">Quick Actions</h2>
-    </div>
-
-    <div class="space-y-3">
-      <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
-        <i class="fas fa-arrow-left mr-2"></i>
-        Back to Home
-      </a>
-      <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
-        <i class="fas fa-list mr-2"></i>
-        All Issues
-      </a>
-      <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
-        <i class="fas fa-users mr-2"></i>
-        Contributors
-      </a>
-      <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
-        <i class="fas fa-sync-alt mr-2"></i>
-        View Cycles
-      </a>
-    </div>
-  </div>
-
-  <!-- Issue Tracker Info -->
-  <div class="stat-card">
-    <div class="flex items-center gap-2 mb-4">
-      <i class="fab fa-ticket-alt text-base-content"></i>
-      <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Info</h2>
-    </div>
-
-    <div class="space-y-3 text-sm">
-      <div class="flex items-start gap-2">
-        <i class="fas fa-hashtag text-info mt-1"></i>
-        <div>
-          <span class="font-semibold">Issue Number:</span>
-          <p class="text-base-content/70">#{{ issue.number }}</p>
+        <div class="space-y-3">
+          <a href="{% url 'index' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Home
+          </a>
+          <a href="{% url 'issues' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-list mr-2"></i>
+            All Issues
+          </a>
+          <a href="{% url 'contributors' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-users mr-2"></i>
+            Contributors
+          </a>
+          <a href="{% url 'cycles' %}" class="btn btn-outline justify-start w-full">
+            <i class="fas fa-sync-alt mr-2"></i>
+            View Cycles
+          </a>
         </div>
       </div>
 
-      <div class="flex items-start gap-2">
-        <i class="fas fa-calendar text-success mt-1"></i>
-        <div>
-          <span class="font-semibold">Created:</span>
-          <p class="text-base-content/70">{{ issue_created_at|date:"M j, Y" }}</p>
+      <!-- Issue Tracker Info -->
+      <div class="stat-card">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fab fa-ticket-alt text-base-content"></i>
+          <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Info</h2>
         </div>
-      </div>
 
-      <div class="flex items-start gap-2">
-        <i class="fas fa-sync-alt text-warning mt-1"></i>
-        <div>
-          <span class="font-semibold">Last Updated:</span>
-          <p class="text-base-content/70">{{ issue_updated_at|date:"M j, Y" }}</p>
+        <div class="space-y-3 text-sm">
+          <div class="flex items-start gap-2">
+            <i class="fas fa-hashtag text-info mt-1"></i>
+            <div>
+              <span class="font-semibold">Issue Number:</span>
+              <p class="text-base-content/70">#{{ issue.number }}</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-2">
+            <i class="fas fa-calendar text-success mt-1"></i>
+            <div>
+              <span class="font-semibold">Created:</span>
+              <p class="text-base-content/70">{{ issue_created_at|date:"M j, Y" }}</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-2">
+            <i class="fas fa-sync-alt text-warning mt-1"></i>
+            <div>
+              <span class="font-semibold">Last Updated:</span>
+              <p class="text-base-content/70">{{ issue_updated_at|date:"M j, Y" }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-{% endblock %}
 
-{% partialdef labels_form_partial %}
-<div class="stat-card">
-  <div class="flex items-center gap-2 mb-4">
-    <i class="fas fa-tags text-primary"></i>
-    <h3 class="text-lg font-bold">Manage Labels & Priority</h3>
-  </div>
-
-  <form method="post"
-      hx-post="{{ request.path }}"
-      hx-target="#labels-form-container"
-      hx-swap="innerHTML transition:true"
-      hx-vals='{"blocking": "true"}'
-      class="space-y-6">
-
-  {% csrf_token %}
-
-    <!-- Labels -->
-    <div>
-      <label class="label">
-        <span class="label-text font-semibold text-lg">Labels</span>
-      </label>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 rounded-lg">
-        {% for checkbox in labels_form.labels %}
-        <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-all duration-200">
-          {{ checkbox.tag }}
-          <span class="label-text font-medium text-sm">{{ checkbox.choice_label }}</span>
-        </label>
-        {% endfor %}
-      </div>
-      {{ labels_form.labels.errors }}
-    </div>
-
-    <!-- Priority -->
-    <div class="pt-4 border-t border-base-300">
-      <label class="label">
-        <span class="label-text font-semibold text-lg">Priority</span>
-      </label>
-      <div class="flex flex-wrap gap-4 p-4 rounded-lg">
-        {% for radio in labels_form.priority %}
-        <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg hover:bg-base-200 transition-all duration-200 flex-1 min-w-[120px] justify-center">
-          {{ radio.tag }}
-          <span class="label-text font-semibold text-base">{{ radio.choice_label }}</span>
-        </label>
-        {% endfor %}
-      </div>
-      {{ labels_form.priority.errors }}
-    </div>
-
-    <button type="submit" name="submit_labels" class="btn btn-outline btn-warning w-full">
-      <i class="fas fa-save mr-2"></i>
-      Update Labels
-    </button>
-  </form>
-</div>
-
-{% if toast_message %}
-<div id="toast-container" hx-swap-oob="afterbegin">
-  <div class="alert alert-{{ toast_type|default:"success" }} shadow-lg">
-    <span>{{ toast_message }}</span>
-  </div>
-</div>
-{% endif %}
-{% endpartialdef labels_form_partial %}
-
-{% partialdef issue_labels_partial %}
-<div id="labels-display-container" hx-swap-oob="outerHTML">
-  <div class="flex items-center gap-2 mb-4">
-    <i class="fas fa-tags text-secondary"></i>
-    <span class="font-semibold text-lg">Labels:</span>
-    <div class="flex flex-wrap gap-2">
-      {% for label in issue_labels %}
-        <span class="badge badge-outline badge-lg">{{ label }}</span>
-      {% empty %}
-        <span class="text-base-content/60 text-sm">No labels assigned</span>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-{% endpartialdef %}
-
-{% partialdef close_modal_partial %}
-<dialog id="{{ modal_id }}" class="modal">
-  <div class="modal-box">
+  {% partialdef labels_form_partial %}
+  <div class="stat-card">
     <div class="flex items-center gap-2 mb-4">
-      <i class="fas fa-{% if action_value == 'addressed' %}check-circle text-success{% else %}times-circle text-warning{% endif %} text-xl"></i>
-      <h3 class="font-bold text-lg">{{ action_label }}</h3>
+      <i class="fas fa-tags text-primary"></i>
+      <h3 class="text-lg font-bold">Manage Labels & Priority</h3>
     </div>
-
-    <p class="py-4">
-      This will close the issue as <strong class="{% if action_value == 'addressed' %}text-success{% else %}text-warning{% endif %}">{{ action_value }}</strong>.
-      {% if action_value == 'addressed' %}
-        The issue will be marked as successfully resolved.
-      {% else %}
-        The issue will be marked as won't be fixed.
-      {% endif %}
-    </p>
 
     <form method="post"
-          action="{% url 'issue_detail' issue.pk %}"
-          onsubmit="document.getElementById('{{ modal_id }}').close()"
-          class="space-y-4">
+        hx-post="{{ request.path }}"
+        hx-target="#labels-form-container"
+        hx-swap="innerHTML transition:true"
+        hx-vals='{"blocking": "true"}'
+        class="space-y-6">
 
-        {% csrf_token %}
-        <input type="hidden" name="close_action" value="{{ action_value }}">
+    {% csrf_token %}
 
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Closing Comment (Optional)</span>
+      <!-- Labels -->
+      <div>
+        <label class="label">
+          <span class="label-text font-semibold text-lg">Labels</span>
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 rounded-lg">
+          {% for checkbox in labels_form.labels %}
+          <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-all duration-200">
+            {{ checkbox.tag }}
+            <span class="label-text font-medium text-sm">{{ checkbox.choice_label }}</span>
           </label>
-          <textarea name="close_comment"
-                    class="textarea textarea-bordered w-full h-32"
-                    placeholder="Add a comment explaining why this issue is being closed..."></textarea>
+          {% endfor %}
         </div>
+        {{ labels_form.labels.errors }}
+      </div>
 
-        <div class="modal-action">
-            <button type="button" class="btn btn-outline" onclick="document.getElementById('{{ modal_id }}').close()">Cancel</button>
-            <button type="submit" name="submit_close" class="btn {{ btn_class }}">
-              <i class="fas fa-{% if action_value == 'addressed' %}check{% else %}times{% endif %}-circle mr-2"></i>
-              {{ action_label }}
-            </button>
+      <!-- Priority -->
+      <div class="pt-4">
+        <label class="label">
+          <span class="label-text font-semibold text-lg">Priority</span>
+        </label>
+        <div class="flex flex-wrap gap-4 p-4 rounded-lg">
+          {% for radio in labels_form.priority %}
+          <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg hover:bg-base-200 transition-all duration-200 flex-1 min-w-[120px] justify-center">
+            {{ radio.tag }}
+            <span class="label-text font-semibold text-base">{{ radio.choice_label }}</span>
+          </label>
+          {% endfor %}
         </div>
+        {{ labels_form.priority.errors }}
+      </div>
+
+      <button type="submit" name="submit_labels" class="btn btn-outline btn-success w-full">
+        <i class="fas fa-save mr-2"></i>
+        Update Labels
+      </button>
     </form>
   </div>
 
-  <form method="dialog" class="modal-backdrop">
-      <button>close</button>
-  </form>
-</dialog>
-{% endpartialdef close_modal_partial %}
-
-{% partialdef message_toast %}
-<div class="toast toast-top toast-end z-[9999] pr-6 pointer-events-none">
-  <div class="alert alert-{{ message.tags|yesno:"error,success" }} shadow-lg pointer-events-auto">
-    {% if message.tags == "error" %}
-      <i class="fas fa-exclamation-triangle mr-2"></i>
-    {% else %}
-      <i class="fas fa-check-circle mr-2"></i>
-    {% endif %}
-    <span>{{ message }}</span>
+  {% if toast_message %}
+  <div id="toast-container" hx-swap-oob="afterbegin">
+    <div class="alert alert-{{ toast_type|default:"success" }} shadow-lg">
+      <span>{{ toast_message }}</span>
+    </div>
   </div>
-</div>
-{% endpartialdef message_toast %}
+  {% endif %}
+  {% endpartialdef labels_form_partial %}
 
-<!-- Messages -->
-{% for message in messages %}
-  {% partial message_toast %}
-{% endfor %}
+  {% partialdef issue_labels_partial %}
+  <div id="labels-display-container" hx-swap-oob="outerHTML">
+    <div class="flex items-center gap-2 mb-4">
+      <i class="fas fa-tags text-secondary"></i>
+      <span class="font-semibold text-lg">Labels:</span>
+      <div class="flex flex-wrap gap-2">
+        {% for label in issue_labels %}
+          <span class="badge badge-outline badge-lg">{{ label }}</span>
+        {% empty %}
+          <span class="text-base-content/60 text-sm">No labels assigned</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endpartialdef issue_labels_partial %}
 
-<div id="modal-container"></div>
+  {% partialdef close_modal_partial %}
+  <dialog id="{{ modal_id }}" class="modal">
+    <div class="modal-box">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-{% if action_value == 'addressed' %}check-circle text-success{% else %}times-circle text-warning{% endif %} text-xl"></i>
+        <h3 class="font-bold text-lg">{{ action_label }}</h3>
+      </div>
+      
+      <p class="py-4">
+        This will close the issue as <strong class="{% if action_value == 'addressed' %}text-success{% else %}text-warning{% endif %}">{{ action_value }}</strong>.
+        {% if action_value == 'addressed' %}
+          The issue will be marked as successfully resolved.
+        {% else %}
+          The issue will be marked as won't be fixed.
+        {% endif %}
+      </p>
+
+      <form method="post"
+            action="{% url 'issue_detail' issue.pk %}"
+            onsubmit="document.getElementById('{{ modal_id }}').close()"
+            class="space-y-4">
+
+          {% csrf_token %}
+          <input type="hidden" name="close_action" value="{{ action_value }}">
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">Closing Comment (Optional)</span>
+            </label>
+            <textarea name="close_comment"
+                      class="textarea textarea-bordered w-full h-32"
+                      placeholder="Add a comment explaining why this issue is being closed..."></textarea>
+          </div>
+
+          <div class="modal-action">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('{{ modal_id }}').close()">Cancel</button>
+            <button type="submit" name="submit_close" class="btn btn-outline {{ btn_class }}">
+              <i class="fas fa-{% if action_value == 'addressed' %}check{% else %}times{% endif %}-circle mr-2"></i>
+              {{ action_label }}
+            </button>
+          </div>
+      </form>
+    </div>
+
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+  </dialog>
+  {% endpartialdef close_modal_partial %}
+
+  {% partialdef message_toast %}
+  <div class="toast toast-top toast-end z-[9999] pr-6 pointer-events-none">
+    <div class="alert alert-{{ message.tags|yesno:"error,success" }} shadow-lg pointer-events-auto">
+      {% if message.tags == "error" %}
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+      {% else %}
+        <i class="fas fa-check-circle mr-2"></i>
+      {% endif %}
+      <span>{{ message }}</span>
+    </div>
+  </div>
+  {% endpartialdef message_toast %}
+
+  <!-- Modal Container -->
+  <div id="modal-container"></div>
+
+  <!-- Messages Display -->
+  {% for message in messages %}
+    {% partial message_toast %}
+  {% endfor %}
+{% endblock %}

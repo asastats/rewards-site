@@ -3557,7 +3557,6 @@ class TestCoreContributionModel:
             contribution.save()
             contribution.full_clean()
 
-
     @pytest.mark.django_db
     def test_core_contribution_model_cannot_save_too_long_reply(self):
         contributor = Contributor.objects.create()

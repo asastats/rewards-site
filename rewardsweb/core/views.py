@@ -732,7 +732,7 @@ class IssueDetailView(DetailView):
             # Handle labels form submission
             return self._handle_labels_submission(request, issue)
 
-        elif "submit_close" in request.POST:
+        elif "close_action" in request.POST:
             # Handle close issue submission
             return self._handle_close_submission(request, issue)
 
@@ -838,13 +838,19 @@ class IssueDetailView(DetailView):
                 self.request.user.profile.log_action("issue_status_set", str(issue))
 
                 if action == "addressed":
-                    result, payload = list(
-                        process_allocations_for_contributions(
-                            self.get_object().contribution_set.all(),
-                            Contribution.objects.addresses_and_amounts_from_contributions,
-                        )
-                    )
-                    if result:
+                    success = True
+                    error_message = None
+
+                    for result, payload in process_allocations_for_contributions(
+                        self.get_object().contribution_set.all(),
+                        Contribution.objects.addresses_and_amounts_from_contributions,
+                    ):
+                        if not result:
+                            success = False
+                            error_message = payload[0] if payload else "Unknown error"
+                            break
+
+                    if success:
                         issue.status = IssueStatus.CLAIMABLE
                         issue.save()
                         self.request.user.profile.log_action(
@@ -852,7 +858,7 @@ class IssueDetailView(DetailView):
                         )
 
                     else:
-                        messages.error(request, payload[0])
+                        messages.error(request, error_message)
 
             else:
                 messages.error(

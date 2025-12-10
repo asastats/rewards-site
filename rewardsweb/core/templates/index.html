@@ -113,7 +113,7 @@
       {% if contribution_list %}
         <div class="space-y-3">
           {% for contribution in contribution_list %}
-          <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+          <div class="flex items-center justify-between p-3 rounded-lg hover:bg-base-200 transition-colors">
             <a class="link link-accent font-medium" href="{{ contribution.get_absolute_url }}">
               {{ contribution.info }}
             </a>
@@ -237,7 +237,7 @@
   </div>
   <div class="space-y-3">
     {% for contribution in group.query reversed %}
-    <div class="bg-base-200 rounded-lg p-3 hover:bg-base-300 transition-colors">
+    <div class="rounded-lg p-3 hover:bg-base-200 transition-colors">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
         <div class="flex items-center gap-2">
           <span class="font-semibold text-base-content/70">Cycle:</span>

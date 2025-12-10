@@ -31,9 +31,9 @@
         <i class="fas fa-calendar-alt text-warning"></i>
         <label class="label-text font-semibold text-lg">{{ form.report_type.label }}</label>
       </div>
-      <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300 flex gap-2">
+      <div class="p-1 rounded-xl flex gap-2">
         {% for radio in form.report_type %}
-        <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-300 px-4 py-3 rounded-lg transition-colors duration-200 flex-1 justify-center">
+        <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-200 px-4 py-3 rounded-lg transition-colors duration-200 flex-1 justify-center">
           {{ radio.tag }}
           <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
         </label>
@@ -128,9 +128,9 @@
         <i class="fas fa-sort-amount-down text-accent"></i>
         <label class="label-text font-semibold text-lg">{{ form.ordering.label }}</label>
       </div>
-      <div class="bg-base-200 p-1 rounded-xl border-2 border-base-300 flex gap-2">
+      <div class="p-1 rounded-xl flex gap-2">
         {% for radio in form.ordering %}
-        <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-300 px-4 py-3 rounded-lg transition-colors duration-200 flex-1 justify-center">
+        <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-200 px-4 py-3 rounded-lg transition-colors duration-200 flex-1 justify-center">
           {{ radio.tag }}
           <span class="label-text font-medium text-sm whitespace-nowrap">{{ radio.choice_label }}</span>
         </label>

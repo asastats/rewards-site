@@ -31,7 +31,7 @@
           <div class="space-y-4">
             {% for provider, provider_accounts in accounts.items %}
               {% for account in provider_accounts %}
-              <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+              <div class="flex items-center justify-between p-4 rounded-lg hover:bg-base-200 transition-colors">
                 <div class="flex items-center gap-4">
                   <div class="p-3 rounded-lg bg-primary/10 text-primary">
                     <i class="fab fa-{{ provider.name|lower }}"></i>

@@ -224,7 +224,7 @@ class ContributionInvalidateView(UpdateView):
                 message.get("timestamp"), "%Y-%m-%dT%H:%M:%S.%f%z"
             ).strftime("%d %b %H:%M")
             original_comment = f"    {author} - {timestamp}\n\n"
-            for line in message.get("content").split("\n"):
+            for line in message.get("contribution").split("\n"):
                 original_comment += f"{line}\n"
 
             context["original_comment"] = original_comment

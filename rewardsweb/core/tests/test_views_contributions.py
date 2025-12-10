@@ -667,7 +667,7 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
@@ -696,7 +696,7 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
@@ -730,7 +730,7 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
@@ -761,7 +761,7 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
@@ -794,7 +794,7 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance

@@ -30,17 +30,17 @@
       <label class="label-text font-semibold text-lg">{{ ISSUE_TRACKER }} Issue</label>
     </div>
 
-    <div class="bg-base-200 p-6 rounded-xl border-2 border-base-300">
+    <div class="p-6 rounded-xl border-2 border-base-300">
       <div class="mb-4">
         <label class="label py-0 mb-2">Issue Number</label>
-        <div class="bg-base-100 p-1 rounded-lg border border-base-300">
+        <div class="p-1 rounded-lg border border-base-300">
           {{ form.issue_number }}
         </div>
       </div>
 
       <div>
         <label class="label py-0 mb-2">Issue Status</label>
-        <div class="flex gap-2 p-1 rounded-lg items-stretch bg-base-100 border border-base-300">
+        <div class="flex gap-2 p-1 rounded-lg items-stretch border border-base-300">
           {% for radio in form.issue_status %}
           <label class="flex items-center space-x-3 cursor-pointer hover:bg-base-200 px-4 py-3 rounded transition-colors duration-200 flex-1 justify-center">
             {{ radio.tag }}

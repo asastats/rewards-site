@@ -258,6 +258,45 @@ ADMINS = [
     ("Ivica Paleka", "ipaleka@asastats.com"),
 ]
 
+# You also need to update core/static/css/input.css with the same values
+AVAILABLE_THEMES = [
+    "light",
+    "dark",
+    "abyss",
+    # "acid",
+    "aqua",
+    "autumn",
+    # "black",
+    "bumblebee",
+    # "business",
+    # "caramellate",
+    # "cmyk",
+    "coffee",
+    "corporate",
+    # "cupcake",
+    "cyberpunk",
+    "dim",
+    # "dracula",
+    # "emerald",
+    # "fantasy",
+    # "forest",
+    # "garden",
+    # "halloween",
+    "lemonade",
+    "lofi",
+    "luxury",
+    # "night",
+    "nord",
+    # "pastel",
+    "retro",
+    "silk",
+    "sunset",
+    "synthwave",
+    "valentine",
+    "winter",
+    # "wireframe",
+]
+
 # =============================================================================
 # ISSUE TRACKER CONFIGURATION
 # +-------------+-----------------------+-----------------------+

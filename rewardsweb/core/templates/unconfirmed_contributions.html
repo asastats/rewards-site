@@ -47,9 +47,9 @@
         {% if contribution_list %}
           <div class="space-y-3">
             {% for contribution in contribution_list %}
-            <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
+            <div class="flex items-center justify-between p-4 rounded-lg hover:bg-base-200 transition-colors group">
               <div class="flex items-center gap-3">
-                <div class="p-2 rounded-lg bg-warning/10 text-warning">
+                <div class="p-2 rounded-lg text-warning">
                   <i class="fas fa-hourglass-half"></i>
                 </div>
                 <div>
@@ -97,7 +97,7 @@
                 <i class="fas fa-arrow-left mr-2"></i>
                 Back to Home
               </a>
-              <a href="{% url 'contributors' %}" class="btn btn-primary">
+              <a href="{% url 'contributors' %}" class="btn btn-outline btn-primary">
                 <i class="fas fa-users mr-2"></i>
                 Browse Contributors
               </a>
@@ -110,7 +110,7 @@
       {% if contribution_list %}
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="stat-card text-center">
-          <div class="p-3 rounded-lg bg-warning/10 text-warning inline-block mb-3">
+          <div class="p-3 rounded-lg text-warning inline-block mb-3">
             <i class="fas fa-clock text-xl"></i>
           </div>
           <p class="text-sm font-medium text-base-content/70">Pending Contributions</p>
@@ -118,7 +118,7 @@
         </div>
 
         <div class="stat-card text-center">
-          <div class="p-3 rounded-lg bg-primary/10 text-primary inline-block mb-3">
+          <div class="p-3 rounded-lg text-primary inline-block mb-3">
             <i class="fas fa-tasks text-xl"></i>
           </div>
           <p class="text-sm font-medium text-base-content/70">Status</p>
@@ -126,7 +126,7 @@
         </div>
 
         <div class="stat-card text-center">
-          <div class="p-3 rounded-lg bg-accent/10 text-accent inline-block mb-3">
+          <div class="p-3 rounded-lg text-accent inline-block mb-3">
             <i class="fas fa-user-shield text-xl"></i>
           </div>
           <p class="text-sm font-medium text-base-content/70">Access Level</p>

@@ -1,10 +1,10 @@
 {% if user.is_superuser %}
   {% if arg2 %}
-    <a href="{% url url_name arg1 arg2 %}" class="btn btn-{{ color|default:'warning' }} {{ extra_classes|default:'' }}">
+    <a href="{% url url_name arg1 arg2 %}" class="btn btn-outline btn-{{ color|default:'warning' }} {{ extra_classes|default:'' }}">
   {% elif arg1 %}
-    <a href="{% url url_name arg1 %}" class="btn btn-{{ color|default:'warning' }} {{ extra_classes|default:'' }}">
+    <a href="{% url url_name arg1 %}" class="btn btn-outline btn-{{ color|default:'warning' }} {{ extra_classes|default:'' }}">
   {% else %}
-    <a href="{% url url_name %}" class="btn btn-{{ color|default:'warning' }} {{ extra_classes|default:'' }}">
+    <a href="{% url url_name %}" class="btn btn-outline btn-{{ color|default:'warning' }} {{ extra_classes|default:'' }}">
   {% endif %}
     {% if icon %}
       <i class="fas fa-{{ icon }} mr-2"></i>

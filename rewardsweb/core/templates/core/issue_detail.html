@@ -54,7 +54,7 @@
     <h3 class="font-semibold text-lg mb-4">Linked Contributions</h3>
     <div class="space-y-3">
       {% for contribution in issue.contribution_set.all reversed %}
-      <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+      <div class="flex items-center justify-between p-3 rounded-lg hover:bg-base-200 transition-colors">
         <div class="flex items-center gap-3">
           <i class="fas fa-code-branch text-primary"></i>
           <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.get_absolute_url }}">
@@ -73,7 +73,7 @@
   <!-- Action Button -->
   <div class="mt-6">
     <a href="{% url 'contribution_add_from_issue' issue.number %}"
-      class="btn btn-primary w-full md:w-auto gap-2">
+      class="btn btn-outline btn-primary w-full md:w-auto gap-2">
       <i class="fas fa-plus"></i>
       Add Contribution
     </a>
@@ -90,7 +90,7 @@
 
       <!-- Close Issue Buttons - Only for superusers and if issue is open -->
       {% if user.is_superuser and tracker_issue and issue_state == 'open' %}
-        <button class="btn btn-success flex-1"
+        <button class="btn btn-outline btn-success flex-1"
                 hx-get="{% url 'issue_modal' issue.pk %}?action=addressed"
                 hx-target="#modal-container"
                 hx-swap="innerHTML transition:true">
@@ -98,7 +98,7 @@
           Close as addressed
         </button>
 
-        <button class="btn btn-warning flex-1"
+        <button class="btn btn-outline btn-warning flex-1"
                 hx-get="{% url 'issue_modal' issue.pk %}?action=wontfix"
                 hx-target="#modal-container"
                 hx-swap="innerHTML transition:true">
@@ -181,7 +181,7 @@
           <i class="fas fa-align-left text-accent"></i>
           <h3 class="text-lg font-semibold">Description</h3>
         </div>
-        <div class="bg-base-200 rounded-xl p-6 border-2 border-base-300">
+        <div class="rounded-xl p-6 border-2 border-base-300">
           <div class="prose prose-sm max-w-none text-base-content/80">
             {{ issue_body|linebreaks|urlize }}
           </div>
@@ -288,7 +288,7 @@
 {% endblock %}
 
 {% partialdef labels_form_partial %}
-<div class="stat-card bg-base-200">
+<div class="stat-card">
   <div class="flex items-center gap-2 mb-4">
     <i class="fas fa-tags text-primary"></i>
     <h3 class="text-lg font-bold">Manage Labels & Priority</h3>
@@ -308,9 +308,9 @@
       <label class="label">
         <span class="label-text font-semibold text-lg">Labels</span>
       </label>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-base-100 p-4 rounded-lg border-2 border-base-300">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 rounded-lg">
         {% for checkbox in labels_form.labels %}
-        <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg bg-base-200 hover:bg-base-300 border border-base-300 transition-all duration-200">
+        <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-all duration-200">
           {{ checkbox.tag }}
           <span class="label-text font-medium text-sm">{{ checkbox.choice_label }}</span>
         </label>
@@ -324,9 +324,9 @@
       <label class="label">
         <span class="label-text font-semibold text-lg">Priority</span>
       </label>
-      <div class="flex flex-wrap gap-4 bg-base-100 p-4 rounded-lg border-2 border-base-300">
+      <div class="flex flex-wrap gap-4 p-4 rounded-lg">
         {% for radio in labels_form.priority %}
-        <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg bg-base-200 hover:bg-base-300 border-2 border-base-300 transition-all duration-200 flex-1 min-w-[120px] justify-center">
+        <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg hover:bg-base-200 transition-all duration-200 flex-1 min-w-[120px] justify-center">
           {{ radio.tag }}
           <span class="label-text font-semibold text-base">{{ radio.choice_label }}</span>
         </label>
@@ -335,7 +335,7 @@
       {{ labels_form.priority.errors }}
     </div>
 
-    <button type="submit" name="submit_labels" class="btn btn-success w-full">
+    <button type="submit" name="submit_labels" class="btn btn-outline btn-warning w-full">
       <i class="fas fa-save mr-2"></i>
       Update Labels
     </button>

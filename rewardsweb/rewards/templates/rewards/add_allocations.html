@@ -56,14 +56,14 @@
       {% csrf_token %}
       <button id="add-allocations-admin"
               type="submit"
-              class="btn btn-warning"
+              class="btn btn-outline btn-warning"
               hx-disable>
         <i class="fas fa-plus-circle mr-2"></i>
         Add allocations (admin mode)
       </button>
     </form>
     {% else %}
-    <button id="add-allocations-button" type="button" class="btn btn-warning">
+    <button id="add-allocations-button" type="button" class="btn btn-outline btn-warning">
       <i class="fas fa-plus-circle mr-2"></i>
       Add allocations
     </button>

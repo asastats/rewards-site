@@ -43,7 +43,7 @@ describe('ReclaimAllocationsComponent', () => {
     container = document.createElement('div')
     container.id = 'reclaim-allocations-container'
     container.innerHTML = `
-      <div class="space-y-4 p-4 rounded-lg bg-base-200 mt-4">
+      <div class="space-y-4 p-4 rounded-lg mt-4">
         <h4 class="font-semibold text-lg">Reclaimable Addresses</h4>
         <table class="table w-full">
           <thead>

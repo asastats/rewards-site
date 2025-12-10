@@ -19,7 +19,7 @@
     <div class="stat-card bg-gradient-to-r from-success/10 to-success/5 border border-success/20">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="p-3 rounded-lg bg-success/20 text-success">
+          <div class="p-3 rounded-lg text-success">
             <i class="fas fa-gift text-xl"></i>
           </div>
           <div>
@@ -29,16 +29,16 @@
             </p>
           </div>
         </div>
-        <a href="{% url 'claim' %}" hx-boost="false" class="btn btn-success btn-lg">
+        <a href="{% url 'claim' %}" hx-boost="false" class="btn btn-outline btn-success btn-lg">
           <i class="fas fa-gift mr-2"></i>
           Claim Rewards
         </a>
       </div>
     </div>
     {% else %}
-    <div class="stat-card bg-base-200">
+    <div class="stat-card">
       <div class="flex items-center gap-3">
-        <div class="p-3 rounded-lg bg-base-content/10 text-base-content/50">
+        <div class="p-3 rounded-lg text-base-content/50">
           <i class="fas fa-info-circle text-xl"></i>
         </div>
         <div>
@@ -104,8 +104,8 @@
     <h3 class="font-semibold text-lg mb-4">Social Handles</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {% for handle in contributor.prefetched_handles %}
-      <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
-        <div class="p-2 rounded-lg bg-secondary/10 text-secondary">
+      <div class="flex items-center gap-3 p-3 rounded-lg">
+        <div class="p-2 rounded-lg text-secondary">
           <i class="fab fa-{{ handle.platform.name|lower }}"></i>
         </div>
         <div>
@@ -138,9 +138,9 @@
 
       <div class="space-y-4">
         {% for contribution in group.query reversed %}
-        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors group">
+        <div class="flex items-center justify-between p-4 rounded-lg hover:bg-base-200 transition-colors group">
           <div class="flex items-center gap-4">
-            <div class="p-2 rounded-lg bg-primary/10 text-primary">
+            <div class="p-2 rounded-lg text-primary">
               <i class="fas fa-gem"></i>
             </div>
             <div>

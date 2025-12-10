@@ -17,7 +17,7 @@
 {% block main_content %}
 <div class="space-y-6 fade-in">
   <div class="stat-card text-center">
-    <div class="p-4 rounded-lg bg-warning/10 text-warning inline-block mb-4">
+    <div class="p-4 rounded-lg text-warning inline-block mb-4">
       <i class="fas fa-envelope-circle-check text-3xl"></i>
     </div>
 
@@ -25,7 +25,7 @@
 
     <form method="post" class="space-y-4">
       {% csrf_token %}
-      <button class="btn btn-success w-full max-w-xs" type="submit">
+      <button class="btn btn-outline btn-success w-full max-w-xs" type="submit">
         <i class="fas fa-check-circle mr-2"></i>
         {% trans "Confirm Email Address" %}
       </button>

@@ -18,6 +18,7 @@ class TestUtilsContextProcessorsFunctions:
             "PROJECT_WEBSITE_NAME": f"{settings.PROJECT_OWNER} Rewards website",
             "PROJECT_DOMAIN": settings.PROJECT_DOMAIN,
             "ISSUE_TRACKER": settings.ISSUE_TRACKER_PROVIDER,
+            "AVAILABLE_THEMES": settings.AVAILABLE_THEMES,
         }
 
     # # pagination_context

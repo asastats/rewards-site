@@ -230,19 +230,19 @@ class ContributionInvalidateView(UpdateView):
             context["original_comment"] = original_comment
 
         else:
-            context["original_comment"] = ""  # Set empty string when no message
+            context["original_comment"] = ""
 
         return context
 
     def form_valid(self, form):
         """Set contribution as confirmed with reaction and optional reply."""
         reaction = self.kwargs.get("reaction")
-        comment = form.cleaned_data.get("comment")
+        reply = form.cleaned_data.get("reply")
         updater = UpdateProvider(self.object.platform.name)
 
         # Track operations that need to be performed
         operations = []
-        if comment:
+        if reply:
             operations.append("reply")
         operations.append("reaction")
 
@@ -251,9 +251,9 @@ class ContributionInvalidateView(UpdateView):
 
         # Add reply if comment exists
         reply_success = True
-        if comment:
+        if reply:
             try:
-                reply_success = updater.add_reply_to_message(self.object.url, comment)
+                reply_success = updater.add_reply_to_message(self.object.url, reply)
                 if not reply_success:
                     failed_operations.append("reply")
             except Exception as e:
@@ -290,7 +290,7 @@ class ContributionInvalidateView(UpdateView):
         )
 
         # Success message
-        success_msg = self._get_success_message(comment, reaction)
+        success_msg = self._get_success_message(reply, reaction)
         messages.success(self.request, success_msg)
 
         return super().form_valid(form)

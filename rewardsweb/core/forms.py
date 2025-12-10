@@ -111,11 +111,11 @@ class ContributionEditForm(ModelForm):
 class ContributionInvalidateForm(ModelForm):
     """Model form class for setting contribution as already existing.
 
-    :var ContributionInvalidateForm.comment: optional comment to add as a reply
-    :type ContributionInvalidateForm.comment: :class:`django.forms.CharField`
+    :var ContributionInvalidateForm.reply: optional comment to add as a reply
+    :type ContributionInvalidateForm.reply: :class:`django.forms.CharField`
     """
 
-    comment = CharField(
+    reply = CharField(
         widget=Textarea(
             attrs={
                 "class": "textarea textarea-bordered w-full h-32",
@@ -129,7 +129,7 @@ class ContributionInvalidateForm(ModelForm):
 
     class Meta:
         model = Contribution
-        fields = ["comment"]
+        fields = ["reply"]
 
 
 class ContributionCreateForm(ModelForm):

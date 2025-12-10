@@ -147,11 +147,11 @@ class TestContributionInvalidateForm:
 
     def test_contributioninvalidateform_comment_field(self):
         form = ContributionInvalidateForm()
-        assert "comment" in form.base_fields
-        assert isinstance(form.base_fields["comment"], CharField)
-        assert not form.base_fields["comment"].required
-        assert isinstance(form.base_fields["comment"].widget, Textarea)
-        assert "class" in form.base_fields["comment"].widget.attrs
+        assert "reply" in form.base_fields
+        assert isinstance(form.base_fields["reply"], CharField)
+        assert not form.base_fields["reply"].required
+        assert isinstance(form.base_fields["reply"].widget, Textarea)
+        assert "class" in form.base_fields["reply"].widget.attrs
 
     # # Meta
     def test_contributioninvalidateform_meta_model_is_contribution(self):
@@ -160,7 +160,7 @@ class TestContributionInvalidateForm:
 
     def test_contributioninvalidateform_meta_fields(self):
         form = ContributionInvalidateForm()
-        assert form._meta.fields == ["comment"]
+        assert form._meta.fields == ["reply"]
 
 
 class TestContributionCreateForm:

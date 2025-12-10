@@ -79,7 +79,7 @@
                 </details>
               </li>
               {% else %}
-              <li><a href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" hx-boost="false" hx-disable="true" class="btn btn-primary btn-sm">
+              <li><a href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}" hx-boost="false" hx-disable="true" class="btn btn-outline btn-primary btn-sm">
                 <i class="fas fa-sign-in-alt mr-2"></i>Login
               </a></li>
               {% endif %}

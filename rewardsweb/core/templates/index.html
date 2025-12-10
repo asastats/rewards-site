@@ -147,7 +147,7 @@
             </p>
           </div>
         </div>
-        <a href="{% url 'claim' %}" hx-boost="false" class="btn btn-success btn-lg">
+        <a href="{% url 'claim' %}" hx-boost="false" class="btn btn-outline btn-success btn-lg">
           <i class="fas fa-gift mr-2"></i>
           Claim Rewards
         </a>
@@ -193,24 +193,24 @@
   <div class="stat-card">
     <h2 class="text-xl font-bold mb-4">Quick Actions</h2>
     <div class="flex flex-wrap gap-4">
-      <a href="{% url 'cycles' %}" class="btn btn-primary">
+      <a href="{% url 'cycles' %}" class="btn btn-outline btn-primary">
         <i class="fas fa-sync-alt mr-2"></i>
         View Cycles
       </a>
-      <a href="{% url 'contributors' %}" class="btn btn-primary">
+      <a href="{% url 'contributors' %}" class="btn btn-outline btn-primary">
         <i class="fas fa-users mr-2"></i>
         Browse Contributors
       </a>
-      <a href="{% url 'issues' %}" class="btn btn-{% if user.is_superuser %}warning{% else %}primary{% endif %}">
+      <a href="{% url 'issues' %}" class="btn btn-outline btn-{% if user.is_superuser %}warning{% else %}primary{% endif %}">
         <i class="fas fa-tasks mr-2"></i>
         {% if user.is_superuser %}Manage{% else %}View{% endif %} Issues
       </a>
       {% if user.is_superuser %}
-      <a href="{% url 'transparency' %}" class="btn btn-warning" hx-boost="false" hx-disable="true" target="_blank" rel="noopener">
+      <a href="{% url 'transparency' %}" class="btn btn-outline btn-warning" hx-boost="false" hx-disable="true" target="_blank" rel="noopener">
         <i class="fas fa-file-lines mr-2"></i>
         Transparency Report
       </a>
-      <a href="{% url 'admin:index' %}" class="btn btn-warning" target="_blank" rel="noopener">
+      <a href="{% url 'admin:index' %}" class="btn btn-outline btn-warning" target="_blank" rel="noopener">
         <i class="fas fa-shield-alt mr-2"></i>
         Admin Dashboard
       </a>

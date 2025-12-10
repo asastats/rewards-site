@@ -73,7 +73,7 @@
   <!-- Action Button -->
   <div class="mt-6">
     <a href="{% url 'contribution_add_from_issue' issue.number %}"
-      class="btn btn-primary w-full md:w-auto gap-2">
+      class="btn btn-outline btn-primary w-full md:w-auto gap-2">
       <i class="fas fa-plus"></i>
       Add Contribution
     </a>
@@ -90,7 +90,7 @@
 
       <!-- Close Issue Buttons - Only for superusers and if issue is open -->
       {% if user.is_superuser and tracker_issue and issue_state == 'open' %}
-        <button class="btn btn-success flex-1"
+        <button class="btn btn-outline btn-success flex-1"
                 hx-get="{% url 'issue_modal' issue.pk %}?action=addressed"
                 hx-target="#modal-container"
                 hx-swap="innerHTML transition:true">
@@ -98,7 +98,7 @@
           Close as addressed
         </button>
 
-        <button class="btn btn-warning flex-1"
+        <button class="btn btn-outline btn-warning flex-1"
                 hx-get="{% url 'issue_modal' issue.pk %}?action=wontfix"
                 hx-target="#modal-container"
                 hx-swap="innerHTML transition:true">
@@ -335,7 +335,7 @@
       {{ labels_form.priority.errors }}
     </div>
 
-    <button type="submit" name="submit_labels" class="btn btn-success w-full">
+    <button type="submit" name="submit_labels" class="btn btn-outline btn-warning w-full">
       <i class="fas fa-save mr-2"></i>
       Update Labels
     </button>

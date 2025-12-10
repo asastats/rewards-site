@@ -45,7 +45,7 @@
               {% csrf_token %}
               <input type="hidden" name="address" value="{{ address }}">
               <button type="submit"
-                      class="btn btn-warning btn-sm"
+                      class="btn btn-outline btn-warning btn-sm"
                       hx-disable>
                 <i class="fas fa-recycle mr-2"></i>
                 Reclaim
@@ -53,7 +53,7 @@
             </form>
             {% else %}
               <button type="button"
-                      class="btn btn-warning btn-sm reclaim-button"
+                      class="btn btn-outline btn-warning btn-sm reclaim-button"
                       data-address="{{ address }}"
                       id="reclaim-button-{{ forloop.counter }}">
                 <i class="fas fa-recycle mr-2"></i>

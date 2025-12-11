@@ -12,7 +12,7 @@
         <h2 class="text-xl font-bold">{% block form_title %}Form{% endblock %}</h2>
       </div>
 
-      <form method="post">
+      {% block form_tag %}<form method="post">{% endblock %}
         {% csrf_token %}
 
         {% include "includes/form_errors.html" %}

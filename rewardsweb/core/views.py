@@ -168,12 +168,7 @@ class ContributionEditView(UpdateView):
                     issue_number
                 )
                 if not issue_data.get("success"):
-                    if issue_data.get("error") == MISSING_API_TOKEN_TEXT:
-                        form.add_error(
-                            "issue_number", "That tracker issue doesn't exist!"
-                        )
-                    else:
-                        form.add_error("issue_number", MISSING_API_TOKEN_TEXT)
+                    form.add_error("issue_number", issue_data.get("error"))
                     return self.form_invalid(form)
 
                 # Create new issue with selected status
@@ -197,7 +192,7 @@ class ContributionEditView(UpdateView):
         self.request.user.profile.log_action(
             "contribution_edited", Contribution.objects.get(id=self.object.pk).info()
         )
-        messages.success(self.request, "Contribution updated successfully!")
+        messages.success(self.request, "✅ Contribution updated successfully!")
         return reverse_lazy("contribution_detail", kwargs={"pk": self.object.pk})
 
 
@@ -301,7 +296,10 @@ class ContributionInvalidateView(UpdateView):
             return f"Failed to set contribution as {reaction}. All operations failed."
 
         failed_ops_str = " and ".join(failed_operations)
-        return f"Failed to add {failed_ops_str}. Contribution was not confirmed as {reaction}."
+        return (
+            f"Failed to add {failed_ops_str}. "
+            f"Contribution was not confirmed as {reaction}."
+        )
 
     def _get_success_message(self, comment, reaction):
         """Generate appropriate success message."""
@@ -311,7 +309,7 @@ class ContributionInvalidateView(UpdateView):
         actions.append("reaction added")
 
         actions_str = " and ".join(actions)
-        return f"Contribution {actions_str} successfully!"
+        return f"✅ Contribution {actions_str} successfully!"
 
     def get_success_url(self):
         """Return URL to redirect after successful update."""
@@ -1393,5 +1391,5 @@ class RefreshTransparencyDataView(RedirectView):
         :rtype: :class:`django.http.HttpResponseRedirect`
         """
         refresh_data()
-        messages.success(request, "Transparency data refreshed successfully!")
+        messages.success(request, "✅ Transparency data refreshed successfully!")
         return super().get(request, *args, **kwargs)

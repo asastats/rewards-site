@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
+from asgiref.sync import sync_to_async
 
 from trackers.config import REWARDS_API_BASE_URL
 from trackers.models import Mention, MentionLog
@@ -174,6 +175,16 @@ class BaseMentionTracker:
         :type details: str
         """
         MentionLog.objects.log_action(self.platform_name, action, details)
+
+    async def log_action_async(self, action, details=""):
+        """Log platform actions to database (async version).
+
+        :param action: description of the action performed
+        :type action: str
+        :param details: additional details about the action
+        :type details: str
+        """
+        return await sync_to_async(self.log_action)(action, details)
 
     def prepare_contribution_data(self, parsed_message, message_data):
         """Prepare contribution data for POST request from provided arguments.

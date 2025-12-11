@@ -16,6 +16,8 @@
 
 {% block form_title %}Edit Contribution Details{% endblock %}
 
+{% block form_tag %}<form method="post" hx-boost="false">{% endblock %}
+
 {% block form_fields %}
   {% include "includes/form_errors.html" %}
 

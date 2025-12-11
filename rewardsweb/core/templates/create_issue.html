@@ -16,6 +16,8 @@
 
 {% block form_title %}Issue Details{% endblock %}
 
+{% block form_tag %}<form method="post" hx-boost="false">{% endblock %}
+
 {% block form_fields %}
   <!-- Hidden field for contribution_id -->
   <input type="hidden" name="contribution_id" value="{{ contribution_id }}">

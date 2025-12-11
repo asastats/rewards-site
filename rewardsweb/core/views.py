@@ -168,12 +168,7 @@ class ContributionEditView(UpdateView):
                     issue_number
                 )
                 if not issue_data.get("success"):
-                    if issue_data.get("error") == MISSING_API_TOKEN_TEXT:
-                        form.add_error(
-                            "issue_number", "That tracker issue doesn't exist!"
-                        )
-                    else:
-                        form.add_error("issue_number", MISSING_API_TOKEN_TEXT)
+                    form.add_error("issue_number", issue_data.get("error"))
                     return self.form_invalid(form)
 
                 # Create new issue with selected status
@@ -197,7 +192,7 @@ class ContributionEditView(UpdateView):
         self.request.user.profile.log_action(
             "contribution_edited", Contribution.objects.get(id=self.object.pk).info()
         )
-        messages.success(self.request, "Contribution updated successfully!")
+        messages.success(self.request, "✅ Contribution updated successfully!")
         return reverse_lazy("contribution_detail", kwargs={"pk": self.object.pk})
 
 
@@ -301,7 +296,10 @@ class ContributionInvalidateView(UpdateView):
             return f"Failed to set contribution as {reaction}. All operations failed."
 
         failed_ops_str = " and ".join(failed_operations)
-        return f"Failed to add {failed_ops_str}. Contribution was not confirmed as {reaction}."
+        return (
+            f"Failed to add {failed_ops_str}. "
+            f"Contribution was not confirmed as {reaction}."
+        )
 
     def _get_success_message(self, comment, reaction):
         """Generate appropriate success message."""
@@ -311,7 +309,7 @@ class ContributionInvalidateView(UpdateView):
         actions.append("reaction added")
 
         actions_str = " and ".join(actions)
-        return f"Contribution {actions_str} successfully!"
+        return f"✅ Contribution {actions_str} successfully!"
 
     def get_success_url(self):
         """Return URL to redirect after successful update."""
@@ -758,7 +756,7 @@ class IssueDetailView(DetailView):
                     f"Successfully set labels for issue #{issue.number}: "
                     f"{', '.join(labels_to_add)}"
                 )
-                messages.success(request, "Labels updated successfully")
+                messages.success(request, "✅ Labels updated successfully")
 
                 request.user.profile.log_action("issue_labels_set", success_message)
 
@@ -813,7 +811,9 @@ class IssueDetailView(DetailView):
             if action not in labels_to_set:
                 labels_to_set.append(action)
 
-            success_message = f"Issue #{issue.number} closed as {action} successfully."
+            success_message = (
+                f"✅ Issue #{issue.number} closed as {action} successfully."
+            )
 
             # Call the function to close issue on tracker
             result = IssueProvider(request.user).close_issue_with_labels(
@@ -871,17 +871,14 @@ class IssueDetailView(DetailView):
         return redirect("issue_detail", pk=issue.pk)
 
     def _labels_response_from_hx_request(self, request, form, issue, labels):
-        """Prepare HTML response for labels sections fro mprovided data."""
+        """Prepare HTML response for labels sections from provided data."""
+        # Get all messages (already added to request)
         msg_obj = next(iter(messages.get_messages(request)), None)
 
+        # Render the partials
         form_html = render_to_string(
             "core/issue_detail.html#labels_form_partial",
-            {
-                "labels_form": form,
-                "issue": issue,
-                "toast_message": msg_obj.message if msg_obj else None,
-                "toast_type": msg_obj.tags if msg_obj else None,
-            },
+            {"labels_form": form, "issue": issue},
             request=request,
         )
 
@@ -891,7 +888,14 @@ class IssueDetailView(DetailView):
             request=request,
         )
 
-        return HttpResponse(form_html + labels_html)
+        # Create a container with data attributes for HTMX
+        container_html = (
+            f'<div data-toast-message="{msg_obj.message if msg_obj else ""}" '
+            f'data-toast-type="{msg_obj.tags if msg_obj else "info"}">'
+            f"{form_html}{labels_html}</div>"
+        )
+
+        return HttpResponse(container_html)
 
 
 class IssueModalView(DetailView):
@@ -1393,5 +1397,5 @@ class RefreshTransparencyDataView(RedirectView):
         :rtype: :class:`django.http.HttpResponseRedirect`
         """
         refresh_data()
-        messages.success(request, "Transparency data refreshed successfully!")
+        messages.success(request, "✅ Transparency data refreshed successfully!")
         return super().get(request, *args, **kwargs)

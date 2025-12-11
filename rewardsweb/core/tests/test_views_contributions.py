@@ -208,7 +208,10 @@ class TestDbContributionEditView:
         mocker.patch(f"issues.providers.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
             "issues.providers.BaseIssueProvider.issue_by_number",
-            return_value={"success": False, "error": MISSING_API_TOKEN_TEXT},
+            return_value={
+                "success": False,
+                "error": "That tracker issue doesn't exist!",
+            },
         )
         request = rf.post(
             f"/contribution/{contribution.id}/edit/",
@@ -267,7 +270,7 @@ class TestDbContributionEditView:
         assert "form" in response.context_data
         form = response.context_data["form"]
         assert "issue_number" in form.errors
-        assert MISSING_API_TOKEN_TEXT in form.errors["issue_number"]
+        assert "API rate limit exceeded" in form.errors["issue_number"]
 
         mock_issue_by_number.assert_called_once_with(999)
 
@@ -303,7 +306,7 @@ class TestDbContributionEditView:
         assert "form" in response.context_data
         form = response.context_data["form"]
         assert "issue_number" in form.errors
-        assert "That tracker issue doesn't exist!" in form.errors["issue_number"]
+        assert MISSING_API_TOKEN_TEXT in form.errors["issue_number"]
 
         mock_issue_by_number.assert_called_once_with(999)
 

@@ -13,6 +13,8 @@
 
 {% block form_title %}New Contribution{% endblock %}
 
+{% block form_tag %}<form method="post" hx-boost="false">{% endblock %}
+
 {% block form_fields %}
   <input type="hidden" name="q" value="{{ request.GET.q }}">
 

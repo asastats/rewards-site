@@ -1088,14 +1088,14 @@ class TestIssueDetailViewSubmissionHandlers:
         # Check success message
         messages = list(get_messages(response.wsgi_request))
         assert any(
-            f"Issue #{issue.number} closed as addressed successfully" in str(message)
+            f"✅ Issue #{issue.number} closed as addressed successfully" in str(message)
             for message in messages
         )
 
         calls = [
             mocker.call(
                 "issue_closed",
-                f"Issue #{issue.number} closed as addressed successfully.",
+                f"✅ Issue #{issue.number} closed as addressed successfully.",
             ),
             mocker.call("issue_status_set", str(issue)),
         ]
@@ -1167,7 +1167,7 @@ class TestIssueDetailViewSubmissionHandlers:
         calls = [
             mocker.call(
                 "issue_closed",
-                f"Issue #{issue.number} closed as addressed successfully.",
+                f"✅ Issue #{issue.number} closed as addressed successfully.",
             ),
             mocker.call("issue_status_set", "123 [addressed]"),
             mocker.call("issue_status_set", "123 [claimable]"),

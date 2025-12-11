@@ -398,52 +398,38 @@
             onsubmit="document.getElementById('{{ modal_id }}').close()"
             class="space-y-4">
 
-          {% csrf_token %}
-          <input type="hidden" name="close_action" value="{{ action_value }}">
+        {% csrf_token %}
+        <input type="hidden" name="close_action" value="{{ action_value }}">
 
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Closing Comment (Optional)</span>
-            </label>
-            <textarea name="close_comment"
-                      class="textarea textarea-bordered w-full h-32"
-                      placeholder="Add a comment explaining why this issue is being closed..."></textarea>
-          </div>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Closing Comment (Optional)</span>
+          </label>
+          <textarea name="close_comment"
+                    class="textarea textarea-bordered w-full h-32"
+                    placeholder="Add a comment explaining why this issue is being closed..."></textarea>
+        </div>
 
-          <div class="modal-action">
-            <button type="button" class="btn btn-outline" onclick="document.getElementById('{{ modal_id }}').close()">Cancel</button>
-            <button type="submit" name="submit_close" class="btn btn-outline {{ btn_class }}">
-              <i class="fas fa-{% if action_value == 'addressed' %}check{% else %}times{% endif %}-circle mr-2"></i>
-              {{ action_label }}
-            </button>
-          </div>
+        <div class="modal-action">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('{{ modal_id }}').close()">Cancel</button>
+          <button type="submit" name="submit_close" class="btn btn-outline {{ btn_class }}">
+            <i class="fas fa-{% if action_value == 'addressed' %}check{% else %}times{% endif %}-circle mr-2"></i>
+            {{ action_label }}
+          </button>
+        </div>
       </form>
     </div>
 
     <form method="dialog" class="modal-backdrop">
-        <button>close</button>
+      <button>close</button>
     </form>
   </dialog>
   {% endpartialdef close_modal_partial %}
 
-  {% partialdef message_toast %}
-  <div class="toast toast-top toast-end z-[9999] pr-6 pointer-events-none">
-    <div class="alert alert-{{ message.tags|yesno:"error,success" }} shadow-lg pointer-events-auto">
-      {% if message.tags == "error" %}
-        <i class="fas fa-exclamation-triangle mr-2"></i>
-      {% else %}
-        <i class="fas fa-check-circle mr-2"></i>
-      {% endif %}
-      <span>{{ message }}</span>
-    </div>
-  </div>
-  {% endpartialdef message_toast %}
-
   <!-- Modal Container -->
   <div id="modal-container"></div>
 
-  <!-- Messages Display -->
-  {% for message in messages %}
-    {% partial message_toast %}
-  {% endfor %}
+  {% load core_utils %}
+  {% messages_toast request %}
+
 {% endblock %}

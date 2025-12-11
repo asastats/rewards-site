@@ -9,6 +9,7 @@ const {
   processDaisyUITheme,
   processTransparencyReportForm,
   processClipboardCopy,
+  processAllMessages,
 } = require("./site.js");
 
 // JSDOM doesn't implement showModal, so we'll mock it.
@@ -611,20 +612,6 @@ describe("HTMX Progress Bar - generate-report-btn disabled state", () => {
     expect(btn.disabled).toBe(false);
   });
 
-  it("htmx:afterSwap should re-enable generate-report-btn", () => {
-    const btn = document.getElementById('generate-report-btn');
-    btn.disabled = true; // Start disabled
-
-    const event = new CustomEvent("htmx:afterSwap", {
-      detail: {
-        target: document.createElement('div')
-      }
-    });
-
-    document.body.dispatchEvent(event);
-    expect(btn.disabled).toBe(false);
-  });
-
   it("htmx:afterSwap should not throw if generate-report-btn doesn't exist", () => {
     document.getElementById('generate-report-btn').remove();
 
@@ -748,5 +735,306 @@ describe("htmx:load listener for transparency report", () => {
 
     // Should not throw
     expect(() => document.body.dispatchEvent(event)).not.toThrow();
+  });
+});
+
+describe("processAllMessages Function", () => {
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="toast-container"></div>';
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("should process Django messages, container attributes, and element attributes", () => {
+    // Set up multiple message sources
+    document.body.innerHTML += `
+      <div id="django-messages">
+        <div data-message="Django message" data-message-type="success"></div>
+      </div>
+      <div id="element-with-toast" data-toast-message="Element message" data-toast-type="info">
+        Some content
+      </div>
+      <div class="another-toast" data-toast-message="Another element" data-toast-type="warning">
+        More content
+      </div>
+    `;
+
+    // Create a container with its own toast attributes
+    const container = document.createElement('div');
+    container.dataset.toastMessage = "Container message";
+    container.dataset.toastType = "error";
+
+    // Execute the function
+    processAllMessages(container);
+
+    // Check all toasts were shown - should be 4 total (Django + 2 elements + container)
+    const toastContainer = document.getElementById("toast-container");
+    expect(toastContainer.children.length).toBe(4);
+
+    // Verify Django message toast
+    expect(toastContainer.children[0].classList.contains("alert-success")).toBe(true);
+    expect(toastContainer.children[0].textContent).toBe("Django message");
+
+    // Verify element with toast attributes were cleared
+    const elementWithToast = document.getElementById("element-with-toast");
+    expect(elementWithToast.dataset.toastMessage).toBeUndefined();
+    expect(elementWithToast.dataset.toastType).toBeUndefined();
+
+    // Verify another element with toast attributes were cleared
+    const anotherToast = document.querySelector('.another-toast');
+    expect(anotherToast.dataset.toastMessage).toBeUndefined();
+    expect(anotherToast.dataset.toastType).toBeUndefined();
+
+    // Verify container attributes were cleared
+    expect(container.dataset.toastMessage).toBeUndefined();
+    expect(container.dataset.toastType).toBeUndefined();
+
+    // Verify Django messages container was removed
+    expect(document.getElementById("django-messages")).toBeNull();
+  });
+
+  it("should handle empty or missing messages gracefully", () => {
+    // Test with empty data attributes
+    document.body.innerHTML += `
+      <div data-toast-message="" data-toast-type="info"></div>
+      <div data-toast-message="   "></div>
+    `;
+
+    processAllMessages();
+
+    // Empty message should not create a toast
+    const toastContainer = document.getElementById("toast-container");
+    expect(toastContainer.children.length).toBe(0);
+  });
+
+  it("should handle missing container parameter", () => {
+    // Set up some toast elements
+    document.body.innerHTML += `
+      <div data-toast-message="Element message" data-toast-type="info"></div>
+    `;
+
+    // Call without container
+    processAllMessages();
+
+    // Should still process the element
+    const toastContainer = document.getElementById("toast-container");
+    expect(toastContainer.children.length).toBe(1);
+    expect(toastContainer.children[0].textContent).toBe("Element message");
+  });
+
+  it("should process container attributes when provided", () => {
+    // Create a container with toast attributes
+    const container = document.createElement('div');
+    container.dataset.toastMessage = "Container toast message";
+    container.dataset.toastType = "success";
+
+    // Execute with container
+    processAllMessages(container);
+
+    // Verify toast was shown
+    const toastContainer = document.getElementById("toast-container");
+    expect(toastContainer.children.length).toBe(1);
+    expect(toastContainer.children[0].textContent).toBe("Container toast message");
+    expect(toastContainer.children[0].classList.contains("alert-success")).toBe(true);
+
+    // Verify container attributes were cleared
+    expect(container.dataset.toastMessage).toBeUndefined();
+    expect(container.dataset.toastType).toBeUndefined();
+  });
+
+  it("should prioritize container attributes over other sources", () => {
+    // Set up conflicting messages
+    document.body.innerHTML += `
+      <div id="django-messages">
+        <div data-message="Django message" data-message-type="success"></div>
+      </div>
+      <div data-toast-message="Element message" data-toast-type="info"></div>
+    `;
+
+    // Create container with different message
+    const container = document.createElement('div');
+    container.dataset.toastMessage = "Container message (should be shown)";
+    container.dataset.toastType = "error";
+
+    processAllMessages(container);
+
+    // Should show all 3 toasts (Django, Element, and Container)
+    const toastContainer = document.getElementById("toast-container");
+    expect(toastContainer.children.length).toBe(3);
+
+    // All should be processed regardless of source
+    const messages = Array.from(toastContainer.children).map(el => el.textContent);
+    expect(messages).toContain("Django message");
+    expect(messages).toContain("Element message");
+    expect(messages).toContain("Container message (should be shown)");
+  });
+
+  it("should not fail when toast container is missing", () => {
+    // Remove toast container
+    document.body.innerHTML = '';
+
+    // Set up some messages
+    const container = document.createElement('div');
+    container.dataset.toastMessage = "Test message";
+
+    // Should not throw
+    expect(() => processAllMessages(container)).not.toThrow();
+  });
+  it("should use 'info' as fallback when data-toast-type is missing or empty", () => {
+    // Test with missing data-toast-type
+    document.body.innerHTML += `
+    <div data-toast-message="Message without type"></div>
+  `;
+
+    processAllMessages();
+
+    const toastContainer = document.getElementById("toast-container");
+    expect(toastContainer.children.length).toBe(1);
+    expect(toastContainer.children[0].classList.contains("alert-info")).toBe(true);
+    expect(toastContainer.children[0].textContent).toBe("Message without type");
+  });
+
+  it("should handle empty data-toast-type string", () => {
+    // Test with empty data-toast-type
+    document.body.innerHTML += `
+    <div data-toast-message="Message with empty type" data-toast-type=""></div>
+  `;
+
+    processAllMessages();
+
+    const toastContainer = document.getElementById("toast-container");
+    expect(toastContainer.children.length).toBe(1);
+    expect(toastContainer.children[0].classList.contains("alert-info")).toBe(true);
+  });
+});
+
+describe("Dialog Modal Auto-open", () => {
+  beforeEach(() => {
+    // Mock showModal for all tests
+    HTMLDialogElement.prototype.showModal = jest.fn();
+    HTMLDialogElement.prototype.close = jest.fn();
+
+    // Set up necessary elements for htmx:afterSwap
+    document.body.innerHTML = `
+      <div id="htmx-progress-bar" class="hidden"></div>
+      <div id="toast-container"></div>
+    `;
+
+    // Use fake timers to handle setTimeout in htmx:afterSwap
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("should call showModal when dialog is not open", () => {
+    const swapTarget = document.createElement("div");
+    const dialog = document.createElement("dialog");
+    dialog.open = false; // Explicitly set to not open
+
+    swapTarget.appendChild(dialog);
+
+    const event = new CustomEvent("htmx:afterSwap", {
+      bubbles: true,
+      detail: { target: swapTarget }
+    });
+
+    document.body.dispatchEvent(event);
+
+    // Advance timers to run the setTimeout for fade-in removal
+    jest.advanceTimersByTime(300);
+
+    expect(dialog.showModal).toHaveBeenCalledTimes(1);
+  });
+
+  it("should NOT call showModal when dialog is already open", () => {
+    const swapTarget = document.createElement("div");
+    const dialog = document.createElement("dialog");
+    dialog.open = true; // Dialog is already open
+
+    swapTarget.appendChild(dialog);
+
+    const event = new CustomEvent("htmx:afterSwap", {
+      bubbles: true,
+      detail: { target: swapTarget }
+    });
+
+    document.body.dispatchEvent(event);
+
+    // Advance timers to run the setTimeout for fade-in removal
+    jest.advanceTimersByTime(300);
+
+    expect(dialog.showModal).not.toHaveBeenCalled();
+  });
+
+  it("should handle swapped element being a dialog itself", () => {
+    const swappedDialog = document.createElement("dialog");
+    swappedDialog.open = false;
+
+    const event = new CustomEvent("htmx:afterSwap", {
+      bubbles: true,
+      detail: { target: swappedDialog }
+    });
+
+    document.body.dispatchEvent(event);
+
+    // Advance timers to run the setTimeout for fade-in removal
+    jest.advanceTimersByTime(300);
+
+    // When the swapped element itself is a dialog, it should open
+    expect(swappedDialog.showModal).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not throw when dialogs have no showModal method", () => {
+    const swapTarget = document.createElement("div");
+    const dialog = document.createElement("dialog");
+
+    // Remove showModal method
+    delete dialog.showModal;
+
+    swapTarget.appendChild(dialog);
+
+    const event = new CustomEvent("htmx:afterSwap", {
+      bubbles: true,
+      detail: { target: swapTarget }
+    });
+
+    // Should not throw even if showModal is missing
+    expect(() => {
+      document.body.dispatchEvent(event);
+      // Advance timers
+      jest.advanceTimersByTime(300);
+    }).not.toThrow();
+  });
+
+  it("should handle dialog with dynamic open property", () => {
+    const swapTarget = document.createElement("div");
+    const dialog = document.createElement("dialog");
+
+    // Simulate dynamic property change by using a getter
+    let dialogOpen = false;
+    Object.defineProperty(dialog, 'open', {
+      get() { return dialogOpen; },
+      set(value) { dialogOpen = value; },
+      configurable: true
+    });
+
+    swapTarget.appendChild(dialog);
+
+    const event = new CustomEvent("htmx:afterSwap", {
+      bubbles: true,
+      detail: { target: swapTarget }
+    });
+
+    document.body.dispatchEvent(event);
+
+    // Advance timers to run the setTimeout for fade-in removal
+    jest.advanceTimersByTime(300);
+
+    expect(dialog.showModal).toHaveBeenCalled();
   });
 });

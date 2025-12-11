@@ -41,6 +41,42 @@ function processDjangoMessages() {
   }
 }
 
+/**
+ * Unified function to process and display all types of messages.
+ * Checks for Django messages, HTMX attributes, and custom message sources.
+ */
+function processAllMessages(container = null) {
+  // Process Django messages from hidden div
+  processDjangoMessages();
+
+  // Check for HTMX toast attributes on the container
+  if (container) {
+    if (container.dataset.toastMessage && container.dataset.toastMessage.trim()) {
+      showToast(
+        container.dataset.toastType || "info",
+        container.dataset.toastMessage
+      );
+      // Clear attributes after processing
+      delete container.dataset.toastMessage;
+      delete container.dataset.toastType;
+    }
+  }
+
+  // Also check for any elements with data-toast-message in the swapped content
+  document.querySelectorAll('[data-toast-message]').forEach(el => {
+    if (el.dataset.toastMessage && el.dataset.toastMessage.trim()) {
+      showToast(
+        el.dataset.toastType || "info",
+        el.dataset.toastMessage
+      );
+      // Clear after showing
+      delete el.dataset.toastMessage;
+      delete el.dataset.toastType;
+    }
+  });
+}
+
+
 /******************************************************************************
  *
  *  Modal Management
@@ -240,7 +276,7 @@ function processTransparencyReportForm() {
 function initializeDomReadyListeners() {
   processActiveNetwork();
   processDaisyUITheme();
-  processDjangoMessages();
+  processAllMessages();
 }
 
 /**
@@ -272,49 +308,38 @@ document.body.addEventListener("htmx:configRequest", (event) => {
 document.body.addEventListener("htmx:afterSwap", (event) => {
   finishProgressBar(htmxState.requestBlocking);
 
-  const generateReportBtn = document.getElementById('generate-report-btn');
-  if (generateReportBtn) {
-    generateReportBtn.disabled = false;
-  }
-
   const swappedEl = event.detail.target;
 
-  // Fade-in animation for the new content
+  // Process all types of messages
+  processAllMessages(swappedEl);
+
+  // Fade-in animation
   swappedEl.classList.add("fade-in");
   setTimeout(() => swappedEl.classList.remove("fade-in"), 300);
 
-  // Autofocus on the first input in the new content
+  // Autofocus
   const firstInput = swappedEl.querySelector(
     "input:not([type=hidden]), textarea, select"
   );
   if (firstInput) setTimeout(() => firstInput.focus(), 30);
 
-  // Show toast notifications if specified in the response
-  if (swappedEl.dataset.toastMessage) {
-    showToast(
-      swappedEl.dataset.toastType || "success",
-      swappedEl.dataset.toastMessage
-    );
-  }
-
-  // Auto-open any dialogs in the swapped content
+  // Auto-open dialogs
   const dialogs = swappedEl.querySelectorAll("dialog");
   dialogs.forEach((dialog) => {
-    /* istanbul ignore next */
     if (!dialog.open) dialog.showModal();
   });
   if (swappedEl.tagName === "DIALOG" && !swappedEl.open) {
     swappedEl.showModal();
   }
 
-  // Re-apply theme logic if theme-related elements were swapped
+  // Re-apply theme
   processDaisyUITheme();
 });
 
 
 /**
- * 
- * 
+ * HTMX listener: Fired after htmx is loaded
+ * Handles transparency report functions.
  */
 document.body.addEventListener('htmx:load', function () {
   const transparencyContainer = document.getElementById('transparency-report-container');
@@ -349,6 +374,7 @@ if (typeof exports !== "undefined") {
     startProgressBar,
     finishProgressBar,
     processActiveNetwork,
+    processAllMessages,
     processDaisyUITheme,
     processTransparencyReportForm,
     processClipboardCopy,

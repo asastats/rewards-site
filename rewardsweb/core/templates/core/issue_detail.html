@@ -428,7 +428,7 @@
 
   {% partialdef message_toast %}
   <div class="toast toast-top toast-end z-[9999] pr-6 pointer-events-none">
-    <div class="alert alert-{{ message.tags|yesno:"error,success" }} shadow-lg pointer-events-auto">
+    <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %} shadow-lg pointer-events-auto">
       {% if message.tags == "error" %}
         <i class="fas fa-exclamation-triangle mr-2"></i>
       {% else %}

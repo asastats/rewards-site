@@ -8,9 +8,7 @@
 {% block page_subtitle %}Manage your personal information and account preferences{% endblock %}
 
 {% block header_badge_content %}
-  {% if user.profile.contributor %}
-    <i class="fas fa-user-check mr-1"></i> Contributor
-  {% endif %}
+  <i class="fas fa-user-cog mr-1"></i> Profile
 {% endblock %}
 
 {% block header_badge_class %}{% if user.profile.contributor %}badge-primary{% endif %}{% endblock %}

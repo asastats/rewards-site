@@ -17,7 +17,7 @@ class TestTrackersTelegram:
     ):
         # Mock TelegramClient to prevent actual API calls
         mock_telegram_client = mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         # Create instance - this will call the real __init__ but with mocked TelegramClient
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         # Assert TelegramClient was called with correct parameters
@@ -34,7 +34,7 @@ class TestTrackersTelegram:
     ):
         # Mock the parent init to avoid API calls
         mocker.patch.object(TelegramTracker, "__init__", return_value=None)
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         # Mock the async methods
         mock_sender_info = {
@@ -84,7 +84,7 @@ class TestTrackersTelegram:
     ):
         # Mock the parent init to avoid API calls
         mocker.patch.object(TelegramTracker, "__init__", return_value=None)
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         # Mock the async methods
         mock_sender_info = {
@@ -198,7 +198,7 @@ class TestTrackersTelegram:
         """Test _get_chat_entity successful chat retrieval."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         mock_entity = mocker.MagicMock()
         # Mock the async method properly
@@ -214,7 +214,7 @@ class TestTrackersTelegram:
         """Test _get_chat_entity exception handling."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         instance.logger = mocker.MagicMock()
         # Mock the async method to raise exception
@@ -233,7 +233,7 @@ class TestTrackersTelegram:
         """Test run method when client is None."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         instance.logger = mocker.MagicMock()
         # Set client to None
@@ -253,7 +253,7 @@ class TestTrackersTelegram:
         self, mocker, telegram_config, telegram_chats
     ):
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         # Patch BaseMentionTracker.run so no real loop runs
         mocked_base_run = mocker.patch("trackers.base.BaseMentionTracker.run")
         # Create instance (MessageParser.parse mocked out)
@@ -292,7 +292,7 @@ class TestTrackersTelegram:
         """Test _check_chat_mentions when chat entity is None."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         # Mock _get_chat_entity to return None
         mocker.patch.object(instance, "_get_chat_entity", return_value=None)
@@ -307,7 +307,7 @@ class TestTrackersTelegram:
         """Test _check_chat_mentions successful message processing."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         mock_chat = mocker.MagicMock()
         mocker.patch.object(instance, "_get_chat_entity", return_value=mock_chat)
@@ -346,7 +346,7 @@ class TestTrackersTelegram:
         """Test _check_chat_mentions exception handling."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         instance.logger = mocker.MagicMock()
         mock_chat = mocker.MagicMock()
@@ -369,7 +369,7 @@ class TestTrackersTelegram:
         """Test _check_chat_mentions when mention condition is not met."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         mock_chat = mocker.MagicMock()
         mocker.patch.object(instance, "_get_chat_entity", return_value=mock_chat)
@@ -404,7 +404,7 @@ class TestTrackersTelegram:
         """Test _check_chat_mentions when message is already processed."""
         # Mock TelegramClient
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         mock_chat = mocker.MagicMock()
         mocker.patch.object(instance, "_get_chat_entity", return_value=mock_chat)
@@ -860,7 +860,7 @@ class TestTrackersTelegram:
         """Test _post_init_setup method."""
         mocker.patch("trackers.telegram.TelegramClient")
         instance = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
-        mock_log_action = mocker.patch.object(instance, "log_action")
+        mock_log_action = mocker.patch.object(instance, "log_action_async")
         await instance._post_init_setup(telegram_chats)
         mock_log_action.assert_called_once_with(
             "initialized", f"Tracking {len(telegram_chats)} chats"
@@ -927,7 +927,7 @@ class TestTrackersTelegram:
     ):
         """Test run method when client is already connected."""
         mocker.patch("trackers.telegram.TelegramClient")
-        mocker.patch.object(TelegramTracker, "log_action")
+        mocker.patch.object(TelegramTracker, "log_action_async")
         mocked_base_run = mocker.patch("trackers.base.BaseMentionTracker.run")
         tracker = TelegramTracker(lambda x: None, telegram_config, telegram_chats)
         tracker.client = mocker.MagicMock()

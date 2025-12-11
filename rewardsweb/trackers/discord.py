@@ -238,9 +238,8 @@ class DiscordTracker(BaseMentionTracker):
         self.concurrent_channel_checks = 3
         self.channel_discovery_interval = 300
 
-        self.logger.info(
-            f"Multi-guild Discord tracker initialized for {len(guilds_collection) if guilds_collection else 'all'} guilds"
-        )
+        size = str(len(guilds_collection)) if guilds_collection else "all"
+        self.logger.info(f"Multi-guild Discord tracker initialized for {size} guilds")
 
         # Set up event handlers
         self._setup_events()
@@ -255,10 +254,8 @@ class DiscordTracker(BaseMentionTracker):
     async def _on_ready(self):
         """Called when the bot is logged in and ready.
 
-        :var user: Discord client user
-        :type user: :class:`discord.ClientUser`
-        :var guilds: guilds the client is connected to
-        :type guilds: list of :class:`discord.Guild`
+        :var size: nnumber of tracked huilds or all
+        :type size: str
         """
         self.logger.info(f"Discord bot logged in as {self.client.user}")
         self.logger.info(f"Connected to {len(self.client.guilds)} guilds")
@@ -266,13 +263,15 @@ class DiscordTracker(BaseMentionTracker):
         # Discover channels for all guilds
         await self._discover_all_guild_channels()
 
-        await self.log_action(
-            "initialized",
-            f"Tracking {len(self.tracked_guilds) if self.tracked_guilds else 'all'} guilds",
-        )
-        await self.log_action(
+        size = str(len(self.tracked_guilds)) if self.tracked_guilds else "all"
+        await self.log_action_async("initialized", f"Tracking {size} guilds")
+        await self.log_action_async(
             "connected",
-            f"Logged in as {self.client.user}, tracking {len(self.all_tracked_channels)} channels across {len(self.guild_channels)} guilds",
+            (
+                f"Logged in as {self.client.user}, tracking "
+                f"{len(self.all_tracked_channels)} channels across "
+                f"{len(self.guild_channels)} guilds"
+            ),
         )
 
     async def _on_message(self, message):
@@ -291,7 +290,7 @@ class DiscordTracker(BaseMentionTracker):
         """
         self.logger.info(f"Joined new guild: {guild.name} (ID: {guild.id})")
         await self._discover_guild_channels(guild)
-        await self.log_action("guild_joined", f"Guild: {guild.name}")
+        await self.log_action_async("guild_joined", f"Guild: {guild.name}")
 
     async def _on_guild_remove(self, guild):
         """Called when the bot is removed from a guild.
@@ -301,7 +300,7 @@ class DiscordTracker(BaseMentionTracker):
         """
         self.logger.info(f"Left guild: {guild.name} (ID: {guild.id})")
         self._remove_guild_from_tracking(guild.id)
-        await self.log_action("guild_left", f"Guild: {guild.name}")
+        await self.log_action_async("guild_left", f"Guild: {guild.name}")
 
     def _remove_guild_from_tracking(self, guild_id):
         """Remove a guild from tracking.
@@ -382,7 +381,10 @@ class DiscordTracker(BaseMentionTracker):
             self._update_all_tracked_channels()
 
             self.logger.info(
-                f"Discovered {len(channel_ids)} trackable channels in guild '{guild.name}'"
+                (
+                    f"Discovered {len(channel_ids)} trackable "
+                    f"channels in guild '{guild.name}'"
+                )
             )
 
         except Exception as e:
@@ -827,7 +829,7 @@ class DiscordTracker(BaseMentionTracker):
         self._register_signal_handlers()
 
         self.logger.info("Starting multi-guild Discord tracker in continuous mode")
-        self.log_action("started", "Continuous multi-guild mode")
+        await self.log_action_async("started", "Continuous multi-guild mode")
 
         try:
             await self.client.start(self.token)
@@ -835,11 +837,11 @@ class DiscordTracker(BaseMentionTracker):
 
         except KeyboardInterrupt:
             self.logger.info("Multi-guild Discord tracker stopped by user")
-            self.log_action("stopped", "User interrupt")
+            await self.log_action_async("stopped", "User interrupt")
 
         except Exception as e:
             self.logger.error(f"Multi-guild Discord tracker error: {e}")
-            self.log_action("error", f"Tracker error: {str(e)}")
+            await self.log_action_async("error", f"Tracker error: {str(e)}")
             raise
 
         finally:

@@ -47,7 +47,7 @@ class TelegramTracker(BaseMentionTracker):
 
     async def _post_init_setup(self, chats_collection):
         """Perform asynchronous setup tasks after initialization."""
-        self.log_action("initialized", f"Tracking {len(chats_collection)} chats")
+        await self.log_action_async("initialized", f"Tracking {len(chats_collection)} chats")
 
     async def cleanup(self):
         """Perform graceful cleanup of the Telegram client."""
@@ -266,7 +266,7 @@ class TelegramTracker(BaseMentionTracker):
 
         except Exception as e:
             self.logger.error(f"Error checking chat {chat_identifier}: {e}")
-            self.log_action(
+            await self.log_action_async(
                 "chat_check_error", f"Chat: {chat_identifier}, Error: {str(e)}"
             )
 

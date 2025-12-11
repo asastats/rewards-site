@@ -536,8 +536,6 @@ class TestDiscordTracker:
         assert "_on_guild_join" in mock_client_wrapper._event_handlers
         assert "_on_guild_remove" in mock_client_wrapper._event_handlers
 
-    # Fix the first test - test_trackers_discord_on_ready
-
     @pytest.mark.asyncio
     async def test_trackers_discord_on_ready(
         self, discord_config, guilds_collection, mock_client_wrapper, mocker
@@ -555,9 +553,10 @@ class TestDiscordTracker:
         mock_discover = mock.AsyncMock()
         instance._discover_all_guild_channels = mock_discover
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         # Setup client state - create a proper mock with name attribute
         mock_user = mock.MagicMock()
@@ -603,7 +602,8 @@ class TestDiscordTracker:
     ):
         """Test _on_message event handler."""
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
         instance = DiscordTracker(
             lambda x: None,
@@ -611,7 +611,7 @@ class TestDiscordTracker:
             guilds_collection,
             client_wrapper=mock_client_wrapper,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         mock_handle = mock.AsyncMock()
         instance._handle_new_message = mock_handle
@@ -626,7 +626,8 @@ class TestDiscordTracker:
     ):
         """Test _on_guild_join event handler."""
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
         instance = DiscordTracker(
             lambda x: None,
@@ -634,7 +635,7 @@ class TestDiscordTracker:
             guilds_collection,
             client_wrapper=mock_client_wrapper,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         instance.logger = mock.MagicMock()
         mock_discover = mock.AsyncMock()
@@ -658,7 +659,8 @@ class TestDiscordTracker:
     ):
         """Test _on_guild_remove event handler."""
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
         instance = DiscordTracker(
             lambda x: None,
@@ -666,7 +668,7 @@ class TestDiscordTracker:
             guilds_collection,
             client_wrapper=mock_client_wrapper,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         instance.logger = mock.MagicMock()
 
@@ -1148,7 +1150,8 @@ class TestDiscordTracker:
     ):
         """Test _handle_new_message successful processing."""
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
         instance = DiscordTracker(
             lambda x: None,
@@ -1156,7 +1159,7 @@ class TestDiscordTracker:
             guilds_collection,
             client_wrapper=mock_client_wrapper,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         instance.logger = mock.MagicMock()
         instance.all_tracked_channels = {mock_message.channel.id}
@@ -1194,7 +1197,8 @@ class TestDiscordTracker:
     ):
         """Test _handle_new_message with already processed message."""
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
         instance = DiscordTracker(
             lambda x: None,
@@ -1202,7 +1206,7 @@ class TestDiscordTracker:
             guilds_collection,
             client_wrapper=mock_client_wrapper,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         instance.all_tracked_channels = {mock_message.channel.id}
 
@@ -1233,7 +1237,8 @@ class TestDiscordTracker:
     ):
         """Test _handle_new_message when process_mention returns False."""
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
         instance = DiscordTracker(
             lambda x: None,
@@ -1241,7 +1246,7 @@ class TestDiscordTracker:
             guilds_collection,
             client_wrapper=mock_client_wrapper,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         instance.all_tracked_channels = {mock_message.channel.id}
 
@@ -1272,7 +1277,8 @@ class TestDiscordTracker:
     ):
         """Test extract_mention_data with message reply."""
         mock_log_action = mocker.patch(
-            "trackers.discord.DiscordTracker.log_action", new_callable=mock.AsyncMock
+            "trackers.discord.DiscordTracker.log_action_async",
+            new_callable=mock.AsyncMock,
         )
         instance = DiscordTracker(
             lambda x: None,
@@ -1280,7 +1286,7 @@ class TestDiscordTracker:
             guilds_collection,
             client_wrapper=mock_client_wrapper,
         )
-        instance.log_action = mock_log_action
+        instance.log_action_async = mock_log_action
 
         # Create replied message
         mock_replied = mock.MagicMock()
@@ -2206,7 +2212,7 @@ class TestDiscordTracker:
         )
 
         instance.logger = mocker.MagicMock()
-        instance.log_action = mocker.AsyncMock()
+        instance.log_action_async = mocker.AsyncMock()
 
         # Track signal registration
         with mock.patch.object(
@@ -2244,8 +2250,10 @@ class TestDiscordTracker:
         instance.logger.info.assert_any_call(
             "Multi-guild Discord tracker stopped by user"
         )
-        instance.log_action.assert_any_call("started", "Continuous multi-guild mode")
-        instance.log_action.assert_any_call("stopped", "User interrupt")
+        instance.log_action_async.assert_any_call(
+            "started", "Continuous multi-guild mode"
+        )
+        instance.log_action_async.assert_any_call("stopped", "User interrupt")
         assert start_called
         assert close_called
 
@@ -2262,7 +2270,7 @@ class TestDiscordTracker:
         )
 
         instance.logger = mocker.MagicMock()
-        instance.log_action = mocker.AsyncMock()
+        instance.log_action_async = mocker.AsyncMock()
         instance.cleanup = mocker.AsyncMock()
 
         test_error = Exception("Test error")
@@ -2283,7 +2291,9 @@ class TestDiscordTracker:
         instance.logger.error.assert_called_once_with(
             "Multi-guild Discord tracker error: Test error"
         )
-        instance.log_action.assert_called_with("error", "Tracker error: Test error")
+        instance.log_action_async.assert_called_with(
+            "error", "Tracker error: Test error"
+        )
         instance.cleanup.assert_called_once()
 
     # Statistics tests

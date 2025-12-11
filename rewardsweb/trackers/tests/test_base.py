@@ -180,6 +180,15 @@ class TestTrackersBaseMentionTracker:
             "test_platform", "test_action", "test_details"
         )
 
+    # log_action_async
+    @pytest.mark.asyncio
+    async def test_base_basementiontracker_log_action_async_functionality(self, mocker):
+        mocker.patch.object(BaseMentionTracker, "setup_logging")
+        mocked_log = mocker.patch("trackers.base.BaseMentionTracker.log_action")
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        await instance.log_action_async("test_action", "test_details")
+        mocked_log.assert_called_once_with("test_action", "test_details")
+
     # prepare_contribution_data
     def test_base_basementiontracker_prepare_contribution_data_success(self, mocker):
         mocker.patch("trackers.base.get_env_variable", return_value="")

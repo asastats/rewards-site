@@ -756,7 +756,7 @@ class IssueDetailView(DetailView):
                     f"Successfully set labels for issue #{issue.number}: "
                     f"{', '.join(labels_to_add)}"
                 )
-                messages.success(request, "Labels updated successfully")
+                messages.success(request, "✅ Labels updated successfully")
 
                 request.user.profile.log_action("issue_labels_set", success_message)
 
@@ -811,7 +811,9 @@ class IssueDetailView(DetailView):
             if action not in labels_to_set:
                 labels_to_set.append(action)
 
-            success_message = f"Issue #{issue.number} closed as {action} successfully."
+            success_message = (
+                f"✅ Issue #{issue.number} closed as {action} successfully."
+            )
 
             # Call the function to close issue on tracker
             result = IssueProvider(request.user).close_issue_with_labels(
@@ -869,17 +871,14 @@ class IssueDetailView(DetailView):
         return redirect("issue_detail", pk=issue.pk)
 
     def _labels_response_from_hx_request(self, request, form, issue, labels):
-        """Prepare HTML response for labels sections fro mprovided data."""
+        """Prepare HTML response for labels sections from provided data."""
+        # Get all messages (already added to request)
         msg_obj = next(iter(messages.get_messages(request)), None)
 
+        # Render the partials
         form_html = render_to_string(
             "core/issue_detail.html#labels_form_partial",
-            {
-                "labels_form": form,
-                "issue": issue,
-                "toast_message": msg_obj.message if msg_obj else None,
-                "toast_type": msg_obj.tags if msg_obj else None,
-            },
+            {"labels_form": form, "issue": issue},
             request=request,
         )
 
@@ -889,7 +888,14 @@ class IssueDetailView(DetailView):
             request=request,
         )
 
-        return HttpResponse(form_html + labels_html)
+        # Create a container with data attributes for HTMX
+        container_html = (
+            f'<div data-toast-message="{msg_obj.message if msg_obj else ""}" '
+            f'data-toast-type="{msg_obj.tags if msg_obj else "info"}">'
+            f"{form_html}{labels_html}</div>"
+        )
+
+        return HttpResponse(container_html)
 
 
 class IssueModalView(DetailView):

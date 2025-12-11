@@ -203,13 +203,8 @@
       </div>
     </div>
 
-    {% if messages %}
-    <div id="django-messages" style="display: none;">
-      {% for message in messages %}
-      <div data-message-type="{{ message.tags }}" data-message="{{ message|escapejs }}"></div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    {% load core_utils %}
+    {% messages_toast request %}
 
     <div id="toast-container" class="toast toast-end z-50"></div>
     <div id="htmx-progress-bar" class="hidden fixed top-0 left-0 h-1 bg-primary z-[9999]" style="width:0%"></div>

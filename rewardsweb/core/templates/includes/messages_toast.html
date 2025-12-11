@@ -1,0 +1,7 @@
+{% if django_messages %}
+<div id="django-messages" style="display: none;">
+  {% for message in django_messages %}
+  <div data-message-type="{{ message.tags }}" data-message="{{ message|escapejs }}"></div>
+  {% endfor %}
+</div>
+{% endif %}

@@ -594,7 +594,7 @@ class TestContributionInvalidateViewDb:
         assert response.context["type"] == "duplicate"
 
     @pytest.mark.parametrize(
-        "comment,expected_comment",
+        "reply,expected_comment",
         [
             ("This is a test reply", "This is a test reply"),
             ("", ""),
@@ -606,11 +606,11 @@ class TestContributionInvalidateViewDb:
         superuser,
         contribution,
         invalidate_url,
-        comment,
+        reply,
         expected_comment,
         mocker,
     ):
-        """Test successful form submission with and without comment."""
+        """Test successful form submission with and without reply."""
         client.force_login(superuser)
 
         # Mock the UpdateProvider
@@ -621,11 +621,11 @@ class TestContributionInvalidateViewDb:
         mock_update_provider.return_value = mock_updater_instance
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
 
-        response = client.post(invalidate_url, {"comment": comment})
+        response = client.post(invalidate_url, {"reply": reply})
 
         # Check that operations were called appropriately
         mock_update_provider.assert_called_once_with(contribution.platform.name)
-        if comment:
+        if reply:
             mock_updater_instance.add_reply_to_message.assert_called_once_with(
                 contribution.url, expected_comment
             )
@@ -667,12 +667,12 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
 
-        response = client.post(invalidate_url, {"comment": "This is a test reply"})
+        response = client.post(invalidate_url, {"reply": "This is a test reply"})
 
         # Check that contribution was NOT confirmed
         contribution.refresh_from_db()
@@ -696,12 +696,12 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
 
-        response = client.post(invalidate_url, {"comment": ""})
+        response = client.post(invalidate_url, {"reply": ""})
 
         # Check that contribution was NOT confirmed
         contribution.refresh_from_db()
@@ -730,12 +730,12 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
 
-        response = client.post(invalidate_url, {"comment": "This is a test reply"})
+        response = client.post(invalidate_url, {"reply": "This is a test reply"})
 
         # Check that contribution was NOT confirmed
         contribution.refresh_from_db()
@@ -761,12 +761,12 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
 
-        response = client.post(invalidate_url, {"comment": "This is a test reply"})
+        response = client.post(invalidate_url, {"reply": "This is a test reply"})
 
         # Check that contribution was NOT confirmed
         contribution.refresh_from_db()
@@ -794,12 +794,12 @@ class TestContributionInvalidateViewDb:
             "success": True,
             "author": "test_user",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message",
+            "contribution": "Test message",
         }
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
 
-        response = client.post(invalidate_url, {"comment": ""})
+        response = client.post(invalidate_url, {"reply": ""})
 
         # Check that contribution was NOT confirmed
         contribution.refresh_from_db()
@@ -831,7 +831,7 @@ class TestContributionInvalidateViewDb:
         mock_update_provider = mocker.patch("core.views.UpdateProvider")
         mock_update_provider.return_value = mock_updater_instance
 
-        client.post(url, {"comment": ""})
+        client.post(url, {"reply": ""})
 
         # Check that reaction was called with correct type
         mock_updater_instance.add_reaction_to_message.assert_called_once_with(
@@ -850,7 +850,7 @@ class TestContributionInvalidateViewDb:
         response = client.get(invalidate_url)
 
         content = response.content.decode()
-        assert 'name="comment"' in content
+        assert 'name="reply"' in content
         assert "textarea" in content
         assert "Confirm as Duplicate" in content
 
@@ -898,7 +898,7 @@ class TestContributionInvalidateViewDb:
         mock_updater_instance.add_reaction_to_message.return_value = True
         mocker.patch("core.views.UpdateProvider", return_value=mock_updater_instance)
 
-        response = client.post(invalidate_url, {"comment": "Test reply"})
+        response = client.post(invalidate_url, {"reply": "Test reply"})
 
         messages = list(get_messages(response.wsgi_request))
         message_text = messages[0].message.lower()
@@ -918,7 +918,7 @@ class TestContributionInvalidateViewDb:
         mock_updater_instance.add_reaction_to_message.return_value = True
         mocker.patch("core.views.UpdateProvider", return_value=mock_updater_instance)
 
-        response = client.post(invalidate_url, {"comment": ""})
+        response = client.post(invalidate_url, {"reply": ""})
 
         messages = list(get_messages(response.wsgi_request))
         message_text = messages[0].message.lower()

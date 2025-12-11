@@ -51,7 +51,7 @@
         <span class="text-sm font-semibold text-base-content/70 mb-1">URL</span>
         <a href="{{ contribution.url }}" class="link link-accent font-semibold hover:no-underline truncate" target="_blank">
           <i class="fas fa-external-link-alt mr-2"></i>
-          {{ contribution.url|urlizetrunc:40 }}
+          {{ contribution.url|truncatechars:40 }}
         </a>
       </div>
       {% endif %}

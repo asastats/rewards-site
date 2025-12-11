@@ -1036,9 +1036,9 @@ class TestIssueDetailViewSubmissionHandlers:
         )
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
         mocked_process = mocker.patch(
-            "core.views.process_allocations_for_contributions", return_value=(False, [])
+            "core.views.process_allocations_for_contributions",
+            return_value=[(False, [])],
         )
-
         mock_tracker_data = {
             "success": True,
             "issue": {
@@ -1125,7 +1125,7 @@ class TestIssueDetailViewSubmissionHandlers:
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
         mocked_process = mocker.patch(
             "core.views.process_allocations_for_contributions",
-            return_value=("txid", ["addr1"]),
+            return_value=[("txid", ["addr1"])],
         )
         mock_tracker_data = {
             "success": True,
@@ -1671,7 +1671,8 @@ class TestIssueDetailViewCloseFunctionality:
             "issues.providers.BaseIssueProvider.close_issue_with_labels"
         )
         mock_process = mocker.patch(
-            "core.views.process_allocations_for_contributions", return_value=(False, [])
+            "core.views.process_allocations_for_contributions",
+            return_value=[(False, [])],
         )
         mock_tracker_data = {
             "success": True,
@@ -1735,7 +1736,7 @@ class TestIssueDetailViewCloseFunctionality:
         )
         mock_process = mocker.patch(
             "core.views.process_allocations_for_contributions",
-            return_value=("txid", ["addr"]),
+            return_value=[("txid1", ["addr1"]), ("txid2", ["addr2"])],
         )
         mock_tracker_data = {
             "success": True,

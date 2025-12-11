@@ -109,7 +109,7 @@ def mock_message_from_url():
             "success": True,
             "author": "test_user_string",
             "timestamp": "2024-01-01T12:00:00.000000+00:00",
-            "content": "Test message content",
+            "contribution": "Test message content",
         }
         mock_update_provider.return_value = mock_updater_instance
         yield mock_update_provider

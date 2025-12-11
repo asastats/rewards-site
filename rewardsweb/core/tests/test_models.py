@@ -3388,6 +3388,7 @@ class TestCoreContributionModel:
             ("percentage", models.DecimalField),
             ("url", models.CharField),
             ("comment", models.CharField),
+            ("reply", models.CharField),
             ("confirmed", models.BooleanField),
             ("created_at", models.DateTimeField),
             ("updated_at", models.DateTimeField),
@@ -3551,6 +3552,26 @@ class TestCoreContributionModel:
             platform=platform,
             reward=reward,
             comment="abc" * 100,
+        )
+        with pytest.raises(DataError):
+            contribution.save()
+            contribution.full_clean()
+
+    @pytest.mark.django_db
+    def test_core_contribution_model_cannot_save_too_long_reply(self):
+        contributor = Contributor.objects.create()
+        cycle = Cycle.objects.create(start=datetime(2022, 1, 1))
+        platform = SocialPlatform.objects.create(
+            name="contributionplatform3", prefix="c3"
+        )
+        reward_type = RewardType.objects.create(label="80", name="reward80")
+        reward = Reward.objects.create(type=reward_type)
+        contribution = Contribution(
+            contributor=contributor,
+            cycle=cycle,
+            platform=platform,
+            reward=reward,
+            reply="abc" * 100,
         )
         with pytest.raises(DataError):
             contribution.save()

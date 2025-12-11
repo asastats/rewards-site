@@ -44,10 +44,10 @@
       <label class="label-text font-semibold text-lg">{{ form.labels.label }}</label>
     </div>
 
-    <div class="p-6 rounded-xl border-2 border-base-300">
+    <div class="p-6 rounded-xl">
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {% for checkbox in form.labels %}
-        <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 border border-base-300 transition-all duration-200 hover:shadow-sm">
+        <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-all duration-200 hover:shadow-sm">
           {{ checkbox.tag }}
           <span class="label-text font-medium text-sm">{{ checkbox.choice_label }}</span>
         </label>
@@ -72,10 +72,10 @@
       <label class="label-text font-semibold text-lg">{{ form.priority.label }}</label>
     </div>
 
-    <div class="p-6 rounded-xl border-2 border-base-300">
+    <div class="p-6 rounded-xl">
       <div class="flex flex-wrap gap-4">
         {% for radio in form.priority %}
-        <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg hover:bg-base-200 border-2 border-base-300 transition-all duration-200 hover:shadow-sm flex-1 min-w-[120px]">
+        <label class="flex items-center space-x-3 cursor-pointer p-4 rounded-lg hover:bg-base-200 transition-all duration-200 hover:shadow-sm flex-1 min-w-[120px]">
           {{ radio.tag }}
           <span class="label-text font-semibold text-base">{{ radio.choice_label }}</span>
         </label>
@@ -100,7 +100,7 @@
       <label class="label-text font-semibold text-lg">{{ form.issue_title.label }}</label>
     </div>
 
-    <div class="p-1 rounded-xl border-2 border-base-300">
+    <div class="p-1 rounded-xl">
       {{ form.issue_title }}
     </div>
 

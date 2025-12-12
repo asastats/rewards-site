@@ -209,10 +209,12 @@ class DiscordTracker(BaseMentionTracker):
 
         # Configure Discord intents
         intents = Intents.default()
-        intents.messages = True
         intents.message_content = True
+        intents.messages = True
         intents.guilds = True
         intents.members = True
+        intents.guild_messages = True
+        intents.reactions = True
 
         # Use provided wrapper or create default one
         self.client = client_wrapper or DiscordClientWrapper(intents)
@@ -246,12 +248,24 @@ class DiscordTracker(BaseMentionTracker):
 
     def _setup_events(self):
         """Set up Discord event handlers."""
-        self.client.event(self._on_ready)
-        self.client.event(self._on_message)
-        self.client.event(self._on_guild_join)
-        self.client.event(self._on_guild_remove)
 
-    async def _on_ready(self):
+        @self.client.event
+        async def on_ready():
+            await self._handle_on_ready()
+
+        @self.client.event
+        async def on_message(message):
+            await self._handle_on_message(message)
+
+        @self.client.event
+        async def on_guild_join(guild):
+            await self._handle_on_guild_join(guild)
+
+        @self.client.event
+        async def on_guild_remove(guild):
+            await self._handle_on_guild_remove(guild)
+
+    async def _handle_on_ready(self):
         """Called when the bot is logged in and ready.
 
         :var size: nnumber of tracked huilds or all
@@ -274,7 +288,7 @@ class DiscordTracker(BaseMentionTracker):
             ),
         )
 
-    async def _on_message(self, message):
+    async def _handle_on_message(self, message):
         """Called when a message is sent in any channel the bot can see.
 
         :param message: Discord message object
@@ -282,7 +296,7 @@ class DiscordTracker(BaseMentionTracker):
         """
         await self._handle_new_message(message)
 
-    async def _on_guild_join(self, guild):
+    async def _handle_on_guild_join(self, guild):
         """Called when the bot joins a new guild.
 
         :param guild: guild that was joined
@@ -292,7 +306,7 @@ class DiscordTracker(BaseMentionTracker):
         await self._discover_guild_channels(guild)
         await self.log_action_async("guild_joined", f"Guild: {guild.name}")
 
-    async def _on_guild_remove(self, guild):
+    async def _handle_on_guild_remove(self, guild):
         """Called when the bot is removed from a guild.
 
         :param guild: guild that was left
@@ -825,7 +839,6 @@ class DiscordTracker(BaseMentionTracker):
         :var mentions_found: number of mentions found in historical check
         :type mentions_found: int
         """
-        # Use base-class helpers for graceful shutdown
         self._register_signal_handlers()
 
         self.logger.info("Starting multi-guild Discord tracker in continuous mode")
@@ -867,6 +880,8 @@ class DiscordTracker(BaseMentionTracker):
         :type last_channel_discovery: :class:`datetime.datetime`
         :var now: current timestamp
         :type now: :class:`datetime.datetime`
+        :var mentions_found: total number of found mentions
+        :type mentions_found: int
         """
         last_historical_check = datetime.now()
         last_channel_discovery = datetime.now()
@@ -874,13 +889,23 @@ class DiscordTracker(BaseMentionTracker):
         while not self.exit_signal and not self.client.is_closed():
             now = datetime.now()
 
-            last_channel_discovery = await self._handle_periodic_tasks(
-                now,
-                last_channel_discovery,
-                last_historical_check,
-                historical_check_interval,
-            )
-            last_historical_check = now
+            # Channel discovery
+            if self._should_run_channel_discovery(now, last_channel_discovery):
+                self.logger.debug("Running periodic channel discovery")
+                await self._discover_all_guild_channels()
+                last_channel_discovery = now
+
+            # Historical checks
+            if self._should_run_historical_check(
+                now, last_historical_check, historical_check_interval
+            ):
+                self.logger.debug("Running periodic historical check")
+                mentions_found = await self.check_mentions_async()
+                if mentions_found > 0:
+                    self.logger.info(
+                        f"Found {mentions_found} new mentions in historical check"
+                    )
+                last_historical_check = now
 
             # Sleep in small async chunks so we can react to exit_signal
             await self._async_interruptible_sleep(10)

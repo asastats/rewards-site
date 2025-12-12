@@ -1,5 +1,6 @@
 """Testing module for :py:mod:`trackers.discord` module."""
 
+import asyncio
 from datetime import datetime, timedelta
 from unittest import mock
 
@@ -517,10 +518,10 @@ class TestDiscordTracker:
         assert isinstance(instance.client, DiscordClientWrapper)
 
     # Event handler tests
-    def test_trackers_discord_setup_events(
+    # # _setup_events
+    def test_trackers_discord_setup_events_functionality(
         self, discord_config, guilds_collection, mock_client_wrapper
     ):
-        """Test _setup_events method."""
         instance = DiscordTracker(
             lambda x: None,
             discord_config,
@@ -531,16 +532,249 @@ class TestDiscordTracker:
         instance._setup_events()
 
         # Verify event handlers were registered
-        assert "_on_ready" in mock_client_wrapper._event_handlers
-        assert "_on_message" in mock_client_wrapper._event_handlers
-        assert "_on_guild_join" in mock_client_wrapper._event_handlers
-        assert "_on_guild_remove" in mock_client_wrapper._event_handlers
+        assert "on_ready" in mock_client_wrapper._event_handlers
+        assert "on_message" in mock_client_wrapper._event_handlers
+        assert "on_guild_join" in mock_client_wrapper._event_handlers
+        assert "on_guild_remove" in mock_client_wrapper._event_handlers
+
+    def test_trackers_discord_setup_events_registration(
+        self, discord_config, guilds_collection, mock_client_wrapper
+    ):
+        """Test _setup_events method properly registers event handlers."""
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        # Track registered event handlers
+        registered_handlers = {}
+
+        # Create a mock decorator that captures registered functions
+        def mock_event_decorator(func):
+            registered_handlers[func.__name__] = {
+                "func": func,
+                "is_coroutine": asyncio.iscoroutinefunction(func),
+            }
+            return func
+
+        # Patch the event decorator
+        mock_client_wrapper.event = mock_event_decorator
+
+        # Call the method
+        instance._setup_events()
+
+        # Verify handlers were registered
+        assert len(registered_handlers) == 4
+
+        # Check each handler
+        assert "on_ready" in registered_handlers
+        assert "on_message" in registered_handlers
+        assert "on_guild_join" in registered_handlers
+        assert "on_guild_remove" in registered_handlers
+
+        # Verify they are coroutine functions
+        assert registered_handlers["on_ready"]["is_coroutine"] is True
+        assert registered_handlers["on_message"]["is_coroutine"] is True
+        assert registered_handlers["on_guild_join"]["is_coroutine"] is True
+        assert registered_handlers["on_guild_remove"]["is_coroutine"] is True
 
     @pytest.mark.asyncio
-    async def test_trackers_discord_on_ready(
+    async def test_trackers_discord_setup_events_on_ready_calls_handler(
         self, discord_config, guilds_collection, mock_client_wrapper, mocker
     ):
-        """Test _on_ready event handler."""
+        """Test that on_ready event handler calls _handle_on_ready."""
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        # Track registered event handlers
+        registered_handlers = {}
+
+        def mock_event_decorator(func):
+            registered_handlers[func.__name__] = func
+            return func
+
+        mock_client_wrapper.event = mock_event_decorator
+
+        # Mock the handler method
+        mock_handler = mocker.patch.object(
+            instance, "_handle_on_ready", new_callable=mock.AsyncMock
+        )
+
+        # Call setup
+        instance._setup_events()
+
+        # Get the on_ready handler
+        on_ready_handler = registered_handlers["on_ready"]
+
+        # Call the handler to verify it calls _handle_on_ready
+        await on_ready_handler()
+
+        # Verify _handle_on_ready was called
+        mock_handler.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trackers_discord_setup_events_on_message_calls_handler(
+        self,
+        discord_config,
+        guilds_collection,
+        mock_client_wrapper,
+        mock_message,
+        mocker,
+    ):
+        """Test that on_message event handler calls _handle_on_message."""
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        registered_handlers = {}
+
+        def mock_event_decorator(func):
+            registered_handlers[func.__name__] = func
+            return func
+
+        mock_client_wrapper.event = mock_event_decorator
+
+        # Mock the handler method
+        mock_handler = mocker.patch.object(
+            instance, "_handle_on_message", new_callable=mock.AsyncMock
+        )
+
+        # Call setup
+        instance._setup_events()
+
+        # Get the on_message handler
+        on_message_handler = registered_handlers["on_message"]
+
+        # Call the handler with a mock message
+        await on_message_handler(mock_message)
+
+        # Verify _handle_on_message was called with the message
+        mock_handler.assert_called_once_with(mock_message)
+
+    @pytest.mark.asyncio
+    async def test_trackers_discord_setup_events_on_guild_join_calls_handler(
+        self, discord_config, guilds_collection, mock_client_wrapper, mock_guild, mocker
+    ):
+        """Test that on_guild_join event handler calls _handle_on_guild_join."""
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        registered_handlers = {}
+
+        def mock_event_decorator(func):
+            registered_handlers[func.__name__] = func
+            return func
+
+        mock_client_wrapper.event = mock_event_decorator
+
+        # Mock the handler method
+        mock_handler = mocker.patch.object(
+            instance, "_handle_on_guild_join", new_callable=mock.AsyncMock
+        )
+
+        # Call setup
+        instance._setup_events()
+
+        # Get the on_guild_join handler
+        on_guild_join_handler = registered_handlers["on_guild_join"]
+
+        # Call the handler with a mock guild
+        await on_guild_join_handler(mock_guild)
+
+        # Verify _handle_on_guild_join was called with the guild
+        mock_handler.assert_called_once_with(mock_guild)
+
+    @pytest.mark.asyncio
+    async def test_trackers_discord_setup_events_on_guild_remove_calls_handler(
+        self, discord_config, guilds_collection, mock_client_wrapper, mock_guild, mocker
+    ):
+        """Test that on_guild_remove event handler calls _handle_on_guild_remove."""
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        registered_handlers = {}
+
+        def mock_event_decorator(func):
+            registered_handlers[func.__name__] = func
+            return func
+
+        mock_client_wrapper.event = mock_event_decorator
+
+        # Mock the handler method
+        mock_handler = mocker.patch.object(
+            instance, "_handle_on_guild_remove", new_callable=mock.AsyncMock
+        )
+
+        # Call setup
+        instance._setup_events()
+
+        # Get the on_guild_remove handler
+        on_guild_remove_handler = registered_handlers["on_guild_remove"]
+
+        # Call the handler with a mock guild
+        await on_guild_remove_handler(mock_guild)
+
+        # Verify _handle_on_guild_remove was called with the guild
+        mock_handler.assert_called_once_with(mock_guild)
+
+    def test_trackers_discord_setup_events_closure_binding(
+        self, discord_config, guilds_collection, mock_client_wrapper
+    ):
+        """Test that closures properly bind to the instance."""
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        registered_handlers = {}
+
+        def mock_event_decorator(func):
+            registered_handlers[func.__name__] = func
+            return func
+
+        mock_client_wrapper.event = mock_event_decorator
+
+        # Call setup
+        instance._setup_events()
+
+        # Get the on_ready handler
+        on_ready_handler = registered_handlers["on_ready"]
+
+        # Check that the closure has access to instance variables
+        # by inspecting the closure's __closure__ attribute
+        assert on_ready_handler.__closure__ is not None
+
+        # The closure should have a reference to 'self' (the instance)
+        # This is a bit implementation-specific, but we can check
+        cell_contents = [cell.cell_contents for cell in on_ready_handler.__closure__]
+
+        # One of the cells should be our instance
+        assert instance in cell_contents
+
+    # # _handle_on_ready
+    @pytest.mark.asyncio
+    async def test_trackers_discord_handle_on_ready_functionality(
+        self, discord_config, guilds_collection, mock_client_wrapper, mocker
+    ):
         instance = DiscordTracker(
             lambda x: None,
             discord_config,
@@ -570,7 +804,7 @@ class TestDiscordTracker:
         instance.guild_channels = {111111111111111111: [123456789012345678]}
         instance.all_tracked_channels = {123456789012345678}
 
-        await instance._on_ready()
+        await instance._handle_on_ready()
 
         # Verify behavior - check that the calls were made with the expected content
         # Get the actual string arguments that were passed to logger.info
@@ -592,7 +826,7 @@ class TestDiscordTracker:
         )
 
     @pytest.mark.asyncio
-    async def test_trackers_discord_on_message(
+    async def test_trackers_discord_handle_on_message_functionality(
         self,
         discord_config,
         guilds_collection,
@@ -600,7 +834,6 @@ class TestDiscordTracker:
         mock_message,
         mocker,
     ):
-        """Test _on_message event handler."""
         mock_log_action = mocker.patch(
             "trackers.discord.DiscordTracker.log_action_async",
             new_callable=mock.AsyncMock,
@@ -616,12 +849,13 @@ class TestDiscordTracker:
         mock_handle = mock.AsyncMock()
         instance._handle_new_message = mock_handle
 
-        await instance._on_message(mock_message)
+        await instance._handle_on_message(mock_message)
 
         mock_handle.assert_called_once_with(mock_message)
 
+    # # _handle_on_guild_join
     @pytest.mark.asyncio
-    async def test_trackers_discord_on_guild_join(
+    async def test_trackers_discord_handle_on_guild_join_functionality(
         self, discord_config, guilds_collection, mock_client_wrapper, mock_guild, mocker
     ):
         """Test _on_guild_join event handler."""
@@ -644,7 +878,7 @@ class TestDiscordTracker:
         mock_guild.name = "New Guild"
         mock_guild.id = 333333333333333333
 
-        await instance._on_guild_join(mock_guild)
+        await instance._handle_on_guild_join(mock_guild)
 
         instance.logger.info.assert_called_once_with(
             "Joined new guild: New Guild (ID: 333333333333333333)"
@@ -653,8 +887,9 @@ class TestDiscordTracker:
         assert mock_log_action.call_count == 1
         mock_log_action.assert_called_with("guild_joined", "Guild: New Guild")
 
+    # # _handle_on_guild_remove
     @pytest.mark.asyncio
-    async def test_trackers_discord_on_guild_remove(
+    async def test_trackers_discord_handle_on_guild_remove_functionality(
         self, discord_config, guilds_collection, mock_client_wrapper, mock_guild, mocker
     ):
         """Test _on_guild_remove event handler."""
@@ -679,7 +914,7 @@ class TestDiscordTracker:
         mock_guild.name = "Old Guild"
         mock_guild.id = 333333333333333333
 
-        await instance._on_guild_remove(mock_guild)
+        await instance._handle_on_guild_remove(mock_guild)
 
         instance.logger.info.assert_called_once_with(
             "Left guild: Old Guild (ID: 333333333333333333)"
@@ -690,10 +925,10 @@ class TestDiscordTracker:
         mock_log_action.assert_called_with("guild_left", "Guild: Old Guild")
 
     # Guild and channel management tests
-    def test_trackers_discord_remove_guild_from_tracking(
+    # # _remove_guild_from_tracking
+    def test_trackers_discord_remove_guild_from_tracking_functionality(
         self, discord_config, guilds_collection, mock_client_wrapper
     ):
-        """Test _remove_guild_from_tracking method."""
         instance = DiscordTracker(
             lambda x: None,
             discord_config,
@@ -717,7 +952,7 @@ class TestDiscordTracker:
         assert 222222222222222222 in instance.guild_channels
         assert len(instance.all_tracked_channels) == initial_channel_count - 1
 
-    def test_trackers_discord_remove_guild_from_tracking_not_present(
+    def test_trackers_discord_remove_guild_from_tracking_not_present_functionality(
         self, discord_config, guilds_collection, mock_client_wrapper
     ):
         """Test _remove_guild_from_tracking when guild not in tracking."""
@@ -741,8 +976,6 @@ class TestDiscordTracker:
         # Verify no changes
         assert len(instance.guild_channels) == initial_guild_count
         assert len(instance.all_tracked_channels) == initial_channel_count
-
-    # Update the test that uses the old get_guild pattern
 
     def test_trackers_discord_get_guilds_to_process_specific_guilds(
         self, discord_config, guilds_collection, mock_client_wrapper
@@ -2140,11 +2373,11 @@ class TestDiscordTracker:
         assert sleep_calls == [1]
 
     # Main loop and continuous operation tests
+    # # _handle_periodic_tasks
     @pytest.mark.asyncio
-    async def test_trackers_discord_handle_periodic_tasks_both_run(
-        self, discord_config, guilds_collection, mock_client_wrapper
+    async def test_trackers_discord_handle_periodic_tasks_no_runs(
+        self, discord_config, guilds_collection, mock_client_wrapper, mocker
     ):
-        """Test _handle_periodic_tasks when both tasks should run."""
         instance = DiscordTracker(
             lambda x: None,
             discord_config,
@@ -2157,24 +2390,194 @@ class TestDiscordTracker:
         last_check = now - timedelta(seconds=400)
         interval = 300
 
+        mocked_discovery = mocker.patch(
+            "trackers.discord.DiscordTracker._should_run_channel_discovery",
+            return_value=False,
+        )
+        mocked_run_discovery = mocker.patch(
+            "trackers.discord.DiscordTracker._run_channel_discovery"
+        )
+        mocked_historical = mocker.patch(
+            "trackers.discord.DiscordTracker._should_run_historical_check",
+            return_value=False,
+        )
+        mocked_run_historical = mocker.patch(
+            "trackers.discord.DiscordTracker._run_historical_check"
+        )
+        result = await instance._handle_periodic_tasks(
+            now, last_discovery, last_check, interval
+        )
+        assert result == last_discovery
+        mocked_discovery.assert_called_once_with(now, last_discovery)
+        mocked_historical.assert_called_once_with(now, last_check, interval)
+        mocked_run_discovery.assert_not_called()
+        mocked_run_historical.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_trackers_discord_handle_periodic_tasks_both_run(
+        self, discord_config, guilds_collection, mock_client_wrapper
+    ):
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        now = datetime.now()
+        last_discovery = now - timedelta(seconds=400)
+        last_check = now - timedelta(seconds=400)
+        interval = 300
         mock_discovery = mock.AsyncMock()
         instance._run_channel_discovery = mock_discovery
         mock_historical = mock.AsyncMock()
         instance._run_historical_check = mock_historical
-
         result = await instance._handle_periodic_tasks(
             now, last_discovery, last_check, interval
         )
-
         mock_discovery.assert_called_once()
         mock_historical.assert_called_once()
         assert result == now  # Should update last_discovery
 
+    # # _run_main_loop
     @pytest.mark.asyncio
-    async def test_trackers_discord_run_main_loop(
+    async def test_trackers_discord_run_main_loop_for_dicovery(
+        self, discord_config, guilds_collection, mock_client_wrapper, mocker
+    ):
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        # Mock client to close after first iteration
+        mock_client_wrapper.closed = False
+        mocked_discovery = mocker.patch(
+            "trackers.discord.DiscordTracker._should_run_channel_discovery",
+            return_value=True,
+        )
+        mocked_discover = mocker.patch(
+            "trackers.discord.DiscordTracker._discover_all_guild_channels"
+        )
+
+        async def sleep_side_effect(seconds, step=1):
+            # After first call, mark client closed so loop exits
+            mock_client_wrapper.closed = True
+
+        mock_client_wrapper.is_closed = lambda: mock_client_wrapper.closed
+
+        with mock.patch.object(
+            instance, "_async_interruptible_sleep", side_effect=sleep_side_effect
+        ) as mock_sleep:
+            await instance._run_main_loop(300)
+
+        # Verify our async sleep helper was called with the expected interval
+        mock_sleep.assert_called_once_with(10)
+        mocked_discovery.assert_called_once()
+        mocked_discover.assert_called_once_with()
+
+    @pytest.mark.asyncio
+    async def test_trackers_discord_run_main_loop_for_historical_check(
+        self, discord_config, guilds_collection, mock_client_wrapper, mocker
+    ):
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+
+        # Mock client to close after first iteration
+        mock_client_wrapper.closed = False
+        mocked_discovery = mocker.patch(
+            "trackers.discord.DiscordTracker._should_run_channel_discovery",
+            return_value=False,
+        )
+        mocked_discover = mocker.patch(
+            "trackers.discord.DiscordTracker._discover_all_guild_channels"
+        )
+        mocked_historical = mocker.patch(
+            "trackers.discord.DiscordTracker._should_run_historical_check",
+            return_value=True,
+        )
+        mocked_check = mocker.patch(
+            "trackers.discord.DiscordTracker.check_mentions_async", return_value=0
+        )
+
+        async def sleep_side_effect(seconds, step=1):
+            # After first call, mark client closed so loop exits
+            mock_client_wrapper.closed = True
+
+        mock_client_wrapper.is_closed = lambda: mock_client_wrapper.closed
+
+        with mock.patch.object(
+            instance, "_async_interruptible_sleep", side_effect=sleep_side_effect
+        ) as mock_sleep:
+            await instance._run_main_loop(300)
+
+        # Verify our async sleep helper was called with the expected interval
+        mock_sleep.assert_called_once_with(10)
+        mocked_discovery.assert_called_once()
+        mocked_historical.assert_called_once()
+        mocked_check.assert_called_once_with()
+        mocked_discover.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_trackers_discord_run_main_loop_for_historical_check_logger(
+        self, discord_config, guilds_collection, mock_client_wrapper, mocker
+    ):
+        instance = DiscordTracker(
+            lambda x: None,
+            discord_config,
+            guilds_collection,
+            client_wrapper=mock_client_wrapper,
+        )
+        instance.logger = mocker.MagicMock()
+        # Mock client to close after first iteration
+        mock_client_wrapper.closed = False
+        mocked_discovery = mocker.patch(
+            "trackers.discord.DiscordTracker._should_run_channel_discovery",
+            return_value=False,
+        )
+        mocked_discover = mocker.patch(
+            "trackers.discord.DiscordTracker._discover_all_guild_channels"
+        )
+        mocked_historical = mocker.patch(
+            "trackers.discord.DiscordTracker._should_run_historical_check",
+            return_value=True,
+        )
+        mentions_found = 2
+        mocked_check = mocker.patch(
+            "trackers.discord.DiscordTracker.check_mentions_async",
+            return_value=mentions_found,
+        )
+
+        async def sleep_side_effect(seconds, step=1):
+            # After first call, mark client closed so loop exits
+            mock_client_wrapper.closed = True
+
+        mock_client_wrapper.is_closed = lambda: mock_client_wrapper.closed
+
+        with mock.patch.object(
+            instance, "_async_interruptible_sleep", side_effect=sleep_side_effect
+        ) as mock_sleep:
+            await instance._run_main_loop(300)
+
+        # Verify our async sleep helper was called with the expected interval
+        mock_sleep.assert_called_once_with(10)
+        mocked_discovery.assert_called_once()
+        mocked_historical.assert_called_once()
+        mocked_check.assert_called_once_with()
+        instance.logger.info.assert_called_once_with(
+            f"Found {mentions_found} new mentions in historical check"
+        )
+        mocked_discover.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_trackers_discord_run_main_loop_functionality(
         self, discord_config, guilds_collection, mock_client_wrapper
     ):
-        """Test _run_main_loop basic operation with interruptible async sleep."""
         instance = DiscordTracker(
             lambda x: None,
             discord_config,
@@ -2199,6 +2602,7 @@ class TestDiscordTracker:
         # Verify our async sleep helper was called with the expected interval
         mock_sleep.assert_called_once_with(10)
 
+    # # run_continuous
     @pytest.mark.asyncio
     async def test_trackers_discord_run_continuous_success(
         self, discord_config, guilds_collection, mock_client_wrapper, mocker

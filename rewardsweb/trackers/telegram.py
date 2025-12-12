@@ -47,7 +47,9 @@ class TelegramTracker(BaseMentionTracker):
 
     async def _post_init_setup(self, chats_collection):
         """Perform asynchronous setup tasks after initialization."""
-        await self.log_action_async("initialized", f"Tracking {len(chats_collection)} chats")
+        await self.log_action_async(
+            "initialized", f"Tracking {len(chats_collection)} chats"
+        )
 
     async def cleanup(self):
         """Perform graceful cleanup of the Telegram client."""

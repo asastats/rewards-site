@@ -1,7 +1,5 @@
 """Module containing social media trackers' run functions."""
 
-import asyncio
-
 from trackers.config import (
     discord_config,
     discord_guilds,
@@ -34,10 +32,9 @@ def run_discord_tracker():
         discord_config=config,
         guilds_collection=discord_guilds(),
     )
-    asyncio.run(
-        tracker.run_continuous(
-            historical_check_interval=config.get("check_interval") * 60
-        )
+    tracker.start_async_task(
+        tracker.run_continuous,
+        historical_check_interval=config.get("check_interval") * 60,
     )
 
 

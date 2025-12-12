@@ -809,7 +809,7 @@ class DiscordTracker(BaseMentionTracker):
                 total_mentions += result
         return total_mentions
 
-    async def run_continuous(self, historical_check_interval=300):
+    async def run_continuous(self, historical_check_interval):
         """Run Discord tracker in continuous mode with periodic historical checks.
 
         Registers signal handlers for graceful shutdown, starts the Discord client

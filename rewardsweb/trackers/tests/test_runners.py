@@ -35,8 +35,6 @@ class TestTrackersRunners:
         mocked_tracker = mocker.patch(
             "trackers.runners.DiscordTracker", return_value=tracker
         )
-        # Mock asyncio.run so no actual event loop runs
-        mocked_asyncio_run = mocker.patch("trackers.runners.asyncio.run")
         run_discord_tracker()
         mocked_parser.assert_called_once_with()
         mocked_config.assert_called_once_with()
@@ -46,19 +44,9 @@ class TestTrackersRunners:
             discord_config=mocked_config.return_value,
             guilds_collection=mocked_guilds.return_value,
         )
-        # Ensure run_continuous was called with correct args
-        tracker.run_continuous.assert_called_once_with(
-            historical_check_interval=interval * 60
+        tracker.start_async_task.assert_called_once_with(
+            tracker.run_continuous, historical_check_interval=interval * 60
         )
-        # asyncio.run should receive that coroutine
-        mocked_asyncio_run.assert_called_once()
-        passed_coro = mocked_asyncio_run.call_args[0][0]
-        # Manually reproduce the call
-        manual_coro = tracker.run_continuous(historical_check_interval=300)
-        assert asyncio.iscoroutine(manual_coro)
-
-        # Ensure the passed coroutine is the SAME KIND of coroutine
-        assert type(passed_coro) is type(manual_coro)
 
     def test_trackers_runners_run_discord_tracker_functionality(
         self, discord_config, mocker
@@ -75,8 +63,6 @@ class TestTrackersRunners:
         mocked_tracker = mocker.patch(
             "trackers.runners.DiscordTracker", return_value=tracker
         )
-        # Mock asyncio.run so no actual event loop runs
-        mocked_asyncio_run = mocker.patch("trackers.runners.asyncio.run")
         run_discord_tracker()
         mocked_parser.assert_called_once_with()
         mocked_config.assert_called_once_with()
@@ -86,17 +72,9 @@ class TestTrackersRunners:
             discord_config=discord_config,
             guilds_collection=mocked_guilds.return_value,
         )
-        # Ensure run_continuous was called with correct args
-        tracker.run_continuous.assert_called_once_with(historical_check_interval=480)
-        # asyncio.run should receive that coroutine
-        mocked_asyncio_run.assert_called_once()
-        passed_coro = mocked_asyncio_run.call_args[0][0]
-        # Manually reproduce the call
-        manual_coro = tracker.run_continuous(historical_check_interval=480)
-        assert asyncio.iscoroutine(manual_coro)
-
-        # Ensure the passed coroutine is the SAME KIND of coroutine
-        assert type(passed_coro) is type(manual_coro)
+        tracker.start_async_task.assert_called_once_with(
+            tracker.run_continuous, historical_check_interval=480
+        )
 
     # # run_reddit_tracker
     def test_trackers_runners_run_reddit_tracker_for_interval_set(

@@ -1,5 +1,6 @@
 """Module containing base tracker class."""
 
+import asyncio
 import logging
 import os
 import signal
@@ -22,6 +23,8 @@ class BaseMentionTracker:
     :type BaseMentionTracker.logger: :class:`logging.Logger`
     :var BaseMentionTracker.exit_signal: flag indicating requested graceful shutdown
     :type BaseMentionTracker.exit_signal: bool
+    :var BaseMentionTracker.async_task: asyncio task representing the running callback
+    :type BaseMentionTracker.async_task: :class:`asyncio.Task`
     """
 
     def __init__(self, platform_name, parse_message_callback):
@@ -35,6 +38,7 @@ class BaseMentionTracker:
         self.platform_name = platform_name
         self.parse_message_callback = parse_message_callback
         self.exit_signal = False
+        self.async_task = None
         self.setup_logging()
 
     # # setup
@@ -96,6 +100,57 @@ class BaseMentionTracker:
                 break
 
             time.sleep(1)
+
+    # # async run
+    def start_async_task(self, callback, **kwargs):
+        """Start and run an asynchronous task with proper signal handling.
+
+        Creates an event loop, runs the provided async callback as a task,
+        and sets up signal handlers for graceful shutdown. This method
+        blocks until the async task completes or is cancelled.
+
+        :param callback: async function to run as the main task
+        :type callback: callable
+        :param kwargs: keyword arguments to pass to the callback function
+        :type kwargs: dict
+        :var event_loop: asyncio event loop for running the async task
+        :type event_loop: :class:`asyncio.AbstractEventLoop`
+        """
+        # Get the event loop
+        event_loop = asyncio.get_event_loop()
+
+        # Create the task
+        self.async_task = event_loop.create_task(callback(**kwargs))
+
+        # Register signal handlers
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            event_loop.add_signal_handler(sig, self.shutdown)
+
+        try:
+            event_loop.run_until_complete(self.async_task)
+
+        except asyncio.CancelledError:
+            print("Tracker cancelled")
+
+        except KeyboardInterrupt:
+            print("Tracker interrupted by user")
+
+        finally:
+            # Cleanup
+            event_loop.close()
+
+    def shutdown(self):
+        """Request graceful shutdown of the running asynchronous task.
+
+        Cancels the main async task when called, typically by a signal handler.
+        This method is safe to call multiple times.
+
+        :var async_task: the currently running async task to cancel
+        :type async_task: :class:`asyncio.Task` or None
+        """
+        print("Shutdown requested...")
+        if self.async_task and hasattr(self.async_task, "cancel"):
+            self.async_task.cancel()
 
     # # processing
     def check_mentions(self):

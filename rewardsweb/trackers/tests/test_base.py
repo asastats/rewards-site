@@ -1,8 +1,9 @@
 """Testing module for :py:mod:`trackers.base` module."""
 
+import asyncio
 import signal
 from pathlib import Path
-from unittest import mock
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 import requests
@@ -25,6 +26,7 @@ class TestTrackersBaseMentionTracker:
         instance = BaseMentionTracker("test_platform", callback)
         assert instance.platform_name == "test_platform"
         assert instance.parse_message_callback == callback
+        assert instance.async_task is None
         mock_setup_logging.assert_called_once()
 
     # setup_logging
@@ -36,9 +38,9 @@ class TestTrackersBaseMentionTracker:
         instance = BaseMentionTracker("test_platform", lambda x: None)
         mock_basic_config.reset_mock()
         mock_get_logger.reset_mock()
-        with mock.patch(
-            "os.path.exists", return_value=False
-        ) as mock_exists, mock.patch("os.makedirs") as mock_makedirs:
+        with patch("os.path.exists", return_value=False) as mock_exists, patch(
+            "os.makedirs"
+        ) as mock_makedirs:
             instance.setup_logging()
             mock_exists.assert_called_once_with(
                 Path(trackers.base.__file__).parent.parent.resolve() / "logs"
@@ -508,3 +510,422 @@ class TestTrackersBaseMentionTracker:
         mock_sleep.assert_called_once()
         # Verify logger.info was called for mentions_found > 0
         instance.logger.info.assert_any_call("Found 3 new mentions")
+
+
+class TestBaseMentionTrackerAsync:
+    """Test suite for async functionality in BaseMentionTracker."""
+
+    @pytest.fixture
+    def tracker(self):
+        """Create a BaseMentionTracker instance for testing."""
+        return BaseMentionTracker("test_platform", lambda x, y: {})
+
+    @pytest.fixture
+    def mock_async_callback(self):
+        """Create a mock async callback function."""
+        return AsyncMock()
+
+    @pytest.fixture
+    def mock_event_loop(self):
+        """Create a mock event loop."""
+        loop = Mock(spec=asyncio.AbstractEventLoop)
+        loop.create_task = Mock()
+        loop.add_signal_handler = Mock()
+        loop.run_until_complete = Mock()
+        loop.close = Mock()
+        loop.is_closed = Mock(return_value=False)
+        return loop
+
+    def test_shutdown_without_task(self, tracker):
+        """Test shutdown when no async task is running."""
+        # Ensure async_task is None
+        tracker.async_task = None
+
+        # Call shutdown - should not raise any exceptions
+        with patch("builtins.print") as mock_print:
+            tracker.shutdown()
+
+            # Verify shutdown message was printed
+            mock_print.assert_called_once_with("Shutdown requested...")
+
+            # No task to cancel, so async_task should still be None
+            assert tracker.async_task is None
+
+    def test_shutdown_with_task(self, tracker):
+        """Test shutdown when an async task is running."""
+        # Create a mock task
+        mock_task = Mock(spec=asyncio.Task)
+        mock_task.cancel = Mock()
+        tracker.async_task = mock_task
+
+        # Call shutdown
+        with patch("builtins.print") as mock_print:
+            tracker.shutdown()
+
+            # Verify shutdown message was printed
+            mock_print.assert_called_once_with("Shutdown requested...")
+
+            # Verify task.cancel() was called
+            mock_task.cancel.assert_called_once()
+
+    def test_shutdown_with_cancelled_task(self, tracker):
+        """Test shutdown when task has already been cancelled."""
+        # Create a mock task that's already cancelled
+        mock_task = Mock(spec=asyncio.Task)
+        mock_task.cancel = Mock()
+        tracker.async_task = mock_task
+
+        # Call shutdown multiple times
+        with patch("builtins.print") as mock_print:
+            for _ in range(3):
+                tracker.shutdown()
+
+            # Verify shutdown message was printed each time
+            assert mock_print.call_count == 3
+            assert mock_print.call_args_list == [
+                call("Shutdown requested..."),
+                call("Shutdown requested..."),
+                call("Shutdown requested..."),
+            ]
+
+            # Verify task.cancel() was called each time
+            assert mock_task.cancel.call_count == 3
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_normal_execution(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test start_async_task with normal callback execution."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+
+        # Create a list to capture the coroutine passed to create_task
+        captured_coroutine = []
+
+        def capture_create_task(coro):
+            captured_coroutine.append(coro)
+            return mock_task
+
+        mock_event_loop.create_task.side_effect = capture_create_task
+
+        # Call start_async_task
+        tracker.start_async_task(mock_async_callback, arg1="value1", arg2="value2")
+
+        # Verify event loop was retrieved
+        mock_get_loop.assert_called_once()
+
+        # Verify callback was called with correct arguments
+        mock_async_callback.assert_called_once_with(arg1="value1", arg2="value2")
+
+        # Verify a coroutine was captured (not checking exact identity)
+        assert len(captured_coroutine) == 1
+        assert asyncio.iscoroutine(captured_coroutine[0])
+
+        # Verify signal handlers were registered
+        assert mock_event_loop.add_signal_handler.call_count == 2
+        mock_event_loop.add_signal_handler.assert_any_call(
+            signal.SIGINT, tracker.shutdown
+        )
+        mock_event_loop.add_signal_handler.assert_any_call(
+            signal.SIGTERM, tracker.shutdown
+        )
+
+        # Verify event loop ran until task completion
+        mock_event_loop.run_until_complete.assert_called_once_with(mock_task)
+
+        # Verify event loop was closed
+        mock_event_loop.close.assert_called_once()
+
+        # Verify async_task was set
+        assert tracker.async_task == mock_task
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_callback_raises_exception(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test start_async_task when callback raises an exception."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+        mock_event_loop.create_task.return_value = mock_task
+
+        # Make run_until_complete raise an exception
+        test_exception = RuntimeError("Test error")
+        mock_event_loop.run_until_complete.side_effect = test_exception
+
+        # Call start_async_task - should raise the exception
+        with pytest.raises(RuntimeError, match="Test error"):
+            tracker.start_async_task(mock_async_callback)
+
+        # Verify event loop was still closed in finally block
+        mock_event_loop.close.assert_called_once()
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_with_keyboard_interrupt(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test start_async_task when KeyboardInterrupt occurs."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+        mock_event_loop.create_task.return_value = mock_task
+
+        # Make run_until_complete raise KeyboardInterrupt
+        mock_event_loop.run_until_complete.side_effect = KeyboardInterrupt
+
+        with patch("builtins.print") as mock_print:
+            # Call start_async_task
+            tracker.start_async_task(mock_async_callback)
+
+            # Verify interruption message was printed
+            mock_print.assert_called_with("Tracker interrupted by user")
+
+            # Verify event loop was closed
+            mock_event_loop.close.assert_called_once()
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_with_cancelled_error(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test start_async_task when asyncio.CancelledError occurs."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+        mock_event_loop.create_task.return_value = mock_task
+
+        # Make run_until_complete raise asyncio.CancelledError
+        mock_event_loop.run_until_complete.side_effect = asyncio.CancelledError
+
+        with patch("builtins.print") as mock_print:
+            # Call start_async_task
+            tracker.start_async_task(mock_async_callback)
+
+            # Verify cancellation message was printed
+            mock_print.assert_called_with("Tracker cancelled")
+
+            # Verify event loop was closed
+            mock_event_loop.close.assert_called_once()
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_signal_handler_invocation(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test that signal handlers correctly call shutdown."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+        mock_event_loop.create_task.return_value = mock_task
+
+        # Create a mock for the shutdown method
+        tracker.shutdown = Mock()
+
+        # Call start_async_task
+        tracker.start_async_task(mock_async_callback)
+
+        # Verify signal handlers were registered with the shutdown method
+        mock_event_loop.add_signal_handler.assert_any_call(
+            signal.SIGINT, tracker.shutdown
+        )
+        mock_event_loop.add_signal_handler.assert_any_call(
+            signal.SIGTERM, tracker.shutdown
+        )
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_event_loop_already_closed(
+        self, mock_get_loop, tracker, mock_async_callback
+    ):
+        """Test start_async_task when event loop is already closed."""
+        # Create a mock event loop that's already closed
+        mock_event_loop = Mock(spec=asyncio.AbstractEventLoop)
+        mock_event_loop.is_closed = Mock(return_value=True)
+        mock_event_loop.create_task = Mock()
+        mock_event_loop.add_signal_handler = Mock()
+        mock_event_loop.run_until_complete = Mock()
+        mock_event_loop.close = Mock()
+
+        mock_get_loop.return_value = mock_event_loop
+
+        # This should not raise an error because the code doesn't check is_closed
+        # The event loop will be used even if closed
+        tracker.start_async_task(mock_async_callback)
+
+        # Verify the event loop was used (create_task called)
+        mock_event_loop.create_task.assert_called_once()
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_multiple_calls(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test calling start_async_task multiple times."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task1 = Mock(spec=asyncio.Task)
+        mock_task2 = Mock(spec=asyncio.Task)
+
+        # Track create_task calls
+        create_task_calls = []
+
+        def create_task_side_effect(coro):
+            # Count the calls
+            create_task_calls.append(coro)
+            if len(create_task_calls) == 1:
+                return mock_task1
+            return mock_task2
+
+        mock_event_loop.create_task.side_effect = create_task_side_effect
+
+        # First call
+        tracker.start_async_task(mock_async_callback, arg1="first")
+
+        # Second call - reset run_until_complete to track it
+        mock_event_loop.run_until_complete.reset_mock()
+        tracker.start_async_task(mock_async_callback, arg1="second")
+
+        # Verify both tasks were created
+        assert len(create_task_calls) == 2
+        # Verify async_task was updated to second task
+        assert tracker.async_task == mock_task2
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_shutdown_during_execution(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test shutdown being called while async task is running."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+        mock_event_loop.create_task.return_value = mock_task
+
+        # Track if shutdown was called
+        shutdown_called = False
+
+        def mock_shutdown():
+            nonlocal shutdown_called
+            shutdown_called = True
+            mock_task.cancel()
+
+        tracker.shutdown = mock_shutdown
+
+        # Simulate SIGINT signal during execution
+        def run_until_complete_side_effect(task):
+            # Simulate signal handler being called during execution
+            tracker.shutdown()
+            raise asyncio.CancelledError()
+
+        mock_event_loop.run_until_complete.side_effect = run_until_complete_side_effect
+
+        with patch("builtins.print") as mock_print:
+            tracker.start_async_task(mock_async_callback)
+
+            # Verify shutdown was called
+            assert shutdown_called is True
+
+            # Verify cancellation message was printed
+            mock_print.assert_called_with("Tracker cancelled")
+
+            # Verify event loop was closed
+            mock_event_loop.close.assert_called_once()
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_with_empty_kwargs(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test start_async_task with no kwargs passed."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+
+        # Create a list to capture the coroutine passed to create_task
+        captured_coroutine = []
+
+        def capture_create_task(coro):
+            captured_coroutine.append(coro)
+            return mock_task
+
+        mock_event_loop.create_task.side_effect = capture_create_task
+
+        # Call with no kwargs
+        tracker.start_async_task(mock_async_callback)
+
+        # Verify callback was called with no arguments
+        mock_async_callback.assert_called_once_with()
+
+        # Verify a coroutine was captured (not checking exact identity)
+        assert len(captured_coroutine) == 1
+        assert asyncio.iscoroutine(captured_coroutine[0])
+
+        # Verify event loop was retrieved
+        mock_get_loop.assert_called_once()
+
+        # Verify signal handlers were registered
+        assert mock_event_loop.add_signal_handler.call_count == 2
+        mock_event_loop.add_signal_handler.assert_any_call(
+            signal.SIGINT, tracker.shutdown
+        )
+        mock_event_loop.add_signal_handler.assert_any_call(
+            signal.SIGTERM, tracker.shutdown
+        )
+
+        # Verify event loop ran until task completion
+        mock_event_loop.run_until_complete.assert_called_once_with(mock_task)
+
+        # Verify event loop was closed
+        mock_event_loop.close.assert_called_once()
+
+        # Verify async_task was set
+        assert tracker.async_task == mock_task
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_verify_task_cancellation_chain(
+        self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
+    ):
+        """Test the complete chain from signal to task cancellation."""
+        # Setup mocks
+        mock_get_loop.return_value = mock_event_loop
+        mock_task = Mock(spec=asyncio.Task)
+        mock_task.cancel = Mock()
+        mock_event_loop.create_task.return_value = mock_task
+        tracker.async_task = mock_task
+
+        # Call start_async_task
+        tracker.start_async_task(mock_async_callback)
+
+        # Now manually call shutdown (simulating signal)
+        tracker.shutdown()
+
+        # Verify task.cancel() was called
+        mock_task.cancel.assert_called_once()
+
+    @patch("asyncio.get_event_loop")
+    def test_start_async_task_event_loop_cleanup_on_exception(
+        self, mock_get_loop, tracker, mock_async_callback
+    ):
+        """Test that event loop is cleaned up even when an exception occurs during setup."""
+        # Make get_event_loop raise an exception
+        mock_get_loop.side_effect = RuntimeError("No event loop")
+
+        # This should raise, but we need to ensure no dangling resources
+        with pytest.raises(RuntimeError, match="No event loop"):
+            tracker.start_async_task(mock_async_callback)
+
+        # Verify async_task wasn't set
+        assert not hasattr(tracker, "async_task") or tracker.async_task is None
+
+    # # shutdown
+    def test_shutdown_with_partially_initialized_task(self, tracker):
+        """Test shutdown with a task that doesn't have cancel method."""
+
+        # Create a mock that doesn't have cancel() method
+        # Use a simple object without cancel attribute
+        class TaskWithoutCancel:
+            pass
+
+        tracker.async_task = TaskWithoutCancel()
+
+        # This should not raise an exception
+        with patch("builtins.print") as mock_print:
+            tracker.shutdown()
+
+            # Should still print shutdown message
+            mock_print.assert_called_once_with("Shutdown requested...")

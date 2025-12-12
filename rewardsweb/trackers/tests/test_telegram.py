@@ -4,12 +4,16 @@ import asyncio
 
 import pytest
 
+from trackers.base import BaseMentionTracker
 from trackers.telegram import TelegramTracker
 
 
 @pytest.mark.django_db
 class TestTrackersTelegram:
     """Testing class for :class:`trackers.telegram.TelegramTracker`."""
+
+    def test_trackers_telegram_telegramtracker_is_subclass_of_basementiontracker(self):
+        assert issubclass(TelegramTracker, BaseMentionTracker)
 
     # __init__
     def test_trackers_telegramtracker_init_success(

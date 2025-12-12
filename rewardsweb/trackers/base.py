@@ -101,57 +101,6 @@ class BaseMentionTracker:
 
             time.sleep(1)
 
-    # # async run
-    def start_async_task(self, callback, **kwargs):
-        """Start and run an asynchronous task with proper signal handling.
-
-        Creates an event loop, runs the provided async callback as a task,
-        and sets up signal handlers for graceful shutdown. This method
-        blocks until the async task completes or is cancelled.
-
-        :param callback: async function to run as the main task
-        :type callback: callable
-        :param kwargs: keyword arguments to pass to the callback function
-        :type kwargs: dict
-        :var event_loop: asyncio event loop for running the async task
-        :type event_loop: :class:`asyncio.AbstractEventLoop`
-        """
-        # Get the event loop
-        event_loop = asyncio.get_event_loop()
-
-        # Create the task
-        self.async_task = event_loop.create_task(callback(**kwargs))
-
-        # Register signal handlers
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            event_loop.add_signal_handler(sig, self.shutdown)
-
-        try:
-            event_loop.run_until_complete(self.async_task)
-
-        except asyncio.CancelledError:
-            print("Tracker cancelled")
-
-        except KeyboardInterrupt:
-            print("Tracker interrupted by user")
-
-        finally:
-            # Cleanup
-            event_loop.close()
-
-    def shutdown(self):
-        """Request graceful shutdown of the running asynchronous task.
-
-        Cancels the main async task when called, typically by a signal handler.
-        This method is safe to call multiple times.
-
-        :var async_task: the currently running async task to cancel
-        :type async_task: :class:`asyncio.Task` or None
-        """
-        print("Shutdown requested...")
-        if self.async_task and hasattr(self.async_task, "cancel"):
-            self.async_task.cancel()
-
     # # processing
     def check_mentions(self):
         """Check for new mentions - to be implemented by subclasses.
@@ -230,16 +179,6 @@ class BaseMentionTracker:
         :type details: str
         """
         MentionLog.objects.log_action(self.platform_name, action, details)
-
-    async def log_action_async(self, action, details=""):
-        """Log platform actions to database (async version).
-
-        :param action: description of the action performed
-        :type action: str
-        :param details: additional details about the action
-        :type details: str
-        """
-        return await sync_to_async(self.log_action)(action, details)
 
     def prepare_contribution_data(self, parsed_message, message_data):
         """Prepare contribution data for POST request from provided arguments.
@@ -375,3 +314,142 @@ class BaseMentionTracker:
             self.logger.error(f"{self.platform_name} tracker error: {e}")
             self.log_action("error", f"Tracker error: {str(e)}")
             raise
+
+
+class BaseAsyncMentionTracker(BaseMentionTracker):
+    """Async-compatible base class for social media mention trackers."""
+
+    # # async run
+    def start_async_task(self, callback, **kwargs):
+        """Start and run an asynchronous task with proper signal handling.
+
+        Creates an event loop, runs the provided async callback as a task,
+        and sets up signal handlers for graceful shutdown. This method
+        blocks until the async task completes or is cancelled.
+
+        :param callback: async function to run as the main task
+        :type callback: callable
+        :param kwargs: keyword arguments to pass to the callback function
+        :type kwargs: dict
+        :var event_loop: asyncio event loop for running the async task
+        :type event_loop: :class:`asyncio.AbstractEventLoop`
+        """
+        # Get the event loop
+        event_loop = asyncio.get_event_loop()
+
+        # Create the task
+        self.async_task = event_loop.create_task(callback(**kwargs))
+
+        # Register signal handlers
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            event_loop.add_signal_handler(sig, self.shutdown)
+
+        try:
+            event_loop.run_until_complete(self.async_task)
+
+        except asyncio.CancelledError:
+            print("Tracker cancelled")
+
+        except KeyboardInterrupt:
+            print("Tracker interrupted by user")
+
+        finally:
+            # Cleanup
+            event_loop.close()
+
+    def shutdown(self):
+        """Request graceful shutdown of the running asynchronous task.
+
+        Cancels the main async task when called, typically by a signal handler.
+        This method is safe to call multiple times.
+
+        :var async_task: the currently running async task to cancel
+        :type async_task: :class:`asyncio.Task` or None
+        """
+        print("Shutdown requested...")
+        if self.async_task and hasattr(self.async_task, "cancel"):
+            self.async_task.cancel()
+
+    async def is_processed_async(self, item_id):
+        """Async version of is_processed.
+
+        :param item_id: unique identifier for the social media item
+        :type item_id: str
+        :return: True if item has been processed, False otherwise
+        :rtype: bool
+        """
+        return await sync_to_async(self.is_processed)(item_id)
+
+    async def log_action_async(self, action, details=""):
+        """Log platform actions to database (async version).
+
+        :param action: description of the action performed
+        :type action: str
+        :param details: additional details about the action
+        :type details: str
+        """
+        return await sync_to_async(self.log_action)(action, details)
+
+    async def mark_processed_async(self, item_id, data):
+        """Async version of mark_processed.
+
+        :param item_id: unique identifier for the social media item
+        :type item_id: str
+        :param data: mention data dictionary
+        :type data: dict
+        """
+        await sync_to_async(self.mark_processed)(item_id, data)
+
+    async def process_mention_async(self, item_id, data, username):
+        """Async version of process_mention.
+
+        :param item_id: unique identifier for the social media item
+        :type item_id: str
+        :param data: mention data dictionary
+        :type data: dict
+        :param username: mentioned username
+        :type username: str
+        :var parsed_message: parsed message result
+        :type parsed_message: dict
+        :var contribution_data: formatted contribution data
+        :type contribution_data: dict
+        :return: True if mention was processed, False otherwise
+        :rtype: bool
+        """
+        try:
+            if await self.is_processed_async(item_id):
+                return False
+
+            parsed_message = self.parse_message_callback(data.get("content"), username)
+            contribution_data = self.prepare_contribution_data(parsed_message, data)
+
+            # Note: post_new_contribution is synchronous (requests)
+            # If it becomes an issue, you may need to use aiohttp
+            self.post_new_contribution(contribution_data)
+
+            await self.mark_processed_async(item_id, data)
+
+            self.logger.info(
+                f"Processed mention from {data.get('suggester', 'unknown')}"
+            )
+            await self.log_action_async(
+                "mention_processed",
+                f"Item: {item_id}, Suggester: {data.get('suggester')}",
+            )
+
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Error processing mention {item_id}: {e}")
+            await self.log_action_async(
+                "processing_error", f"Item: {item_id}, Error: {str(e)}"
+            )
+            return False
+
+    async def check_mentions_async(self):
+        """Async version of check_mentions.
+
+        :return: number of new mentions found
+        :rtype: int
+        """
+        raise NotImplementedError("Subclasses must implement check_mentions_async()")

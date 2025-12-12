@@ -6,10 +6,10 @@ from datetime import datetime
 from asgiref.sync import sync_to_async
 from telethon import TelegramClient
 
-from trackers.base import BaseMentionTracker
+from trackers.base import BaseAsyncMentionTracker
 
 
-class TelegramTracker(BaseMentionTracker):
+class TelegramTracker(BaseAsyncMentionTracker):
     """Tracker for Telegram mentions in specified groups/channels.
 
     :param TelegramTracker.client: Telegram client instance

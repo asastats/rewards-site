@@ -6,12 +6,18 @@ import logging
 import pytest
 import requests
 
+from trackers.base import BaseMentionTracker
 from trackers.twitterapiio import TwitterapiioTracker
 
 
 @pytest.mark.django_db
 class TestTrackersTwitterApiIOTracker:
     """Testing class for :class:`trackers.twitterapiio.TwitterapiioTracker`."""
+
+    def test_trackers_twitterapiio_twitterapiiotracker_is_subclass_of_basementiontracker(
+        self,
+    ):
+        assert issubclass(TwitterapiioTracker, BaseMentionTracker)
 
     # # __init__
     def test_trackers_twitterapiiotracker_init_success(

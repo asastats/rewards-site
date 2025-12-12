@@ -4,12 +4,16 @@ from datetime import datetime
 
 import pytest
 
+from trackers.base import BaseMentionTracker
 from trackers.twitter import TwitterTracker
 
 
 @pytest.mark.django_db
 class TestTrackersTwitter:
     """Testing class for :class:`trackers.twitter.TwitterTracker`."""
+
+    def test_trackers_twitter_twittertracker_is_subclass_of_basementiontracker(self):
+        assert issubclass(TwitterTracker, BaseMentionTracker)
 
     # __init__
     def test_trackers_twittertracker_init_success(self, mocker, twitter_config):

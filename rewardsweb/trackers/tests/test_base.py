@@ -9,7 +9,7 @@ import pytest
 import requests
 
 import trackers.base
-from trackers.base import BaseMentionTracker
+from trackers.base import BaseAsyncMentionTracker, BaseMentionTracker
 
 
 @pytest.mark.django_db
@@ -181,15 +181,6 @@ class TestTrackersBaseMentionTracker:
         mock_log_action_orm.assert_called_once_with(
             "test_platform", "test_action", "test_details"
         )
-
-    # log_action_async
-    @pytest.mark.asyncio
-    async def test_base_basementiontracker_log_action_async_functionality(self, mocker):
-        mocker.patch.object(BaseMentionTracker, "setup_logging")
-        mocked_log = mocker.patch("trackers.base.BaseMentionTracker.log_action")
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        await instance.log_action_async("test_action", "test_details")
-        mocked_log.assert_called_once_with("test_action", "test_details")
 
     # prepare_contribution_data
     def test_base_basementiontracker_prepare_contribution_data_success(self, mocker):
@@ -512,13 +503,13 @@ class TestTrackersBaseMentionTracker:
         instance.logger.info.assert_any_call("Found 3 new mentions")
 
 
-class TestBaseMentionTrackerAsync:
-    """Test suite for async functionality in BaseMentionTracker."""
+class TestBaseAsyncMentionTracker:
+    """Test suite for :class:`trackers.base.BaseAsyncMentionTracker`."""
 
     @pytest.fixture
     def tracker(self):
-        """Create a BaseMentionTracker instance for testing."""
-        return BaseMentionTracker("test_platform", lambda x, y: {})
+        """Create a BaseAsyncMentionTracker instance for testing."""
+        return BaseAsyncMentionTracker("test_platform", lambda x, y: {})
 
     @pytest.fixture
     def mock_async_callback(self):
@@ -536,7 +527,7 @@ class TestBaseMentionTrackerAsync:
         loop.is_closed = Mock(return_value=False)
         return loop
 
-    def test_shutdown_without_task(self, tracker):
+    def test_reackers_base_baseasyncmentiontracker_shutdown_without_task(self, tracker):
         """Test shutdown when no async task is running."""
         # Ensure async_task is None
         tracker.async_task = None
@@ -551,7 +542,7 @@ class TestBaseMentionTrackerAsync:
             # No task to cancel, so async_task should still be None
             assert tracker.async_task is None
 
-    def test_shutdown_with_task(self, tracker):
+    def test_reackers_base_baseasyncmentiontracker_shutdown_with_task(self, tracker):
         """Test shutdown when an async task is running."""
         # Create a mock task
         mock_task = Mock(spec=asyncio.Task)
@@ -568,7 +559,9 @@ class TestBaseMentionTrackerAsync:
             # Verify task.cancel() was called
             mock_task.cancel.assert_called_once()
 
-    def test_shutdown_with_cancelled_task(self, tracker):
+    def test_reackers_base_baseasyncmentiontracker_shutdown_with_cancelled_task(
+        self, tracker
+    ):
         """Test shutdown when task has already been cancelled."""
         # Create a mock task that's already cancelled
         mock_task = Mock(spec=asyncio.Task)
@@ -592,7 +585,7 @@ class TestBaseMentionTrackerAsync:
             assert mock_task.cancel.call_count == 3
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_normal_execution(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_normal_execution(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test start_async_task with normal callback execution."""
@@ -641,7 +634,7 @@ class TestBaseMentionTrackerAsync:
         assert tracker.async_task == mock_task
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_callback_raises_exception(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_callback_raises_exception(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test start_async_task when callback raises an exception."""
@@ -662,7 +655,7 @@ class TestBaseMentionTrackerAsync:
         mock_event_loop.close.assert_called_once()
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_with_keyboard_interrupt(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_with_keyboard_interrupt(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test start_async_task when KeyboardInterrupt occurs."""
@@ -685,7 +678,7 @@ class TestBaseMentionTrackerAsync:
             mock_event_loop.close.assert_called_once()
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_with_cancelled_error(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_with_cancelled_error(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test start_async_task when asyncio.CancelledError occurs."""
@@ -708,7 +701,7 @@ class TestBaseMentionTrackerAsync:
             mock_event_loop.close.assert_called_once()
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_signal_handler_invocation(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_signal_handler_invocation(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test that signal handlers correctly call shutdown."""
@@ -732,7 +725,7 @@ class TestBaseMentionTrackerAsync:
         )
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_event_loop_already_closed(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_event_loop_already_closed(
         self, mock_get_loop, tracker, mock_async_callback
     ):
         """Test start_async_task when event loop is already closed."""
@@ -754,7 +747,7 @@ class TestBaseMentionTrackerAsync:
         mock_event_loop.create_task.assert_called_once()
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_multiple_calls(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_multiple_calls(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test calling start_async_task multiple times."""
@@ -788,7 +781,7 @@ class TestBaseMentionTrackerAsync:
         assert tracker.async_task == mock_task2
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_shutdown_during_execution(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_shutdown_during_execution(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test shutdown being called while async task is running."""
@@ -828,7 +821,7 @@ class TestBaseMentionTrackerAsync:
             mock_event_loop.close.assert_called_once()
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_with_empty_kwargs(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_with_empty_kwargs(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test start_async_task with no kwargs passed."""
@@ -877,7 +870,7 @@ class TestBaseMentionTrackerAsync:
         assert tracker.async_task == mock_task
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_verify_task_cancellation_chain(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_verify_task_cancellation_chain(
         self, mock_get_loop, tracker, mock_async_callback, mock_event_loop
     ):
         """Test the complete chain from signal to task cancellation."""
@@ -898,7 +891,7 @@ class TestBaseMentionTrackerAsync:
         mock_task.cancel.assert_called_once()
 
     @patch("asyncio.get_event_loop")
-    def test_start_async_task_event_loop_cleanup_on_exception(
+    def test_reackers_base_baseasyncmentiontracker_start_async_task_event_loop_cleanup_on_exception(
         self, mock_get_loop, tracker, mock_async_callback
     ):
         """Test that event loop is cleaned up even when an exception occurs during setup."""
@@ -913,7 +906,9 @@ class TestBaseMentionTrackerAsync:
         assert not hasattr(tracker, "async_task") or tracker.async_task is None
 
     # # shutdown
-    def test_shutdown_with_partially_initialized_task(self, tracker):
+    def test_reackers_base_baseasyncmentiontracker_shutdown_with_partially_initialized_task(
+        self, tracker
+    ):
         """Test shutdown with a task that doesn't have cancel method."""
 
         # Create a mock that doesn't have cancel() method
@@ -929,3 +924,152 @@ class TestBaseMentionTrackerAsync:
 
             # Should still print shutdown message
             mock_print.assert_called_once_with("Shutdown requested...")
+
+    # is_processed_async
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_is_processed_async_true(self, mocker):
+        mocker.patch.object(BaseAsyncMentionTracker, "setup_logging")
+        mock_is_processed_orm = mocker.patch(
+            "trackers.models.Mention.objects.is_processed"
+        )
+        mock_is_processed_orm.return_value = True
+        instance = BaseAsyncMentionTracker("test_platform", lambda x: None)
+        result = await instance.is_processed_async("test_item_id")
+        assert result is True
+        mock_is_processed_orm.assert_called_once_with("test_item_id", "test_platform")
+
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_is_processed_async_false(self, mocker):
+        mocker.patch.object(BaseAsyncMentionTracker, "setup_logging")
+        mock_is_processed_orm = mocker.patch(
+            "trackers.models.Mention.objects.is_processed"
+        )
+        mock_is_processed_orm.return_value = False
+        instance = BaseAsyncMentionTracker("test_platform", lambda x: None)
+        result = await instance.is_processed_async("test_item_id")
+        assert result is False
+        mock_is_processed_orm.assert_called_once_with("test_item_id", "test_platform")
+
+    # log_action_async
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_log_action_async_functionality(
+        self, mocker
+    ):
+        mocker.patch.object(BaseAsyncMentionTracker, "setup_logging")
+        mocked_log = mocker.patch("trackers.base.BaseAsyncMentionTracker.log_action")
+        instance = BaseAsyncMentionTracker("test_platform", lambda x: None)
+        await instance.log_action_async("test_action", "test_details")
+        mocked_log.assert_called_once_with("test_action", "test_details")
+
+    # mark_processed_async
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_mark_processed_async_success(
+        self, mocker
+    ):
+        mocker.patch.object(BaseAsyncMentionTracker, "setup_logging")
+        mock_mark_processed_orm = mocker.AsyncMock(return_value=None)
+        mocker.patch(
+            "trackers.models.Mention.objects.mark_processed",
+            new=mock_mark_processed_orm,
+        )
+        instance = BaseAsyncMentionTracker("test_platform", lambda x: None)
+        test_data = {
+            "suggester": "test_user",
+            "subreddit": "test_subreddit",
+        }
+        await instance.mark_processed_async("test_item_id", test_data)
+        mock_mark_processed_orm.assert_called_once_with(
+            "test_item_id", "test_platform", test_data
+        )
+
+    # process_mention_async
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_process_mention_async_already_processed(
+        self, mocker
+    ):
+        mock_is_processed = mocker.patch.object(
+            BaseAsyncMentionTracker, "is_processed_async"
+        )
+        mock_is_processed.return_value = True
+        mock_callback, username = mocker.MagicMock(), mocker.MagicMock()
+        instance = BaseAsyncMentionTracker("test_platform", mock_callback)
+        result = await instance.process_mention_async("test_item_id", {}, username)
+        assert result is False
+        mock_callback.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_process_mention_async_success(
+        self, mocker
+    ):
+        mock_is_processed = mocker.patch.object(
+            BaseAsyncMentionTracker, "is_processed_async"
+        )
+        mock_is_processed.return_value = False
+        mock_prepare_contribution_data = mocker.patch.object(
+            BaseAsyncMentionTracker, "prepare_contribution_data"
+        )
+        mock_post_new_contribution = mocker.patch.object(
+            BaseAsyncMentionTracker, "post_new_contribution"
+        )
+        mock_mark_processed = mocker.AsyncMock(return_value=None)
+        mocker.patch.object(
+            BaseAsyncMentionTracker, "mark_processed_async", new=mock_mark_processed
+        )
+        mock_log_action = mocker.AsyncMock(return_value=None)
+        mocker.patch.object(
+            BaseAsyncMentionTracker, "log_action_async", new=mock_log_action
+        )
+        mock_logger = mocker.MagicMock()
+        mock_callback = mocker.MagicMock(return_value={"parsed": "data"})
+        instance = BaseAsyncMentionTracker("test_platform", mock_callback)
+        instance.logger = mock_logger
+        test_data = {"suggester": "test_user", "content": "content"}
+        username = "username"
+        result = await instance.process_mention_async(
+            "test_item_id", test_data, username
+        )
+        assert result is True
+        mock_callback.assert_called_once_with("content", "username")
+        mock_prepare_contribution_data.assert_called_once_with(
+            {"parsed": "data"}, test_data
+        )
+        mock_post_new_contribution.assert_called_once()
+        mock_mark_processed.assert_called_once_with("test_item_id", test_data)
+        mock_logger.info.assert_called_once_with("Processed mention from test_user")
+        mock_log_action.assert_called_once_with(
+            "mention_processed", "Item: test_item_id, Suggester: test_user"
+        )
+
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_process_mention_async_exception(
+        self, mocker
+    ):
+        mock_is_processed = mocker.patch.object(
+            BaseAsyncMentionTracker, "is_processed_async"
+        )
+        mock_is_processed.return_value = False
+        mock_logger = mocker.MagicMock()
+        mock_log_action = mocker.AsyncMock(return_value=None)
+        mocker.patch.object(
+            BaseAsyncMentionTracker, "log_action_async", new=mock_log_action
+        )
+        mock_callback = mocker.MagicMock(side_effect=Exception("Test error"))
+        instance = BaseAsyncMentionTracker("test_platform", mock_callback)
+        instance.logger = mock_logger
+        result = await instance.process_mention_async("test_item_id", {}, "username")
+        assert result is False
+        mock_logger.error.assert_called_once_with(
+            "Error processing mention test_item_id: Test error"
+        )
+        mock_log_action.assert_called_once_with(
+            "processing_error", "Item: test_item_id, Error: Test error"
+        )
+
+    # check_mentions_async
+    @pytest.mark.asyncio
+    async def test_base_baseasyncmentiontracker_check_mentions_async_not_implemented(
+        self,
+    ):
+        instance = BaseAsyncMentionTracker("test_platform", lambda x: None)
+        with pytest.raises(NotImplementedError):
+            await instance.check_mentions_async()

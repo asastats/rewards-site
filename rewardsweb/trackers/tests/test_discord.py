@@ -7,6 +7,7 @@ from unittest import mock
 import discord
 import pytest
 
+from trackers.base import BaseAsyncMentionTracker
 from trackers.discord import (
     DiscordClientWrapper,
     DiscordTracker,
@@ -477,6 +478,11 @@ class TestDiscordTracker:
         # Ensure consistent mocking by setting a specific ID for the mock
         channel._mock_name = "MockTextChannel"
         return channel
+
+    def test_trackers_discord_discordtracker_is_subclass_of_baseasyncmentiontracker(
+        self,
+    ):
+        assert issubclass(DiscordTracker, BaseAsyncMentionTracker)
 
     # Initialization tests
     def test_trackers_discord_init_with_guilds_collection(
@@ -1400,10 +1406,10 @@ class TestDiscordTracker:
         # Mock dependencies
         mock_extract = mock.AsyncMock(return_value={})
         instance.extract_mention_data = mock_extract
-        mock_process = mock.MagicMock(return_value=True)
-        instance.process_mention = mock_process
-        mock_is_processed = mock.MagicMock(return_value=False)
-        instance.is_processed = mock_is_processed
+        mock_process = mock.AsyncMock(return_value=True)
+        instance.process_mention_async = mock_process
+        mock_is_processed = mock.AsyncMock(return_value=False)
+        instance.is_processed_async = mock_is_processed
 
         await instance._handle_new_message(mock_message)
 
@@ -1449,10 +1455,10 @@ class TestDiscordTracker:
 
         mock_extract = mock.AsyncMock()
         instance.extract_mention_data = mock_extract
-        mock_process = mock.MagicMock()
-        instance.process_mention = mock_process
-        mock_is_processed = mock.MagicMock(return_value=True)
-        instance.is_processed = mock_is_processed
+        mock_process = mock.AsyncMock()
+        instance.process_mention_async = mock_process
+        mock_is_processed = mock.AsyncMock(return_value=True)
+        instance.is_processed_async = mock_is_processed
 
         await instance._handle_new_message(mock_message)
 
@@ -1460,7 +1466,7 @@ class TestDiscordTracker:
         mock_process.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_trackers_discord_handle_new_message_process_mention_false(
+    async def test_trackers_discord_handle_new_message_process_mention_async_false(
         self,
         discord_config,
         guilds_collection,
@@ -1468,7 +1474,6 @@ class TestDiscordTracker:
         mock_message,
         mocker,
     ):
-        """Test _handle_new_message when process_mention returns False."""
         mock_log_action = mocker.patch(
             "trackers.discord.DiscordTracker.log_action_async",
             new_callable=mock.AsyncMock,
@@ -1486,16 +1491,15 @@ class TestDiscordTracker:
         # Mock dependencies
         mock_extract = mock.AsyncMock(return_value={})
         instance.extract_mention_data = mock_extract
-        mock_process = mock.MagicMock(return_value=False)
-        instance.process_mention = mock_process
-        mock_is_processed = mock.MagicMock(return_value=False)
-        instance.is_processed = mock_is_processed
+        mock_process = mock.AsyncMock(return_value=False)
+        instance.process_mention_async = mock_process
+        mock_is_processed = mock.AsyncMock(return_value=False)
+        instance.is_processed_async = mock_is_processed
 
         await instance._handle_new_message(mock_message)
 
         mock_extract.assert_called_once()
         mock_process.assert_called_once()
-        # Message should NOT be added to processed_messages when process_mention returns False
         assert len(instance.processed_messages) == 0
 
     # Extract mention data tests
@@ -1711,10 +1715,10 @@ class TestDiscordTracker:
         # Mock dependencies
         mock_extract = mock.AsyncMock(return_value={})
         instance.extract_mention_data = mock_extract
-        mock_process = mock.MagicMock(return_value=True)
-        instance.process_mention = mock_process
-        mock_is_processed = mock.MagicMock(return_value=False)
-        instance.is_processed = mock_is_processed
+        mock_process = mock.AsyncMock(return_value=True)
+        instance.process_mention_async = mock_process
+        mock_is_processed = mock.AsyncMock(return_value=False)
+        instance.is_processed_async = mock_is_processed
 
         result = await instance._process_channel_messages(
             mock_channel, 111111111111111111
@@ -1797,8 +1801,8 @@ class TestDiscordTracker:
         message_id = f"discord_111111111111111111_{mock_channel.id}_{mock_message.id}"
         instance.processed_messages = {message_id}
 
-        mock_is_processed = mock.MagicMock(return_value=True)
-        instance.is_processed = mock_is_processed
+        mock_is_processed = mock.AsyncMock(return_value=True)
+        instance.is_processed_async = mock_is_processed
 
         result = await instance._process_channel_messages(
             mock_channel, 111111111111111111
@@ -1810,7 +1814,6 @@ class TestDiscordTracker:
     async def test_trackers_discord_process_channel_messages_process_false(
         self, discord_config, guilds_collection, mock_client_wrapper, mock_message
     ):
-        """Test _process_channel_messages when process_mention returns False."""
         instance = DiscordTracker(
             lambda x: None,
             discord_config,
@@ -1825,16 +1828,16 @@ class TestDiscordTracker:
         # Mock dependencies
         mock_extract = mock.AsyncMock(return_value={})
         instance.extract_mention_data = mock_extract
-        mock_process = mock.MagicMock(return_value=False)
-        instance.process_mention = mock_process
-        mock_is_processed = mock.MagicMock(return_value=False)
-        instance.is_processed = mock_is_processed
+        mock_process = mock.AsyncMock(return_value=False)
+        instance.process_mention_async = mock_process
+        mock_is_processed = mock.AsyncMock(return_value=False)
+        instance.is_processed_async = mock_is_processed
 
         result = await instance._process_channel_messages(
             mock_channel, 111111111111111111
         )
 
-        assert result == 0  # Should not count when process_mention returns False
+        assert result == 0
 
     # HTTP Exception handling tests
     @pytest.mark.asyncio
@@ -2986,10 +2989,10 @@ class TestDiscordTracker:
         # Mock methods that should NOT be called
         mock_extract = mock.AsyncMock()
         instance.extract_mention_data = mock_extract
-        mock_process = mock.MagicMock()
-        instance.process_mention = mock_process
-        mock_is_processed = mock.MagicMock()
-        instance.is_processed = mock_is_processed
+        mock_process = mock.AsyncMock()
+        instance.process_mention_async = mock_process
+        mock_is_processed = mock.AsyncMock()
+        instance.is_processed_async = mock_is_processed
 
         await instance._handle_new_message(mock_message)
 
@@ -3019,10 +3022,10 @@ class TestDiscordTracker:
         # Mock methods that should be called
         mock_extract = mock.AsyncMock(return_value={})
         instance.extract_mention_data = mock_extract
-        mock_process = mock.MagicMock(return_value=True)
-        instance.process_mention = mock_process
-        mock_is_processed = mock.MagicMock(return_value=False)
-        instance.is_processed = mock_is_processed
+        mock_process = mock.AsyncMock(return_value=True)
+        instance.process_mention_async = mock_process
+        mock_is_processed = mock.AsyncMock(return_value=False)
+        instance.is_processed_async = mock_is_processed
 
         await instance._handle_new_message(mock_message)
 

@@ -3,12 +3,16 @@
 import praw
 import pytest
 
+from trackers.base import BaseMentionTracker
 from trackers.reddit import RedditTracker
 
 
 @pytest.mark.django_db
 class TestTrackersReddit:
     """Testing class for :class:`trackers.reddit.RedditTracker`."""
+
+    def test_trackers_reddit_reddittracker_is_subclass_of_basementiontracker(self):
+        assert issubclass(RedditTracker, BaseMentionTracker)
 
     # __init__
     def test_trackers_reddittracker_init_success(

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from discord import Client, Forbidden, HTTPException, Intents
 
-from trackers.base import BaseMentionTracker
+from trackers.base import BaseAsyncMentionTracker
 
 
 class IDiscordClientWrapper(ABC):
@@ -170,7 +170,7 @@ class DiscordClientWrapper(IDiscordClientWrapper):
         return self._client.guilds
 
 
-class DiscordTracker(BaseMentionTracker):
+class DiscordTracker(BaseAsyncMentionTracker):
     """Discord tracker for multiple servers/guilds with automatic channel discovery.
 
     :param DiscordTracker.client: Discord client wrapper instance
@@ -501,9 +501,11 @@ class DiscordTracker(BaseMentionTracker):
 
         message_id = f"discord_{message.guild.id}_{message.channel.id}_{message.id}"
 
-        if not self.is_processed(message_id):
+        if not await self.is_processed_async(message_id):
             data = await self.extract_mention_data(message)
-            if self.process_mention(message_id, data, f"@{self.bot_user_id}"):
+            if await self.process_mention_async(
+                message_id, data, f"@{self.bot_user_id}"
+            ):
                 self.processed_messages.add(message_id)
                 self.logger.info(
                     f"Processed mention in {message.guild.name} / {message.channel.name}"
@@ -702,9 +704,11 @@ class DiscordTracker(BaseMentionTracker):
             if self._is_bot_mentioned(message):
                 message_id = f"discord_{guild_id}_{channel.id}_{message.id}"
 
-                if not self.is_processed(message_id):
+                if not await self.is_processed_async(message_id):
                     data = await self.extract_mention_data(message)
-                    if self.process_mention(message_id, data, f"@{self.bot_user_id}"):
+                    if await self.process_mention_async(
+                        message_id, data, f"@{self.bot_user_id}"
+                    ):
                         mention_count += 1
                         self.processed_messages.add(message_id)
 

@@ -675,6 +675,7 @@ class DiscordTracker(BaseAsyncMentionTracker):
             seconds=self.rate_limit_delay
         ):
             return True
+
         return False
 
     async def _process_channel_messages(self, channel, guild_id):
@@ -732,8 +733,10 @@ class DiscordTracker(BaseAsyncMentionTracker):
                 f"Rate limited on channel {channel_id}, retrying in {retry_after}s"
             )
             await asyncio.sleep(retry_after)
+
         else:
             self.logger.error(f"HTTP error checking channel {channel_id}: {exception}")
+
         return 0
 
     async def _handle_forbidden_exception(self, channel_id, guild_id):
@@ -823,8 +826,10 @@ class DiscordTracker(BaseAsyncMentionTracker):
         for result in results:
             if isinstance(result, Exception):
                 self.logger.error(f"Error processing channel: {result}")
+
             else:
                 total_mentions += result
+
         return total_mentions
 
     async def run_continuous(self, historical_check_interval):

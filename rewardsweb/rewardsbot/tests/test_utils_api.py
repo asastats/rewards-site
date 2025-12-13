@@ -132,11 +132,11 @@ class TestUtilsApi:
     async def test_utils_api_make_request_for_post(self, mocker):
         mock_aiohttp = mocker.patch("rewardsbot.utils.api.aiohttp")
         mock_session = mock.Mock()
-        mock_session_get_cm = mock.AsyncMock()
+        mock_session_post_cm = mock.AsyncMock()
         mock_aiohttp.ClientSession.return_value = mock_session
-        mock_session.post.return_value = mock_session_get_cm
+        mock_session.post.return_value = mock_session_post_cm
         data = "this is the data"
-        mocked_response = mock_session_get_cm.__aenter__.return_value
+        mocked_response = mock_session_post_cm.__aenter__.return_value
         status = "status1"
         mocked_response.status = status
         mocked_response.json.return_value = data

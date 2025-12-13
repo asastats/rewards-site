@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import aiohttp
 import requests
 from asgiref.sync import sync_to_async
 
@@ -317,9 +318,204 @@ class BaseMentionTracker:
 
 
 class BaseAsyncMentionTracker(BaseMentionTracker):
-    """Async-compatible base class for social media mention trackers."""
+    """Async-compatible base class for social media mention trackers.
 
-    # # async run
+    :var BaseAsyncMentionTracker.session: logger instance for this platform
+    :type BaseAsyncMentionTracker.session: :class:`logging.Logger`
+    """
+
+    def __init__(self, platform_name, parse_message_callback):
+        """Initialize async base tracker.
+
+        :param platform_name: name of the social media platform
+        :type platform_name: str
+        :param parse_message_callback: function to call when mention is found
+        :type parse_message_callback: callable
+        """
+        super().__init__(platform_name, parse_message_callback)
+        self.session = None
+
+    async def check_mentions_async(self):
+        """Async version of check_mentions.
+
+        :return: number of new mentions found
+        :rtype: int
+        """
+        raise NotImplementedError("Subclasses must implement check_mentions_async()")
+
+    async def cleanup(self):
+        """Perform async cleanup."""
+        await self.close_session()
+        self.logger.info(f"{self.platform_name} tracker async cleanup completed")
+
+    async def close_session(self):
+        """Close aiohttp session if it exists."""
+        if self.session:
+            await self.session.close()
+            self.session = None
+
+    async def initialize_session(self):
+        """Initialize aiohttp session if not already created."""
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+
+    async def is_processed_async(self, item_id):
+        """Async version of is_processed.
+
+        :param item_id: unique identifier for the social media item
+        :type item_id: str
+        :return: True if item has been processed, False otherwise
+        :rtype: bool
+        """
+        return await sync_to_async(self.is_processed)(item_id)
+
+    async def log_action_async(self, action, details=""):
+        """Log platform actions to database (async version).
+
+        :param action: description of the action performed
+        :type action: str
+        :param details: additional details about the action
+        :type details: str
+        """
+        return await sync_to_async(self.log_action)(action, details)
+
+    async def mark_processed_async(self, item_id, data):
+        """Async version of mark_processed.
+
+        :param item_id: unique identifier for the social media item
+        :type item_id: str
+        :param data: mention data dictionary
+        :type data: dict
+        """
+        await sync_to_async(self.mark_processed)(item_id, data)
+
+    async def post_new_contribution_async(self, contribution_data):
+        """Send add contribution POST request to the Rewards API (async version).
+
+        :param contribution_data: formatted contribution data
+        :type contribution_data: dict
+        :var url: endpoint for adding new contributions
+        :type url: str
+        :var data: response data from endpoint
+        :type data: dict
+        :var error_msg: error message text
+        :type error_msg: str
+        :return: response data from Rewards API
+        :rtype: dict
+        :raises Exception: For connection, HTTP, timeout, or other errors
+        """
+        await self.initialize_session()
+
+        url = f"{REWARDS_API_BASE_URL}/addcontribution"
+
+        try:
+            self.logger.info(
+                f"🌐 Async API Request: POST {url} with data: {contribution_data}"
+            )
+
+            async with self.session.post(
+                url,
+                json=contribution_data,
+                headers={"Content-Type": "application/json"},
+                timeout=aiohttp.ClientTimeout(total=30),
+            ) as response:
+
+                self.logger.info(
+                    f"📡 Async API Response Status: {response.status} for {url}"
+                )
+                response.raise_for_status()
+
+                data = await response.json()
+                self.logger.info(
+                    f"✅ Async API Response received: {len(str(data))} bytes"
+                )
+                return data
+
+        except aiohttp.ClientConnectionError:
+            error_msg = (
+                "Cannot connect to the API server. Make sure it's running on localhost."
+            )
+            self.logger.error(f"❌ Async API connection error: {error_msg}")
+            raise Exception(error_msg)
+
+        except aiohttp.ClientResponseError as e:
+            error_msg = f"API returned error: {e.status} - {e.message}"
+            self.logger.error(f"❌ Async API HTTP error: {error_msg}")
+            raise Exception(error_msg)
+
+        except asyncio.TimeoutError:
+            error_msg = "API request timed out."
+            self.logger.error(f"❌ Async API timeout error: {error_msg}")
+            raise Exception(error_msg)
+
+        except aiohttp.ClientError as e:
+            error_msg = f"API request failed: {e}"
+            self.logger.error(f"❌ Async API client error: {error_msg}")
+            raise Exception(error_msg)
+
+        except Exception as e:
+            error_msg = f"Unexpected API error: {e}"
+            self.logger.error(f"❌ Async API unexpected error: {error_msg}")
+            raise Exception(error_msg)
+
+    async def process_mention_async(self, item_id, data, username):
+        """Async version of process_mention.
+
+        :param item_id: unique identifier for the social media item
+        :type item_id: str
+        :param data: mention data dictionary
+        :type data: dict
+        :param username: mentioned username
+        :type username: str
+        :var parsed_message: parsed message result
+        :type parsed_message: dict
+        :var contribution_data: formatted contribution data
+        :type contribution_data: dict
+        :return: True if mention was processed, False otherwise
+        :rtype: bool
+        """
+        try:
+            if await self.is_processed_async(item_id):
+                return False
+
+            parsed_message = self.parse_message_callback(data.get("content"), username)
+            contribution_data = self.prepare_contribution_data(parsed_message, data)
+
+            # Use async version for API call
+            await self.post_new_contribution_async(contribution_data)
+
+            await self.mark_processed_async(item_id, data)
+
+            self.logger.info(
+                f"Processed mention from {data.get('suggester', 'unknown')}"
+            )
+            await self.log_action_async(
+                "mention_processed",
+                f"Item: {item_id}, Suggester: {data.get('suggester')}",
+            )
+
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Error processing mention {item_id}: {e}")
+            await self.log_action_async(
+                "processing_error", f"Item: {item_id}, Error: {str(e)}"
+            )
+            return False
+
+    def shutdown(self):
+        """Request graceful shutdown of the running asynchronous task.
+
+        Cancels the main async task when called, typically by a signal handler.
+        This method is safe to call multiple times.
+
+        :var async_task: the currently running async task to cancel
+        :type async_task: :class:`asyncio.Task` or None
+        """
+        print("Shutdown requested...")
+        if self.async_task and hasattr(self.async_task, "cancel"):
+            self.async_task.cancel()
+
     def start_async_task(self, callback, **kwargs):
         """Start and run an asynchronous task with proper signal handling.
 
@@ -356,100 +552,3 @@ class BaseAsyncMentionTracker(BaseMentionTracker):
         finally:
             # Cleanup
             event_loop.close()
-
-    def shutdown(self):
-        """Request graceful shutdown of the running asynchronous task.
-
-        Cancels the main async task when called, typically by a signal handler.
-        This method is safe to call multiple times.
-
-        :var async_task: the currently running async task to cancel
-        :type async_task: :class:`asyncio.Task` or None
-        """
-        print("Shutdown requested...")
-        if self.async_task and hasattr(self.async_task, "cancel"):
-            self.async_task.cancel()
-
-    async def is_processed_async(self, item_id):
-        """Async version of is_processed.
-
-        :param item_id: unique identifier for the social media item
-        :type item_id: str
-        :return: True if item has been processed, False otherwise
-        :rtype: bool
-        """
-        return await sync_to_async(self.is_processed)(item_id)
-
-    async def log_action_async(self, action, details=""):
-        """Log platform actions to database (async version).
-
-        :param action: description of the action performed
-        :type action: str
-        :param details: additional details about the action
-        :type details: str
-        """
-        return await sync_to_async(self.log_action)(action, details)
-
-    async def mark_processed_async(self, item_id, data):
-        """Async version of mark_processed.
-
-        :param item_id: unique identifier for the social media item
-        :type item_id: str
-        :param data: mention data dictionary
-        :type data: dict
-        """
-        await sync_to_async(self.mark_processed)(item_id, data)
-
-    async def process_mention_async(self, item_id, data, username):
-        """Async version of process_mention.
-
-        :param item_id: unique identifier for the social media item
-        :type item_id: str
-        :param data: mention data dictionary
-        :type data: dict
-        :param username: mentioned username
-        :type username: str
-        :var parsed_message: parsed message result
-        :type parsed_message: dict
-        :var contribution_data: formatted contribution data
-        :type contribution_data: dict
-        :return: True if mention was processed, False otherwise
-        :rtype: bool
-        """
-        try:
-            if await self.is_processed_async(item_id):
-                return False
-
-            parsed_message = self.parse_message_callback(data.get("content"), username)
-            contribution_data = self.prepare_contribution_data(parsed_message, data)
-
-            # Note: post_new_contribution is synchronous (requests)
-            # If it becomes an issue, you may need to use aiohttp
-            self.post_new_contribution(contribution_data)
-
-            await self.mark_processed_async(item_id, data)
-
-            self.logger.info(
-                f"Processed mention from {data.get('suggester', 'unknown')}"
-            )
-            await self.log_action_async(
-                "mention_processed",
-                f"Item: {item_id}, Suggester: {data.get('suggester')}",
-            )
-
-            return True
-
-        except Exception as e:
-            self.logger.error(f"Error processing mention {item_id}: {e}")
-            await self.log_action_async(
-                "processing_error", f"Item: {item_id}, Error: {str(e)}"
-            )
-            return False
-
-    async def check_mentions_async(self):
-        """Async version of check_mentions.
-
-        :return: number of new mentions found
-        :rtype: int
-        """
-        raise NotImplementedError("Subclasses must implement check_mentions_async()")

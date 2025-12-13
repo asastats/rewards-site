@@ -445,6 +445,7 @@ class TestDiscordTracker:
         """Create a mock Discord message."""
         message = mocker.MagicMock(spec=discord.Message)
         message.author.bot = False
+        message.author.display_name = "user_display_name"
         message.guild = mocker.MagicMock()
         message.guild.id = 111111111111111111
         message.guild.name = "Test Guild"
@@ -1420,7 +1421,7 @@ class TestDiscordTracker:
                 f"{mock_message.channel.id}_{mock_message.id}"
             ),
             {},
-            f"@{instance.bot_user_id}",
+            f"<@{instance.bot_user_id}>",
         )
         mock_is_processed.assert_called_once()
         assert len(instance.processed_messages) == 1
@@ -1527,7 +1528,10 @@ class TestDiscordTracker:
 
         # Create replied message
         mock_replied = mock.MagicMock()
-        mock_replied.jump_url = "https://discord.com/channels/111111111111111111/123456789012345678/111111111111111111"
+        mock_replied.jump_url = (
+            "https://discord.com/channels/111111111111111111/"
+            "123456789012345678/111111111111111111"
+        )
         mock_replied.author.id = 555555555555555555
         mock_replied.author.name = "replied_user"
         mock_replied.author.display_name = "Replied User"
@@ -1538,8 +1542,8 @@ class TestDiscordTracker:
 
         result = await instance.extract_mention_data(mock_message)
 
-        assert result["suggester"] == mock_message.author.id
-        assert result["contributor"] == 555555555555555555
+        assert result["suggester"] == mock_message.author.display_name
+        assert result["contributor"] == "Replied User"
         assert result["contribution_url"] == mock_replied.jump_url
         assert result["discord_guild"] == "Test Guild"
         assert result["discord_channel"] == "test-channel"
@@ -1562,8 +1566,8 @@ class TestDiscordTracker:
 
         result = await instance.extract_mention_data(mock_message)
 
-        assert result["suggester"] == mock_message.author.id
-        assert result["contributor"] == mock_message.author.id
+        assert result["suggester"] == mock_message.author.display_name
+        assert result["contributor"] == mock_message.author.display_name
         assert result["contribution_url"] == mock_message.jump_url
         assert result["contribution"] == "This is a standalone message."
 
@@ -1597,7 +1601,7 @@ class TestDiscordTracker:
 
         # Should fall back to current message URL
         assert result["contribution_url"] == mock_message.jump_url
-        assert result["contributor"] == mock_message.author.id
+        assert result["contributor"] == mock_message.author.display_name
         assert result["contribution"] == "This is the original message."
 
     @pytest.mark.asyncio
@@ -1729,7 +1733,7 @@ class TestDiscordTracker:
         mock_process.assert_called_once_with(
             f"discord_111111111111111111_{mock_channel.id}_{mock_message.id}",
             {},
-            f"@{instance.bot_user_id}",
+            f"<@{instance.bot_user_id}>",
         )
 
     @pytest.mark.asyncio

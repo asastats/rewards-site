@@ -384,7 +384,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock user and profile
@@ -407,8 +407,8 @@ class TestUtilsImportersHelperFunctions:
 
         # Verify contributor creation was attempted for both users
         assert mocked_contributor_create.call_count == 2
-        mocked_contributor_create.assert_any_call(name="user1", address="A" * 58)
-        mocked_contributor_create.assert_any_call(name="user2", address="B" * 58)
+        mocked_contributor_create.assert_any_call("user1", address="A" * 58)
+        mocked_contributor_create.assert_any_call("user2", address="B" * 58)
 
         # Verify profiles were saved
         assert mock_user1.profile.save.call_count == 1
@@ -423,7 +423,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.User.objects.create_superuser"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         _create_superusers()
@@ -446,7 +446,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock user and profile
@@ -463,7 +463,7 @@ class TestUtilsImportersHelperFunctions:
         # Should create one user
         mocked_user_create.assert_called_once_with("user1", password="pass1")
         mocked_contributor_create.assert_called_once_with(
-            name="user1", address="A" * 58
+            "user1", address="A" * 58
         )
         mock_user.profile.save.assert_called_once()
 
@@ -493,7 +493,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock user and profile
@@ -529,7 +529,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock users
@@ -583,7 +583,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock user
@@ -618,7 +618,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock user
@@ -653,7 +653,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock user and profile
@@ -670,7 +670,7 @@ class TestUtilsImportersHelperFunctions:
         mocked_user_create.assert_called_once_with("user1", password="pass1")
         # Should create contributor since address length > 50
         mocked_contributor_create.assert_called_once_with(
-            name="user1", address="A" * 51
+            "user1", address="A" * 51
         )
         mock_user.profile.save.assert_called_once()
 
@@ -695,7 +695,7 @@ class TestUtilsImportersHelperFunctions:
             "utils.importers.Contributor.objects.filter"
         )
         mocked_contributor_create = mocker.patch(
-            "utils.importers.Contributor.objects.create"
+            "utils.importers.Contributor.objects.from_full_handle"
         )
 
         # Mock user and profile
@@ -712,7 +712,7 @@ class TestUtilsImportersHelperFunctions:
         mocked_user_create.assert_called_once_with("user1", password="pass1")
         # Should create contributor since address length > 50 (even though it's whitespace)
         mocked_contributor_create.assert_called_once_with(
-            name="user1", address=" " * 51
+            "user1", address=" " * 51
         )
         mock_user.profile.save.assert_called_once()
 

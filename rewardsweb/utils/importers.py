@@ -154,8 +154,8 @@ def _create_superusers():
             address = addresses[index]
             contributor = Contributor.objects.filter(address=address).first()
             if not contributor:
-                contributor = Contributor.objects.create(
-                    name=user.username, address=address
+                contributor = Contributor.objects.from_full_handle(
+                    user.username, address=address
                 )
 
             user.profile.contributor = contributor

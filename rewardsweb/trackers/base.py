@@ -493,7 +493,6 @@ class BaseAsyncMentionTracker(BaseMentionTracker):
                 "mention_processed",
                 f"Item: {item_id}, Suggester: {data.get('suggester')}",
             )
-
             return True
 
         except Exception as e:

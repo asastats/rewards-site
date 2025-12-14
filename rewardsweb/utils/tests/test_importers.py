@@ -462,9 +462,7 @@ class TestUtilsImportersHelperFunctions:
 
         # Should create one user
         mocked_user_create.assert_called_once_with("user1", password="pass1")
-        mocked_contributor_create.assert_called_once_with(
-            "user1", address="A" * 58
-        )
+        mocked_contributor_create.assert_called_once_with("user1", address="A" * 58)
         mock_user.profile.save.assert_called_once()
 
     def test_utils_importers_create_superusers_mismatched_user_password_lengths(
@@ -669,9 +667,7 @@ class TestUtilsImportersHelperFunctions:
 
         mocked_user_create.assert_called_once_with("user1", password="pass1")
         # Should create contributor since address length > 50
-        mocked_contributor_create.assert_called_once_with(
-            "user1", address="A" * 51
-        )
+        mocked_contributor_create.assert_called_once_with("user1", address="A" * 51)
         mock_user.profile.save.assert_called_once()
 
     def test_utils_importers_create_superusers_whitespace_addresses_length_check(
@@ -711,9 +707,7 @@ class TestUtilsImportersHelperFunctions:
 
         mocked_user_create.assert_called_once_with("user1", password="pass1")
         # Should create contributor since address length > 50 (even though it's whitespace)
-        mocked_contributor_create.assert_called_once_with(
-            "user1", address=" " * 51
-        )
+        mocked_contributor_create.assert_called_once_with("user1", address=" " * 51)
         mock_user.profile.save.assert_called_once()
 
     # # _dataframe_from_csv

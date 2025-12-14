@@ -25,7 +25,7 @@ await rewardsClient.addAllocations(addresses, amounts)
 
 > **new RewardsClient**(`manager`): `RewardsClient`
 
-Defined in: [src/RewardsClient.ts:39](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L39)
+Defined in: [src/RewardsClient.ts:38](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L38)
 
 Creates an instance of RewardsClient.
 
@@ -99,7 +99,7 @@ Defined in: [src/RewardsClient.ts:31](https://github.com/asastats/rewards-suite/
 
 > **addAllocations**(`addresses`, `amounts`, `decimals`): `Promise`\<\{ \}\>
 
-Defined in: [src/RewardsClient.ts:101](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L101)
+Defined in: [src/RewardsClient.ts:100](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L100)
 
 Adds allocations to multiple addresses with specified amounts.
 
@@ -140,7 +140,7 @@ When no active account, arrays are empty, or arrays length mismatch
 
 > `private` **boxNameFromAddress**(`address`): `Uint8Array`
 
-Defined in: [src/RewardsClient.ts:82](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L82)
+Defined in: [src/RewardsClient.ts:81](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L81)
 
 #### Parameters
 
@@ -158,7 +158,7 @@ Defined in: [src/RewardsClient.ts:82](https://github.com/asastats/rewards-suite/
 
 > **claimRewards**(): `Promise`\<`string`\>
 
-Defined in: [src/RewardsClient.ts:283](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L283)
+Defined in: [src/RewardsClient.ts:282](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L282)
 
 Claims available rewards for the active account.
 
@@ -182,7 +182,7 @@ When no active account, app ID not configured, or token_id not found
 
 > **fetchAddAllocationsData**(`address`): `Promise`\<\{ `addresses`: `string`[]; `amounts`: `number`[]; \}\>
 
-Defined in: [src/RewardsClient.ts:464](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L464)
+Defined in: [src/RewardsClient.ts:463](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L463)
 
 Fetches add allocations data for an address from the backend API.
 
@@ -210,7 +210,7 @@ When the API request fails
 
 > **fetchReclaimAllocationsData**(`address`): `Promise`\<\{ `addresses`: `string`[]; \}\>
 
-Defined in: [src/RewardsClient.ts:494](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L494)
+Defined in: [src/RewardsClient.ts:493](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L493)
 
 Fetches reclaimable allocations data for an address from the backend API.
 
@@ -238,7 +238,7 @@ When the API request fails
 
 > `private` **getCsrfToken**(): `string`
 
-Defined in: [src/RewardsClient.ts:57](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L57)
+Defined in: [src/RewardsClient.ts:56](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L56)
 
 Retrieves the CSRF token from cookies or form input for API requests.
 
@@ -254,7 +254,7 @@ The CSRF token as a string
 
 > `private` **getHeaders**(): `object`
 
-Defined in: [src/RewardsClient.ts:77](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L77)
+Defined in: [src/RewardsClient.ts:76](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L76)
 
 Gets the headers for API requests including CSRF token.
 
@@ -278,7 +278,7 @@ Headers object for fetch requests
 
 > **notifyAllocationsSuccessful**(`addresses`, `txIDs`): `Promise`\<\{ `success`: `boolean`; \}\>
 
-Defined in: [src/RewardsClient.ts:373](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L373)
+Defined in: [src/RewardsClient.ts:372](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L372)
 
 Notifies the backend about successful add allocations transactions
 
@@ -306,7 +306,7 @@ The transaction IDs from the add alolocations operation
 
 > **notifyClaimSuccessful**(`address`, `txID`): `Promise`\<\{ `success`: `boolean`; \}\>
 
-Defined in: [src/RewardsClient.ts:402](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L402)
+Defined in: [src/RewardsClient.ts:401](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L401)
 
 Notifies the backend about successful claim transaction
 
@@ -334,7 +334,7 @@ The transaction ID from the claim operation
 
 > **notifyReclaimSuccessful**(`address`, `txID`): `Promise`\<`void`\>
 
-Defined in: [src/RewardsClient.ts:428](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L428)
+Defined in: [src/RewardsClient.ts:427](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L427)
 
 Notifies the backend about successful reclaim allocation transactions
 
@@ -362,7 +362,7 @@ The transaction ID from the reclaim operation
 
 > **reclaimAllocation**(`userAddress`): `Promise`\<`string`\>
 
-Defined in: [src/RewardsClient.ts:203](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L203)
+Defined in: [src/RewardsClient.ts:202](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/RewardsClient.ts#L202)
 
 Reclaims an allocation from a specific user address.
 

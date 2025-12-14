@@ -33,7 +33,6 @@ export class RewardsClient {
   /**
    * Creates an instance of RewardsClient.
    *
-   * @param wallet - The wallet instance for transaction signing
    * @param manager - The wallet manager for network and account management
    */
   constructor(manager: WalletManager) {

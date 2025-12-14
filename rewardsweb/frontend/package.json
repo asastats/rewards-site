@@ -10,7 +10,7 @@
     "test:coverage": "node --no-warnings node_modules/.bin/jest --config jest.config.cjs --coverage",
     "test:all": "node --no-warnings node_modules/.bin/jest --config jest.config.cjs --coverage --verbose",
     "test:ci": "jest --config jest.config.cjs --coverage --coverageReporters=lcov --coverageReporters=text --coverageReporters=html",
-    "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/api/frontend_api src --readme none --gitRevision main",
+    "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/api/frontend_api src --readme none --gitRevision main --gitRemote upstream",
     "build:docs": "typedoc --out docs/frontend src",
     "docs:sphinx": "cd ../../docs && make html"
   },

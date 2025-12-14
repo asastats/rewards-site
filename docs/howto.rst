@@ -128,9 +128,26 @@ Run Discord bot
   PYTHONPATH=rewardsweb python -m rewardsbot.bot
 
 
-Run social media mentions tracker
----------------------------------
+Social media mention trackers
+-----------------------------
+
+We have implemented trackers for the following social media platforms:
+
+* X/Twitter
+
+  * official API
+  * TwitterAPI.io
+
+* Reddit
+* Telegram
+* Discord
+
+
+Run a tracker
+^^^^^^^^^^^^^
+
+Use the `run_tracker` management command followed by the tracker's module name:
 
 .. code-block:: bash
 
-  PYTHONPATH=rewardsweb python -m trackers.runners
+  python manage.py run_tracker twitterapiio

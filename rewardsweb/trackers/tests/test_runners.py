@@ -1,7 +1,5 @@
 """Testing module for :py:mod:`trackers.runners` module."""
 
-import asyncio
-
 from trackers.runners import (
     run_discord_tracker,
     run_reddit_tracker,

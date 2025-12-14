@@ -504,7 +504,7 @@ class DiscordTracker(BaseAsyncMentionTracker):
         if not await self.is_processed_async(message_id):
             data = await self.extract_mention_data(message)
             if await self.process_mention_async(
-                message_id, data, f"@{self.bot_user_id}"
+                message_id, data, f"<@{self.bot_user_id}>"
             ):
                 self.processed_messages.add(message_id)
                 self.logger.info(
@@ -595,14 +595,16 @@ class DiscordTracker(BaseAsyncMentionTracker):
             contribution = message.content if message.content else ""
 
         data = {
-            "suggester": author.id,
-            "suggester_username": author.name,
-            "suggester_display_name": author.display_name,
+            "suggester": author.display_name,
+            # "suggester": author.id,
+            # "suggester_username": author.name,
+            # "suggester_display_name": author.display_name,
             "suggestion_url": message_url,
             "contribution_url": contribution_url,
-            "contributor": contributor.id,
-            "contributor_username": contributor.name,
-            "contributor_display_name": contributor.display_name,
+            "contributor": contributor.display_name,
+            # "contributor": contributor.id,
+            # "contributor_username": contributor.name,
+            # "contributor_display_name": contributor.display_name,
             "type": "message",
             "discord_channel": message.channel.name,
             "discord_guild": message.guild.name,
@@ -708,7 +710,7 @@ class DiscordTracker(BaseAsyncMentionTracker):
                 if not await self.is_processed_async(message_id):
                     data = await self.extract_mention_data(message)
                     if await self.process_mention_async(
-                        message_id, data, f"@{self.bot_user_id}"
+                        message_id, data, f"<@{self.bot_user_id}>"
                     ):
                         mention_count += 1
                         self.processed_messages.add(message_id)

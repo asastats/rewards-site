@@ -223,7 +223,7 @@ class TestTrackersConfig:
             mocker.call("TRACKER_TELEGRAM_API_HASH", ""),
             mocker.call("TRACKER_TELEGRAM_SESSION_NAME", "telegram_tracker"),
             mocker.call("TRACKER_TELEGRAM_BOT_USERNAME", ""),
-            mocker.call("TRACKER_TELEGRAM_POLL_INTERVAL", 30),
+            mocker.call("TRACKER_TELEGRAM_POLL_INTERVAL", 10),
         ]
         mock_env.assert_has_calls(calls, any_order=True)
         assert mock_env.call_count == 5

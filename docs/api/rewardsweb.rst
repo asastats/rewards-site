@@ -414,6 +414,15 @@
   :show-inheritance:
 
 
+:mod:`trackers.apps` -- Trackers application configuration module
+-----------------------------------------------------------------
+
+.. automodule:: trackers.apps
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
 :mod:`trackers.base` -- Module containing base class for all social media trackers
 ----------------------------------------------------------------------------------
 
@@ -432,19 +441,19 @@
   :show-inheritance:
 
 
-:mod:`trackers.database` -- SQLite related trackers code 
---------------------------------------------------------
+:mod:`trackers.discord` -- Module for processing Discord comments
+-----------------------------------------------------------------
 
-.. automodule:: trackers.database
+.. automodule:: trackers.discord
   :members:
   :undoc-members:
   :show-inheritance:
 
 
-:mod:`trackers.discord` -- Module for processing Discord comments
------------------------------------------------------------------
+:mod:`trackers.models` --  Trackers application ORM module
+----------------------------------------------------------
 
-.. automodule:: trackers.discord
+.. automodule:: trackers.models
   :members:
   :undoc-members:
   :show-inheritance:
@@ -486,10 +495,19 @@
   :show-inheritance:
 
 
-:mod:`trackers.twitter` -- Module for processing comments on X/Twitter
-----------------------------------------------------------------------
+:mod:`trackers.twitter` -- Module for processing comments on X/Twitter using official API
+-----------------------------------------------------------------------------------------
 
 .. automodule:: trackers.twitter
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`trackers.twitterapiio` -- Module for processing comments on X/Twitter using TwitterAPI.io
+-----------------------------------------------------------------------------------------------
+
+.. automodule:: trackers.twitterapiio
   :members:
   :undoc-members:
   :show-inheritance:

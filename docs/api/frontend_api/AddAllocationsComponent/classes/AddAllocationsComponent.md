@@ -139,7 +139,7 @@ The HTML element to bind the component to
 
 > **destroy**(): `void`
 
-Defined in: [src/AddAllocationsComponent.ts:132](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L132)
+Defined in: [src/AddAllocationsComponent.ts:130](https://github.com/asastats/rewards-suite/blob/main/rewardsweb/frontend/src/AddAllocationsComponent.ts#L130)
 
 Cleans up the component.
 

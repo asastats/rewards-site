@@ -19,7 +19,7 @@ rewardsweb/fixtures/*.pkl
 rewardsweb/fixtures/*.pem
 rewardsweb/fixtures/*.db
 rewardsweb/fixtures/*.json
-rewardsweb/fixtures/*.session
+rewardsweb/fixtures/*.session*
 rewardsweb/fixtures/social_mentions.*
 rewardsweb/.coverage
 rewardsweb/core/static/css/tailwindcss

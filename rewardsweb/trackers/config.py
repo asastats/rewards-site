@@ -114,7 +114,7 @@ def telegram_config():
             "TRACKER_TELEGRAM_SESSION_NAME", "telegram_tracker"
         ),
         "bot_username": get_env_variable("TRACKER_TELEGRAM_BOT_USERNAME", "").lower(),
-        "poll_interval": int(get_env_variable("TRACKER_TELEGRAM_POLL_INTERVAL", 30)),
+        "poll_interval": int(get_env_variable("TRACKER_TELEGRAM_POLL_INTERVAL", 10)),
     }
 
 

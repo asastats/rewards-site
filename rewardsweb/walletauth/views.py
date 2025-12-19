@@ -13,10 +13,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from contract.network import (
-    claimable_amount_for_address,
-    reclaimable_addresses,
-)
+from contract.network import reclaimable_addresses
 from core.models import Contribution, Contributor, Profile
 from rewards.helpers import (
     added_allocations_for_addresses,

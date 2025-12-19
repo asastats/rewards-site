@@ -25,7 +25,7 @@
       <div class="stat-card">
         <div class="flex flex-col sm:flex-row gap-3">
           <a href="{{ issue_html_url }}" target="_blank" class="btn btn-outline flex-1">
-            <i class="fab fa-ticket-alt mr-2"></i>
+            <i class="fas fa-ticket-alt mr-2"></i>
             View on {{ ISSUE_TRACKER }}
           </a>
 
@@ -97,7 +97,10 @@
                 </a>
               </div>
               <div class="text-sm text-base-content/70">
-                {{ contribution.contributor }}
+                <i class="fas fa-user text-primary"></i>
+                <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.contributor.get_absolute_url }}">
+                  {{ contribution.contributor }}
+                </a>
               </div>
             </div>
             {% endfor %}
@@ -120,7 +123,7 @@
       {% if tracker_issue or tracker_error %}
       <div class="stat-card">
         <div class="flex items-center gap-2 mb-6">
-          <i class="fab fa-ticket-alt text-base-content"></i>
+          <i class="fas fa-ticket-alt text-base-content"></i>
           <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Issue Details</h2>
         </div>
 
@@ -209,12 +212,14 @@
         </div>
 
         <div class="space-y-4">
+          {% if tracker_issue %}
           <div class="flex justify-between items-center">
             <span class="text-base-content/70">Status</span>
             <span class="badge {% if issue_state == 'open' %}badge-success{% else %}badge-neutral{% endif %}">
               {{ issue_state|title }}
             </span>
           </div>
+          {% endif %}
           
           <div class="flex justify-between items-center">
             <span class="text-base-content/70">Linked Contributions</span>
@@ -261,9 +266,10 @@
       </div>
 
       <!-- Issue Tracker Info -->
+      {% if tracker_issue %}
       <div class="stat-card">
         <div class="flex items-center gap-2 mb-4">
-          <i class="fab fa-ticket-alt text-base-content"></i>
+          <i class="fas fa-ticket-alt text-base-content"></i>
           <h2 class="text-xl font-bold">{{ ISSUE_TRACKER }} Info</h2>
         </div>
 
@@ -293,6 +299,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
 

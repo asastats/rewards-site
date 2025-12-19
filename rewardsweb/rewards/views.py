@@ -40,6 +40,10 @@ class ClaimView(LoginRequiredMixin, TemplateView):
 
         :param kwargs: Additional keyword arguments
         :return: Context dictionary with claimable status
+        :var context: data to use in template
+        :type context: dict
+        :var amount: amount to claim by the user
+        :type amount: dict
         :rtype: dict
         """
         context = super().get_context_data(**kwargs)
@@ -51,7 +55,13 @@ class ClaimView(LoginRequiredMixin, TemplateView):
             and contributor.address
             and is_valid_address(contributor.address)
         ):
-            context["amount"] = claimable_amount_for_address(contributor.address)
+            try:
+                amount = claimable_amount_for_address(contributor.address)
+
+            except ValueError:
+                amount = 0
+
+            context["amount"] = amount
 
         return context
 

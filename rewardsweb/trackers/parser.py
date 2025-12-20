@@ -33,7 +33,7 @@ class MessageParser:
         return alias_map, sorted_aliases
 
     def _clean_message(self, message, arg):
-        """Remove argument and extra whitespace from the message.
+        """Remove argument, whitespace and dot from the message.
 
         :param message: The original message string.
         :type message: str
@@ -42,7 +42,7 @@ class MessageParser:
         :return: The cleaned message.
         :rtype: str
         """
-        work_message = message.replace(arg, "").strip()
+        work_message = message.replace(arg, "").strip().strip(".")
         return " ".join(work_message.split())
 
     def _full_type_from_parsed_type(self, parsed_type):

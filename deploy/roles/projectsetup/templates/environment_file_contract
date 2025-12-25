@@ -8,3 +8,4 @@ REWARDS_TOKEN_ID_TESTNET={{ hostvars['localhost'].env_vars.REWARDS_TOKEN_ID_TEST
 REWARDS_TOKEN_ID_MAINNET={{ hostvars['localhost'].env_vars.REWARDS_TOKEN_ID_MAINNET }}
 REWARDS_DAPP_NAME={{ hostvars['localhost'].env_vars.REWARDS_DAPP_NAME }}
 CLAIM_PERIOD_DURATION={{ hostvars['localhost'].env_vars.CLAIM_PERIOD_DURATION }}
+PROJECT_ADDRESSES={{ hostvars['localhost'].env_vars.PROJECT_ADDRESSES }}

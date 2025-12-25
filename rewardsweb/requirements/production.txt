@@ -2,4 +2,4 @@
 gunicorn>=23.0.0
 ## cache requirements
 django-redis>=6.0.0
-redis>=7.0.1
+redis>=7.1.0

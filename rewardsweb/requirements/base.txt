@@ -1,32 +1,31 @@
 ## base
-Django>=5.2.7,<6
-django-template-partials>=25.2
+Django>=5.2.9,<6
+django-template-partials>=25.3
 ## database
-psycopg[binary]>=3.2.12
+psycopg[binary]>=3.3.2
 python-dotenv>=1.2.1
 # Excel import
 openpyxl>=3.1.5
 pandas>=2.3.3
 ## API
-adrf>=0.1.11
+adrf>=0.1.12
 djangorestframework>=3.16.1
 drf-spectacular==0.29.0
 drf-spectacular-sidecar==2025.10.1
 ## auth
-django-allauth[socialaccount]>=65.13.0
-py-algorand-sdk>=2.11.1
-django-widget-tweaks>=1.5.0
-django-simple-captcha>=0.6.2
+django-allauth[socialaccount]>=65.13.1
+django-simple-captcha>=0.6.3
 ## wallet connect
+py-algorand-sdk>=2.11.1
 msgpack>=1.1.2
-PyNaCl>=1.6.0
+PyNaCl>=1.6.1
 ## issue trackers
 PyGithub>=2.8.1
 python-gitlab>=7.0.0
 atlassian-python-api>=4.0.7
 ## GitHub bot
 PyJWT>=2.10.1
-cryptography>=46.0.3
+cryptography>=44.0.3
 ## Discord bot
 discord.py>=2.6.4
 aiohttp>=3.13.2

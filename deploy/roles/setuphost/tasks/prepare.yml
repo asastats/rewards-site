@@ -38,6 +38,13 @@
   become: true
   tags: [setup-host]
 
+- name: Ensure screen package is installed
+  ansible.builtin.package:
+    name: screen
+    state: present
+  become: true
+  tags: [setup-host]
+
 - name: "Ensure opt folder exists for {{ admin_user }}"
   ansible.builtin.file:
     path: "{{ opt_folder }}"

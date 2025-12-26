@@ -142,7 +142,7 @@ Tests
 Python
 ^^^^^^
 
-Run all tests:
+Run all unit tests:
 
 .. code-block:: bash
 
@@ -157,3 +157,16 @@ Run tests matching pattern:
 
   pytest -v -k test_contributor_model  # pytest -vvv for more verbose output
 
+
+Run project's functional tests:
+
+.. code-block:: bash
+
+  python -m pytest functional_tests/ -v
+
+
+Run all smart contract tests:
+
+.. code-block:: bash
+
+  python -m pytest contract/tests/ -v --cov=contract --cov-branch

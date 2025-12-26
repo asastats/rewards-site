@@ -21,12 +21,10 @@
     - 'Support:'
   tags: [audit, audit-motd]
 
-- name: Disable MOTD news feature
-  ansible.builtin.lineinfile:
-    path: /etc/default/motd-news
-    regexp: "^ENABLED="
-    line: "ENABLED=0"
-    state: present
+- name: Remove MOTD news feature
+  ansible.builtin.file:
+    path: /etc/update-motd.d/50-motd-news
+    state: absent
   become: true
   when: not is_molecule_test | default(false)
   tags: [audit, audit-motd]

@@ -7,6 +7,7 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
+    "rewards.asastats.com",
 ]
 
 MIDDLEWARE.insert(2, "django.middleware.gzip.GZipMiddleware")

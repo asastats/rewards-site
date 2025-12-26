@@ -388,8 +388,6 @@ def _save_issues(github_issues, timestamp):
 
 
 ## MAPPING
-
-
 def _create_contributor_from_text(text, contributors):
     """Create a new contributor from text by extracting handle from common patterns.
 

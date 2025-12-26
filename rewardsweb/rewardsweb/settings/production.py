@@ -7,24 +7,11 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
+    "144.91.85.65",
     "rewards.asastats.com",
 ]
 
 MIDDLEWARE.insert(2, "django.middleware.gzip.GZipMiddleware")
-"""
-NOTE: nginx setup:
-
-location /static/ {
-    alias /path/to/static/;
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_buffers 16 8k;
-    gzip_http_version 1.1;
-}
-"""
 
 CSRF_TRUSTED_ORIGINS = [
     f"https://*.{PROJECT_DOMAIN.split('.', 1)[1]}",

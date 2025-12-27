@@ -26,6 +26,7 @@ from core.models import (
 )
 from issues.main import IssueProvider
 from utils.constants.core import (
+    CONTRIBUTOR_TEXT_EXCEPTIONS,
     EXCLUDED_CONTRIBUTORS,
     GITHUB_ISSUES_START_DATE,
     ISSUE_CREATION_LABEL_CHOICES,
@@ -215,7 +216,11 @@ def _identify_contributor_from_text(text, contributors):
         # If contributor info doesn't have parentheses, search for the whole info
         if "(" not in contributor_info:
             # For simple format, require exact word match to avoid false positives
-            if contributor_info.lower() in text_lower:
+            contrib_lower = contributor_info.lower()
+            if (
+                contrib_lower not in CONTRIBUTOR_TEXT_EXCEPTIONS
+                and contrib_lower in text_lower
+            ):
                 return contributor_id
 
         else:

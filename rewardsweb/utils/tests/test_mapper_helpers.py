@@ -11,7 +11,7 @@ from django.conf import settings
 
 import utils.mappers
 from core.models import Reward, RewardType, SocialPlatform
-from utils.constants.core import GITHUB_ISSUES_START_DATE
+from utils.constants.core import CONTRIBUTOR_TEXT_EXCEPTIONS, GITHUB_ISSUES_START_DATE
 from utils.mappers import (
     CustomIssue,
     _build_reward_mapping,
@@ -654,7 +654,6 @@ class TestUtilsMappersHelpers:
 
         assert result is None
 
-    # # _identify_contributor_from_text - handle.lower() in text_lower
     def test_utils_mappers_identify_contributor_from_text_handle_match_first_handle(
         self,
     ):
@@ -743,6 +742,17 @@ class TestUtilsMappersHelpers:
         result = _identify_contributor_from_text(text, contributors)
 
         assert result == 1
+
+    def test_utils_mappers_identify_contributor_from_text_excluded_user(
+        self,
+    ):
+        user = CONTRIBUTOR_TEXT_EXCEPTIONS[0]
+        text = f"{user} reported this issue"
+        contributors = {user: 1}
+
+        result = _identify_contributor_from_text(text, contributors)
+
+        assert result is None
 
     def test_utils_mappers_identify_contributor_from_text_no_parentheses_case_insensit(
         self,

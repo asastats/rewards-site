@@ -79,6 +79,7 @@ EXCLUDED_CONTRIBUTORS = [
     for contributor in excluded_contributors.split(",")
     if excluded_contributors.split(",")[0]
 ]
+CONTRIBUTOR_TEXT_EXCEPTIONS = ["damo"]
 
 TRANPARENCY_REPORT_REQUIRED_FIELDS = {
     "monthly": ["month", "year"],

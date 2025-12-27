@@ -240,10 +240,17 @@
     <div class="rounded-lg p-3 hover:bg-base-200 transition-colors">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
         <div class="flex items-center gap-2">
+          {% if group.name == "Open" %}
+          <span class="font-semibold text-base-content/70">Issue:</span>
+          <a class="link link-accent font-medium" href="{{ contribution.issue.get_absolute_url }}">
+            {{ contribution.issue }}
+          </a>
+          {% else %}
           <span class="font-semibold text-base-content/70">Cycle:</span>
           <a class="link link-accent font-medium" href="{{ contribution.cycle.get_absolute_url }}">
             {{ contribution.cycle }}
           </a>
+          {% endif %}
         </div>
         <div class="flex items-center gap-2">
           <span class="font-semibold text-base-content/70">Reward:</span>

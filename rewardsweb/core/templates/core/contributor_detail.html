@@ -145,10 +145,17 @@
             </div>
             <div>
               <div class="flex items-center gap-3 mb-1">
+                {% if group.name == "Open" %}
+                <span class="font-semibold text-base-content/70">Issue:</span>
+                <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.issue.get_absolute_url }}">
+                  {{ contribution.issue }}
+                </a>
+                {% else %}
                 <span class="font-semibold text-base-content/70">Cycle:</span>
                 <a class="link link-accent font-semibold hover:no-underline" href="{{ contribution.cycle.get_absolute_url }}">
                   {{ contribution.cycle }}
                 </a>
+                {% endif %}
               </div>
               <div class="flex items-center gap-3">
                 <span class="font-semibold text-base-content/70">Reward:</span>

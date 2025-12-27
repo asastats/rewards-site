@@ -52,5 +52,5 @@ Please check the [setup section](https://rewards-suite.readthedocs.io/en/latest/
 - [x] Implement additional issue trackers besides GitHub
 - [x] Create trackers and related parsers for mentions in social media messages (X and Reddit)
 - [x] Enable automatic generation of transparency report snippets based on Mainnet allocations
-- [ ] Setup a server and deploy the application
+- [x] Setup a server and deploy the application
 - [ ] Deploy the smart contract on Mainnet

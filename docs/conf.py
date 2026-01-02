@@ -35,7 +35,7 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = "Rewards Suite"
-copyright = "2025, ASA Stats DAO"
+copyright = "2026, ASA Stats DAO"
 authors = "Eduard Ravnic and Ivica Paleka"
 
 # The full version, including alpha/beta/rc tags

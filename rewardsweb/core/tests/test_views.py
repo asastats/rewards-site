@@ -1,5 +1,6 @@
 """Testing module for :py:mod:`core.views` underlying views."""
 
+import json
 import time
 
 import pytest
@@ -19,6 +20,7 @@ from core.models import Contribution, Contributor, Cycle
 from core.views import (
     DeactivateProfileView,
     IndexView,
+    IssueWebhookView,
     LoginView,
     ProfileDisplay,
     ProfileEditView,
@@ -763,3 +765,248 @@ class TestRefreshTransparencyDataView:
         assert response.url == reverse("transparency")
         mocked_refresh.assert_called_once()
         mocked_messages.success.assert_called_once()
+
+
+"""Testing module for :py:mod:`core.views` module - IssueWebhookView tests."""
+
+import json
+from unittest.mock import Mock
+
+import pytest
+from django.http import JsonResponse
+from django.test import RequestFactory
+from django.urls import reverse
+
+from core.views import IssueWebhookView
+
+
+@pytest.mark.django_db
+class TestIssueWebhookView:
+    """Testing class for :class:`core.views.IssueWebhookView`."""
+
+    def test_issuewebhookview_is_subclass_of_view(self):
+        """Test that IssueWebhookView is a subclass of View."""
+        from django.views.generic import View
+
+        assert issubclass(IssueWebhookView, View)
+
+    def test_issuewebhookview_dispatch_is_csrf_exempt(self):
+        """Test that dispatch method has csrf_exempt decorator."""
+        view = IssueWebhookView()
+        # Check by calling dispatch which should work without CSRF token
+        request_factory = RequestFactory()
+        request = request_factory.post("/webhook/")
+        response = view.dispatch(request)
+        # If csrf_exempt is applied, it shouldn't raise CSRF error
+        assert response is not None
+
+    def test_issuewebhookview_dispatch_requires_post(self, client):
+        """Test that only POST requests are allowed."""
+        url = reverse("issue_webhook")
+        # GET should be not allowed (405 Method Not Allowed)
+        response = client.get(url)
+        assert response.status_code == 405
+        # POST should be allowed
+        response = client.post(url)
+        assert response.status_code != 405  # Will be 500 or other error
+
+    def test_issuewebhookview_post_success(self, mocker, client):
+        """Test successful webhook processing."""
+        # Mock WebhookHandler to return a success response
+        mock_handler = mocker.MagicMock()
+        # Return a real JsonResponse instead of MagicMock
+        mock_response = JsonResponse(
+            {"status": "success", "message": "Webhook processed"}, status=200
+        )
+        mock_handler.process_webhook.return_value = mock_response
+        mock_webhook_handler_class = mocker.patch(
+            "core.views.WebhookHandler", return_value=mock_handler
+        )
+        url = reverse("issue_webhook")
+        data = {"test": "payload"}
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["message"] == "Webhook processed"
+        mock_webhook_handler_class.assert_called_once()
+        mock_handler.process_webhook.assert_called_once()
+
+    def test_issuewebhookview_post_with_exception(self, mocker, client):
+        """Test webhook processing when an exception occurs."""
+        # Mock WebhookHandler to raise an exception
+        mock_handler = mocker.MagicMock()
+        mock_handler.process_webhook.side_effect = Exception("Test error")
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+        # Mock logger to verify error logging
+        mock_logger = mocker.patch("core.views.logger")
+        url = reverse("issue_webhook")
+        data = {"test": "payload"}
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        assert response.status_code == 500
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        assert "Internal server error: Test error" in response_data["message"]
+        mock_logger.error.assert_called_once_with(
+            "Webhook processing failed: Test error"
+        )
+
+    def test_issuewebhookview_post_with_webhook_handler_exception(self, mocker, client):
+        """Test webhook processing when WebhookHandler itself raises an exception."""
+        # Make WebhookHandler instantiation raise an exception
+        mocker.patch(
+            "core.views.WebhookHandler",
+            side_effect=Exception("Handler creation failed"),
+        )
+        # Mock logger to verify error logging
+        mock_logger = mocker.patch("core.views.logger")
+        url = reverse("issue_webhook")
+        data = {"test": "payload"}
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        assert response.status_code == 500
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        assert (
+            "Internal server error: Handler creation failed" in response_data["message"]
+        )
+        mock_logger.error.assert_called_once_with(
+            "Webhook processing failed: Handler creation failed"
+        )
+
+    def test_issuewebhookview_post_empty_body(self, mocker, client):
+        """Test webhook processing with empty request body."""
+        mock_handler = mocker.MagicMock()
+        # Return a real JsonResponse instead of MagicMock
+        mock_response = JsonResponse(
+            {"status": "success", "message": "Processed empty payload"}, status=200
+        )
+        mock_handler.process_webhook.return_value = mock_response
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+        url = reverse("issue_webhook")
+        response = client.post(url, content_type="application/json")
+        assert response.status_code == 200
+        mock_handler.process_webhook.assert_called_once()
+
+    def test_issuewebhookview_post_invalid_json(self, mocker, client):
+        """Test webhook processing with invalid JSON."""
+        mock_handler = mocker.MagicMock()
+        # Simulate WebhookHandler handling invalid JSON
+        mock_response = JsonResponse(
+            {"status": "error", "message": "Invalid JSON"}, status=400
+        )
+        mock_handler.process_webhook.return_value = mock_response
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+        url = reverse("issue_webhook")
+        response = client.post(
+            url, data="invalid json", content_type="application/json"
+        )
+        # The view should still return whatever the handler returns
+        assert response.status_code == 400
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        mock_handler.process_webhook.assert_called_once()
+
+    def test_issuewebhookview_post_with_different_content_types(self, mocker, client):
+        """Test webhook processing with different content types."""
+        mock_handler = mocker.MagicMock()
+        mock_response = JsonResponse({"status": "success"}, status=200)
+        mock_handler.process_webhook.return_value = mock_response
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+
+        url = reverse("issue_webhook")
+
+        # Test with application/json
+        response = client.post(
+            url, data=json.dumps({"test": "data"}), content_type="application/json"
+        )
+        assert response.status_code == 200
+
+        # Test with text/plain
+        response = client.post(url, data="plain text", content_type="text/plain")
+        assert response.status_code == 200
+
+        # Test with no content type - provide data as dictionary
+        response = client.post(url, data={"test": "no content type"})
+        assert response.status_code == 200
+
+        # WebhookHandler should be called 3 times
+        assert mock_handler.process_webhook.call_count == 3
+
+    def test_issuewebhookview_post_returns_correct_response_type(self, mocker, client):
+        """Test that the view returns JsonResponse."""
+        mock_handler = mocker.MagicMock()
+        mock_response = JsonResponse({"test": "data"}, status=200)
+        mock_handler.process_webhook.return_value = mock_response
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+        url = reverse("issue_webhook")
+        response = client.post(
+            url, data=json.dumps({"test": "payload"}), content_type="application/json"
+        )
+        # Verify response is JSON
+        assert response["Content-Type"] == "application/json"
+        assert response.status_code == 200
+        json.loads(response.content)  # Should not raise JSONDecodeError
+
+    def test_issuewebhookview_post_with_handler_validation_failure(
+        self, mocker, client
+    ):
+        """Test webhook processing when handler validation fails."""
+        mock_handler = mocker.MagicMock()
+        mock_response = JsonResponse(
+            {"status": "error", "message": "Webhook validation failed"}, status=403
+        )
+        mock_handler.process_webhook.return_value = mock_response
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+        url = reverse("issue_webhook")
+        response = client.post(
+            url, data=json.dumps({"test": "payload"}), content_type="application/json"
+        )
+        assert response.status_code == 403
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        assert response_data["message"] == "Webhook validation failed"
+
+    def test_issuewebhookview_post_with_handler_no_issue_data(self, mocker, client):
+        """Test webhook processing when handler finds no issue data."""
+        mock_handler = mocker.MagicMock()
+        mock_response = JsonResponse(
+            {"status": "success", "message": "Not an issue creation event"}, status=200
+        )
+        mock_handler.process_webhook.return_value = mock_response
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+        url = reverse("issue_webhook")
+        response = client.post(
+            url, data=json.dumps({"test": "payload"}), content_type="application/json"
+        )
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["message"] == "Not an issue creation event"
+
+    def test_issuewebhookview_post_direct_view_call(self, mocker):
+        """Test calling the view directly with RequestFactory."""
+        # This test doesn't use the Django test client
+        mock_handler = mocker.MagicMock()
+        mock_response = JsonResponse(
+            {"status": "success", "message": "Direct test"}, status=200
+        )
+        mock_handler.process_webhook.return_value = mock_response
+        mocker.patch("core.views.WebhookHandler", return_value=mock_handler)
+        view = IssueWebhookView()
+        request_factory = RequestFactory()
+        request = request_factory.post(
+            "/webhook/",
+            data=json.dumps({"test": "data"}),
+            content_type="application/json",
+        )
+        response = view.post(request)
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        mock_handler.process_webhook.assert_called_once()

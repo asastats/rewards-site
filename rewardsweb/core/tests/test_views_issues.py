@@ -27,7 +27,6 @@ from core.views import (
     IssueListView,
     IssueModalView,
 )
-from utils.constants.core import DISCORD_EMOJIS
 
 user_model = get_user_model()
 
@@ -270,11 +269,12 @@ class TestDbIssueDetailView:
     def test_issuedetailview_tracker_data_added_for_superuser(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         # Create datetime objects for testing
@@ -311,11 +311,12 @@ class TestDbIssueDetailView:
     def test_issuedetailview_no_tracker_data_for_regular_user(
         self, client, regular_user, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         client.force_login(regular_user)
@@ -331,11 +332,12 @@ class TestDbIssueDetailView:
     def test_issuedetailview_tracker_error_for_superuser(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {"success": False, "error": "Authentication failed"}
         mock_get_issue.return_value = mock_tracker_data
@@ -369,11 +371,12 @@ class TestDbIssueDetailView:
     def test_issuedetailview_tracker_api_called_with_correct_arguments(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -402,11 +405,12 @@ class TestDbIssueDetailView:
     def test_issuedetailview_context_data_includes_all_tracker_fields(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -423,7 +427,7 @@ class TestDbIssueDetailView:
         }
         mock_get_issue.return_value = mock_tracker_data
 
-        mock_url = mocker.patch("issues.providers.BaseIssueProvider.issue_url")
+        mock_url = mocker.patch(f"issues.{provider}.BaseIssueProvider.issue_url")
         issue_url = "full_issue_url"
         mock_url.return_value = issue_url
         client.force_login(superuser)
@@ -450,11 +454,12 @@ class TestIssueDetailViewWithForm:
     def test_issuedetailview_labels_form_in_context_for_superuser_and_open_issue(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -483,11 +488,12 @@ class TestIssueDetailViewWithForm:
     def test_issuedetailview_labels_form_not_in_context_for_superuser_and_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -516,11 +522,12 @@ class TestIssueDetailViewWithForm:
         self, client, regular_user, issue, mocker
     ):
         """Test that labels form is NOT in context for regular users even if issue is open."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -548,11 +555,12 @@ class TestIssueDetailViewWithForm:
     def test_issuedetailview_labels_form_not_in_context_when_tracker_fails(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {"success": False, "error": "GitHub API error"}
         mock_get_issue.return_value = mock_tracker_data
@@ -569,11 +577,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that form is prepopulated with existing GitHub labels."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         # Mock GitHub issue with existing labels including priority
@@ -615,11 +624,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that form uses default priority when no priority label exists."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         # Mock GitHub issue with labels but no priority
@@ -654,11 +664,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that unknown labels are filtered out during prepopulation."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         # Mock GitHub issue with some unknown labels
@@ -693,11 +704,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that priority detection works with various label formats."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         # Mock GitHub issue with different priority label formats
@@ -735,11 +747,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that POST request successfully sets labels on GitHub issue."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_add_labels = mocker.patch(
-            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+            f"issues.{provider}.BaseIssueProvider.set_labels_to_issue"
         )
         mock_add_labels.return_value = {
             "success": True,
@@ -767,11 +780,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that GitHub errors are handled when setting labels."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_add_labels = mocker.patch(
-            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+            f"issues.{provider}.BaseIssueProvider.set_labels_to_issue"
         )
         mock_add_labels.return_value = {
             "success": False,
@@ -811,11 +825,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that context variables for current priority and labels are set."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         mock_tracker_data = {
@@ -849,11 +864,12 @@ class TestIssueDetailViewWithForm:
         self, client, superuser, issue, mocker
     ):
         """Test that form appears in template for superusers."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -892,11 +908,12 @@ class TestIssueDetailViewSubmissionHandlers:
         self, client, superuser, issue, mocker
     ):
         """Test successful labels form submission."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_add_labels = mocker.patch(
-            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+            f"issues.{provider}.BaseIssueProvider.set_labels_to_issue"
         )
         mock_add_labels.return_value = {
             "success": True,
@@ -935,11 +952,12 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_labels_submission_tracker_failure(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_add_labels = mocker.patch(
-            "issues.providers.BaseIssueProvider.set_labels_to_issue"
+            f"issues.{provider}.BaseIssueProvider.set_labels_to_issue"
         )
         mock_add_labels.return_value = {
             "success": False,
@@ -1025,14 +1043,15 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_addressed_success(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
         mocked_process = mocker.patch(
@@ -1110,14 +1129,15 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_addressed_success_no_comment(
         self, client, superuser, issue, contribution, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mock_add_reaction = mocker.patch(
             "updaters.discord.DiscordUpdater.add_reaction_to_message"
@@ -1187,14 +1207,15 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_wontfix_success(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mock_tracker_data = {
             "success": True,
@@ -1273,11 +1294,12 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_tracker_fetch_failure(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
 
         mock_tracker_data = {"success": False, "error": "Authentication failed"}
@@ -1308,11 +1330,12 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_already_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -1352,14 +1375,15 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_tracker_close_failure(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mock_tracker_data = {
             "success": True,
@@ -1409,11 +1433,12 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_exception_handling(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_get_issue.side_effect = Exception("Unexpected error")
 
@@ -1440,14 +1465,15 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_labels_processing(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mock_tracker_data = {
             "success": True,
@@ -1500,14 +1526,15 @@ class TestIssueDetailViewSubmissionHandlers:
     def test_issuedetailview_handle_close_submission_existing_label_not_duplicated(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mock_tracker_data = {
             "success": True,
@@ -1556,11 +1583,12 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_buttons_not_shown_for_regular_user(
         self, client, regular_user, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -1590,11 +1618,12 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_buttons_not_shown_for_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -1624,11 +1653,12 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_buttons_shown_for_open_issue_and_superuser(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mocker.patch(
             "core.views.process_allocations_for_contributions", return_value=(False, [])
@@ -1661,14 +1691,15 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_addressed_success(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mock_process = mocker.patch(
             "core.views.process_allocations_for_contributions",
@@ -1725,14 +1756,15 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_addressed_success_and_claimable(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
         mock_process = mocker.patch(
             "core.views.process_allocations_for_contributions",
@@ -1789,14 +1821,15 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_wontfix_success(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
 
         mock_tracker_data = {
@@ -1846,14 +1879,15 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_as_wontfix_success_existing_label(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
 
         mock_tracker_data = {
@@ -1903,14 +1937,15 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_issue_tracker_failure(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_close_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.close_issue_with_labels"
+            f"issues.{provider}.BaseIssueProvider.close_issue_with_labels"
         )
 
         mock_tracker_data = {
@@ -1951,11 +1986,12 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_close_already_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -2014,11 +2050,12 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_labels_form_not_shown_for_closed_issue(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -2046,11 +2083,12 @@ class TestIssueDetailViewCloseFunctionality:
     def test_issuedetailview_labels_form_shown_for_open_issue(
         self, client, superuser, issue, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_get_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number"
+            f"issues.{provider}.BaseIssueProvider.issue_by_number"
         )
         mock_tracker_data = {
             "success": True,
@@ -2201,11 +2239,12 @@ class TestDbCreateIssueView:
         view.contribution_id = contribution.id
 
         # Mock external dependencies
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_create_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.create_issue"
+            f"issues.{provider}.BaseIssueProvider.create_issue"
         )
         mock_create_issue.return_value = {"success": True, "issue_number": 123}
 
@@ -2256,11 +2295,12 @@ class TestDbCreateIssueView:
         view.setup(request, contribution_id=contribution.id)
         view.contribution_id = contribution.id
 
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_create_issue = mocker.patch(
-            "issues.providers.BaseIssueProvider.create_issue"
+            f"issues.{provider}.BaseIssueProvider.create_issue"
         )
         mock_create_issue.return_value = {
             "success": False,

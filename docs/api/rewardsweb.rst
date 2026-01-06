@@ -232,19 +232,54 @@
   :show-inheritance:
 
 
-:mod:`issues.main` -- Main issue tracker class and public functions
--------------------------------------------------------------------
+:mod:`issues.base` -- Module with base classes for issues and webhooks processing
+---------------------------------------------------------------------------------
 
-.. automodule:: issues.main
+.. automodule:: issues.base
   :members:
   :undoc-members:
   :show-inheritance:
 
 
-:mod:`issues.providers` -- Module with implementation of various issue tracker providers
-----------------------------------------------------------------------------------------
+:mod:`issues.bitbucket` -- Module with classes and functions dealing with Bitbucket issues and webhooks
+-------------------------------------------------------------------------------------------------------
 
-.. automodule:: issues.providers
+.. automodule:: issues.bitbucket
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`issues.config` -- Module for issue providers confirguration from environment variables
+--------------------------------------------------------------------------------------------
+
+.. automodule:: issues.config
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+:mod:`issues.github` -- Module with classes and functions dealing with GitHub issues and webhooks
+-------------------------------------------------------------------------------------------------
+
+.. automodule:: issues.github
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`issues.gitlab` -- Module with classes and functions dealing with GitLab issues and webhooks
+-------------------------------------------------------------------------------------------------
+
+.. automodule:: issues.gitlab
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+
+:mod:`issues.main` -- Main issue tracker class and public functions
+-------------------------------------------------------------------
+
+.. automodule:: issues.main
   :members:
   :undoc-members:
   :show-inheritance:

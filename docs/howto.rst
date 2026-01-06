@@ -46,8 +46,41 @@ There's an existing Ansible role for Redis and you can install it during provisi
 by uncommenting the related line in the `deploy/site_playbook.yml`.
 
 
+Issue trackers setup
+--------------------
+
+
+GitHub
+^^^^^^
+
+GitHub bot
+~~~~~~~~~~
+
+Create rewards-bot as a GitHub App and then install it under your organization's settings page.
+
+Assign created app's token to GITHUB_BOT_TOKEN constant in `rewardsweb/.env` file.
+
+GitHub webhook
+~~~~~~~~~~~~~~
+
+Go to your repo → Settings → Webhooks → Add webhook
+
+Payload URL: https://rewards.asastats.com/webhooks/github/
+
+Content type: application/json
+
+Secret: Generate and use a strong secret (store it in Django settings)
+
+Events: Select "Issues" or "Let me select individual events" → check "Issues"
+
+Click Add webhook
+
+
+GitLab
+^^^^^^
+
 GitLab Personal Access Token
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a Personal Access Token (PAT) in GitLab for use with GitlabProvider, follow these steps:
 
@@ -83,8 +116,25 @@ To create a Personal Access Token (PAT) in GitLab for use with GitlabProvider, f
        ``GITLAB_PRIVATE_TOKEN``) as you will not be able to retrieve it again. If you lose it, you'll have to revoke it and create a new one.
 
 
+GitLab webhook
+~~~~~~~~~~~~~~
+
+Go to Project → Settings → Webhooks
+
+Add URL: https://yourdomain.com/webhooks/gitlab/
+
+Add Secret Token (optional but recommended)
+
+Select "Issues events"
+
+Enable SSL verification
+
+
+Bitbucket
+^^^^^^^^^
+
 Bitbucket consumer
-------------------
+~~~~~~~~~~~~~~~~~~
 
 To create a new OAuth consumer (which will give you the "Key" and "Secret" for your BitbucketApp), follow these steps within Bitbucket Cloud:
 
@@ -111,13 +161,16 @@ To create a new OAuth consumer (which will give you the "Key" and "Secret" for y
      * Click **Save**.
      * After saving, Bitbucket will generate a **Key** (which you'll use as ``BITBUCKET_CLIENT_KEY``) and a **Secret** (which you'll use as ``BITBUCKET_SHARED_SECRET``). You'll need to toggle the consumer name to reveal these values.
 
+Bitbucket webhook
+~~~~~~~~~~~~~~~~~
 
-GitHub bot
-----------
+Go to Repository → Repository settings → Webhooks
 
-Create rewards-bot as a GitHub App and then install it under your organization's settings page.
+Add URL: https://yourdomain.com/webhooks/bitbucket/
 
-Assign created app's token to GITHUB_BOT_TOKEN constant in `rewardsweb/.env` file.
+Select "Issue: Created, Updated, Deleted"
+
+Add Secret (for Cloud only)
 
 
 Run Discord bot

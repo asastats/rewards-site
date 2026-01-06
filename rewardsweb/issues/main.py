@@ -6,13 +6,20 @@ from datetime import datetime
 from django.conf import settings
 
 from core.models import Contributor
-from issues.providers import BitbucketProvider, GithubProvider, GitlabProvider
+from issues.bitbucket import BitbucketProvider, BitbucketWebhookHandler
+from issues.github import GithubProvider, GitHubWebhookHandler
+from issues.gitlab import GitlabProvider, GitLabWebhookHandler
 from updaters.main import UpdateProvider
 
 ISSUE_TRACKER_PROVIDERS_REGISTRY = {
     "github": GithubProvider,
     "gitlab": GitlabProvider,
     "bitbucket": BitbucketProvider,
+}
+WEBHOOK_HANDLERS_REGISTRY = {
+    "github": GitHubWebhookHandler,
+    "gitlab": GitLabWebhookHandler,
+    "bitbucket": BitbucketWebhookHandler,
 }
 
 logger = logging.getLogger(__name__)
@@ -64,6 +71,61 @@ class IssueProvider:
         :return: method from provider instance
         """
         return getattr(self._provider_instance, name)
+
+
+class WebhookHandler:
+    """Main webhook handler class that delegates to the configured provider.
+
+    :var WebhookHandler.name: name of the provider to use
+    :type WebhookHandler.name: str
+    :var WebhookHandler.request: Django HTTP request object
+    :type WebhookHandler.request: class:`django.http.HttpRequest`
+    :var WebhookHandler._handler_instance: instance of the webhook handler
+    :type WebhookHandler._handler_instance: :class:`BaseWebhookHandler`
+    """
+
+    name = None
+    request = None
+    _handler_instance = None
+
+    def __init__(self, request):
+        """
+        Initialize webhook handler with configured provider.
+
+        :param request: Django HTTP request object
+        :type request: class:`django.http.HttpRequest`
+        """
+        self.name = settings.ISSUE_TRACKER_PROVIDER.lower()
+        self.request = request
+        self._handler_instance = self._get_handler_instance()
+
+    def _get_handler_instance(self):
+        """Instantiate and return a handler instance from registry.
+
+        :var handler_class: handler class from registry
+        :type handler_class: class
+        :return: instance of the webhook handler
+        :rtype: :class:`BaseWebhookHandler`
+        """
+        handler_class = WEBHOOK_HANDLERS_REGISTRY.get(self.name)
+        return handler_class(self.request)
+
+    def process_webhook(self):
+        """Delegate webhook processing to the handler instance.
+
+        :return: HTTP response from handler
+        :rtype: class:`django.http.JsonResponse`
+        """
+        return self._handler_instance.process_webhook()
+
+    def __getattr__(self, name):
+        """Delegate all method calls to the handler instance.
+
+        :param name: method name to delegate
+        :type name: str
+        :return: method from handler instance
+        """
+        return getattr(self._handler_instance, name)
 
 
 # # PREPARE ISSUE

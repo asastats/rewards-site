@@ -162,11 +162,12 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_valid_with_new_issue(
         self, rf, superuser, contribution, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number",
+            f"issues.{provider}.BaseIssueProvider.issue_by_number",
             return_value={"success": True, "data": {"number": 123}},
         )
         mocked_log_action = mocker.patch("core.models.Profile.log_action")
@@ -203,11 +204,12 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_invalid_with_nonexistent_tracker_issue(
         self, rf, superuser, contribution, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number",
+            f"issues.{provider}.BaseIssueProvider.issue_by_number",
             return_value={
                 "success": False,
                 "error": "That tracker issue doesn't exist!",
@@ -241,11 +243,12 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_invalid_with_tracker_api_error(
         self, rf, superuser, contribution, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number",
+            f"issues.{provider}.BaseIssueProvider.issue_by_number",
             return_value={"success": False, "error": "API rate limit exceeded"},
         )
 
@@ -277,11 +280,12 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_invalid_with_tracker_api_missing_token_error(
         self, rf, superuser, contribution, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number",
+            f"issues.{provider}.BaseIssueProvider.issue_by_number",
             return_value={"success": False, "error": MISSING_API_TOKEN_TEXT},
         )
 
@@ -367,11 +371,12 @@ class TestDbContributionEditView:
     def test_contributioneditview_form_valid_creates_new_issue_when_success_true(
         self, rf, superuser, contribution, mocker
     ):
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number",
+            f"issues.{provider}.BaseIssueProvider.issue_by_number",
             return_value={"success": True, "data": {"number": 456}},
         )
 
@@ -438,11 +443,12 @@ class TestDbContributionEditView:
         self, rf, superuser, contribution, mocker
     ):
         """Test that new issue is created with custom status."""
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_issue_by_number = mocker.patch(
-            "issues.providers.BaseIssueProvider.issue_by_number",
+            f"issues.{provider}.BaseIssueProvider.issue_by_number",
             return_value={"success": True, "data": {"number": 456}},
         )
 

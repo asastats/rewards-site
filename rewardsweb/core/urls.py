@@ -72,4 +72,5 @@ urlpatterns = [
         views.RefreshTransparencyDataView.as_view(),
         name="refresh_transparency_data",
     ),
+    path("webhooks/issue/", views.IssueWebhookView.as_view(), name="issue_webhook"),
 ]

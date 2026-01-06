@@ -1,10 +1,11 @@
 """Testing module for :py:mod:`issues.gitlab` module."""
 
+import json
 import os
 
 from django.conf import settings
 
-from issues.gitlab import     GitlabProvider
+from issues.gitlab import GitlabProvider, GitLabWebhookHandler
 
 
 class TestIssuesGitlabGitlabProvider:
@@ -135,9 +136,7 @@ class TestIssuesGitlabGitlabProvider:
         )
 
     # # _get_repository
-    def test_issues_gitlab_gitlabprovider_get_repository_for_client_none(
-        self, mocker
-    ):
+    def test_issues_gitlab_gitlabprovider_get_repository_for_client_none(self, mocker):
         mocker.patch("issues.gitlab.GitlabProvider._get_client", return_value=None)
         provider = GitlabProvider(mocker.MagicMock())
         returned = provider._get_repository()
@@ -166,9 +165,7 @@ class TestIssuesGitlabGitlabProvider:
             "issues.gitlab.GitlabProvider._get_client",
             return_value=mocker.MagicMock(),
         )
-        mocker.patch(
-            "issues.gitlab.GitlabProvider._get_repository", return_value=None
-        )
+        mocker.patch("issues.gitlab.GitlabProvider._get_repository", return_value=None)
         provider = GitlabProvider(mocker.MagicMock())
         assert provider._get_project() is None
 
@@ -201,11 +198,9 @@ class TestIssuesGitlabGitlabProvider:
         type(mock_issue).labels = mock_labels_property
         provider.repo = mocker.MagicMock()
         provider.repo.issues.get.return_value = mock_issue
-
         labels_to_set = ["bug", "critical"]
         comment = "Closing this issue."
         result = provider._close_issue_with_labels_impl(1, labels_to_set, comment)
-
         provider.repo.issues.get.assert_called_once_with(1)
         mock_issue.labels = labels_to_set
         mock_issue.notes.create.assert_called_once_with({"body": comment})
@@ -225,10 +220,8 @@ class TestIssuesGitlabGitlabProvider:
         mock_issue.labels = []  # Initialize labels as an empty list
         provider.repo = mocker.MagicMock()
         provider.repo.issues.get.return_value = mock_issue
-
         comment = "Closing this issue."
         provider._close_issue_with_labels_impl(1, None, comment)
-
         assert mock_issue.labels == []
 
     def test_issues_gitlab_gitlabprovider_close_issue_with_labels_impl_no_comment(
@@ -242,9 +235,7 @@ class TestIssuesGitlabGitlabProvider:
         provider.repo = mocker.MagicMock()
         provider.repo.issues.get.return_value = mock_issue
         labels_to_set = ["bug", "critical"]
-
         provider._close_issue_with_labels_impl(1, labels_to_set, None)
-
         mock_issue.notes.create.assert_not_called()
 
     # # _create_issue_impl
@@ -256,12 +247,10 @@ class TestIssuesGitlabGitlabProvider:
         mock_issue = mocker.MagicMock()
         provider.repo = mocker.MagicMock()
         provider.repo.issues.create.return_value = mock_issue
-
         title = "New GitLab Issue"
         body = "Description of the issue."
         labels = ["feature"]
         result = provider._create_issue_impl(title, body, labels)
-
         provider.repo.issues.create.assert_called_once_with(
             {"title": title, "description": body, "labels": labels}
         )
@@ -277,11 +266,9 @@ class TestIssuesGitlabGitlabProvider:
         mock_issues_list = mocker.MagicMock()
         provider.repo = mocker.MagicMock()
         provider.repo.issues.list.return_value = mock_issues_list
-
         state = "opened"
         since = mocker.MagicMock()
         result = provider._fetch_issues_impl(state, since)
-
         provider.repo.issues.list.assert_called_once_with(
             state=state, sort="updated_at", since=since
         )
@@ -306,12 +293,9 @@ class TestIssuesGitlabGitlabProvider:
         mock_issue.author = {"username": "gl_author"}
         mock_issue.web_url = "http://gitlab.com/issue/1"
         mock_issue.notes.list.return_value = [mocker.MagicMock()]
-
         provider.repo = mocker.MagicMock()
         provider.repo.issues.get.return_value = mock_issue
-
         result = provider._get_issue_by_number_impl(1)
-
         provider.repo.issues.get.assert_called_once_with(1)
         assert result["issue"]["number"] == mock_issue.iid
         assert result["issue"]["title"] == mock_issue.title
@@ -336,12 +320,9 @@ class TestIssuesGitlabGitlabProvider:
         mock_issue.author = {"username": "gl_author"}
         mock_issue.web_url = "http://gitlab.com/issue/1"
         mock_issue.notes.list.return_value = [mocker.MagicMock()]
-
         provider.repo = mocker.MagicMock()
         provider.repo.issues.get.return_value = mock_issue
-
         result = provider._get_issue_by_number_impl(1)
-
         assert result["issue"]["assignees"] == ["gl_user1", "gl_user2"]
 
     # # _issue_url_impl
@@ -364,10 +345,344 @@ class TestIssuesGitlabGitlabProvider:
         mock_issue = mocker.MagicMock()
         provider.repo = mocker.MagicMock()
         provider.repo.issues.get.return_value = mock_issue
-
         labels_to_set = ["priority::high"]
         result = provider._set_labels_to_issue_impl(1, labels_to_set)
-
         mock_issue.labels = labels_to_set
         mock_issue.save.assert_called_once()
         assert result["current_labels"] == labels_to_set
+
+
+class TestIssuesGitlabGitlabWebhookHandler:
+    """Testing class for :py:mod:`issues.gitlab.GitLabWebhookHandler` class."""
+
+    # # __init__
+    def test_issues_gitlab_gitlabwebhookhandler_init(self, mocker):
+        """Test initialization of GitLabWebhookHandler."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        assert handler.request == request
+        assert handler.payload == {"test": "data"}
+
+    # # validate
+    def test_issues_gitlab_gitlabwebhookhandler_validate_no_token_configured(
+        self, mocker
+    ):
+        """Test validation when no ISSUES_WEBHOOK_SECRET is configured."""
+        mocker.patch("issues.gitlab.os.getenv", return_value=None)
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {}  # No X-Gitlab-Token
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is True
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_empty_token_configured(
+        self, mocker
+    ):
+        """Test validation when empty ISSUES_WEBHOOK_SECRET is configured."""
+        mocker.patch("issues.gitlab.os.getenv", return_value="")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {}  # No X-Gitlab-Token
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is True
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_no_header_token(self, mocker):
+        """Test validation when X-Gitlab-Token header is missing but token is configured."""
+        mocker.patch("issues.gitlab.os.getenv", return_value="expected_token")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {}  # No X-Gitlab-Token
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is False
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_token_mismatch(self, mocker):
+        """Test validation when token doesn't match."""
+        mocker.patch("issues.gitlab.os.getenv", return_value="expected_token")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {"X-Gitlab-Token": "wrong_token"}
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is False
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_token_match(self, mocker):
+        """Test validation when token matches."""
+        expected_token = "expected_token"
+        mocker.patch("issues.gitlab.os.getenv", return_value=expected_token)
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {"X-Gitlab-Token": expected_token}
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is True
+
+    # # extract_issue_data
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_no_payload(
+        self, mocker
+    ):
+        """Test extract_issue_data when payload is None."""
+        request = mocker.MagicMock()
+        request.body = b"invalid_json"
+        handler = GitLabWebhookHandler(request)
+        handler.payload = {}
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_no_object_attributes(
+        self, mocker
+    ):
+        """Test extract_issue_data when payload is None."""
+        request = mocker.MagicMock()
+        request.body = b"invalid_json"
+        handler = GitLabWebhookHandler(request)
+        handler.payload = {}
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_issue_open(
+        self, mocker
+    ):
+        """Test extract_issue_data for issue open event."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {
+                "action": "open",
+                "iid": 123,
+                "title": "Test Issue",
+                "description": "Issue description",
+                "url": "https://gitlab.com/test/repo/issues/123",
+                "created_at": "2023-01-01T00:00:00Z",
+                "author": {"username": "testuser"},
+            },
+            "project": {"id": 456, "name": "test-project"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is not None
+        assert result["issue_number"] == 123
+        assert result["title"] == "Test Issue"
+        assert result["body"] == "Issue description"
+        assert result["raw_content"] == "Issue description"
+        assert result["username"] == "testuser"
+        assert result["issue_url"] == "https://gitlab.com/test/repo/issues/123"
+        assert result["project_id"] == 456
+        assert result["project_name"] == "test-project"
+        assert result["created_at"] == "2023-01-01T00:00:00Z"
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_wrong_object_kind(
+        self, mocker
+    ):
+        """Test extract_issue_data for wrong object_kind."""
+        payload = {
+            "object_kind": "merge_request",  # Not issue
+            "object_attributes": {
+                "action": "open",
+                "iid": 123,
+                "title": "Test MR",
+                "description": "MR description",
+                "url": "https://gitlab.com/test/repo/merge_requests/123",
+                "created_at": "2023-01-01T00:00:00Z",
+                "author": {"username": "testuser"},
+            },
+            "project": {"id": 456, "name": "test-project"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_wrong_action(
+        self, mocker
+    ):
+        """Test extract_issue_data for wrong action."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {
+                "action": "close",  # Not open
+                "iid": 123,
+                "title": "Test Issue",
+                "description": "Issue description",
+                "url": "https://gitlab.com/test/repo/issues/123",
+                "created_at": "2023-01-01T00:00:00Z",
+                "author": {"username": "testuser"},
+            },
+            "project": {"id": 456, "name": "test-project"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_missing_action(
+        self, mocker
+    ):
+        """Test extract_issue_data when action is missing."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {
+                "iid": 123,
+                "title": "Test Issue",
+                "description": "Issue description",
+                "url": "https://gitlab.com/test/repo/issues/123",
+                "created_at": "2023-01-01T00:00:00Z",
+                "author": {"username": "testuser"},
+            },
+            "project": {"id": 456, "name": "test-project"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_empty_object_attributes(
+        self, mocker
+    ):
+        """Test extract_issue_data when object_attributes is empty."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {},
+            "project": {"id": 456, "name": "test-project"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_missing_fields(
+        self, mocker
+    ):
+        """Test extract_issue_data with missing fields in payload."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {
+                "action": "open",
+                "iid": 123,
+                "title": "Test Issue",
+                # Missing description, url, created_at, author
+            },
+            "project": {},  # Missing id and name
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is not None  # Should return dict with default values
+        assert result["issue_number"] == 123
+        assert result["title"] == "Test Issue"
+        assert result["body"] == ""  # Default empty string
+        assert result["raw_content"] == ""  # Default empty string
+        assert result["username"] == ""  # Default empty string
+        assert result["issue_url"] == ""  # Default empty string
+        assert result["project_id"] is None  # Default None
+        assert result["project_name"] == ""  # Default empty string
+        assert result["created_at"] == ""  # Default empty string
+
+    def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_no_project(
+        self, mocker
+    ):
+        """Test extract_issue_data when project is missing."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {
+                "action": "open",
+                "iid": 123,
+                "title": "Test Issue",
+                "description": "Issue description",
+                "url": "https://gitlab.com/test/repo/issues/123",
+                "created_at": "2023-01-01T00:00:00Z",
+                "author": {"username": "testuser"},
+            },
+            # No project key
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = GitLabWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is not None
+        assert result["issue_number"] == 123
+        assert result["title"] == "Test Issue"
+        assert result["project_id"] is None
+        assert result["project_name"] == ""
+
+    # # process_webhook (integration test)
+    def test_issues_gitlab_gitlabwebhookhandler_process_webhook_success(self, mocker):
+        """Test complete webhook processing for successful case."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {
+                "action": "open",
+                "iid": 123,
+                "title": "Test Issue",
+                "description": "Issue description",
+                "url": "https://gitlab.com/test/repo/issues/123",
+                "created_at": "2023-01-01T00:00:00Z",
+                "author": {"username": "testuser"},
+            },
+            "project": {"id": 456, "name": "test-project"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        request.headers = {}  # No token needed since no secret
+        handler = GitLabWebhookHandler(request)
+        response = handler.process_webhook()
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["provider"] == "GitLabWebhookHandler"
+        assert response_data["issue_title"] == "Test Issue"
+        assert response_data["issue_number"] == 123
+        assert response_data["username"] == "testuser"
+
+    def test_issues_gitlab_gitlabwebhookhandler_process_webhook_validation_failed(
+        self, mocker
+    ):
+        """Test webhook processing when validation fails."""
+        mocker.patch("issues.gitlab.os.getenv", return_value="expected_token")
+        request = mocker.MagicMock()
+        request.body = b"test_body"
+        request.headers = {}  # No X-Gitlab-Token
+        handler = GitLabWebhookHandler(request)
+        response = handler.process_webhook()
+        assert response.status_code == 403
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        assert "Webhook validation failed" in response_data["message"]
+
+    def test_issues_gitlab_gitlabwebhookhandler_process_webhook_no_issue_data(
+        self, mocker
+    ):
+        """Test webhook processing when no issue data is found."""
+        payload = {
+            "object_kind": "issue",
+            "object_attributes": {
+                "action": "close",  # Not open
+                "iid": 123,
+                "title": "Test Issue",
+                "description": "Issue description",
+                "url": "https://gitlab.com/test/repo/issues/123",
+                "created_at": "2023-01-01T00:00:00Z",
+                "author": {"username": "testuser"},
+            },
+            "project": {"id": 456, "name": "test-project"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        request.headers = {}
+        handler = GitLabWebhookHandler(request)
+        response = handler.process_webhook()
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["message"] == "Not an issue creation event"
+        assert "issue_title" not in response_data
+        assert "issue_number" not in response_data

@@ -1,11 +1,12 @@
 """Module containing functions for GitLab issues and webhooks management."""
 
 import logging
+import os
 
 from django.conf import settings
 from gitlab import Gitlab
 
-from issues.base import BaseIssueProvider
+from issues.base import BaseIssueProvider, BaseWebhookHandler
 from issues.config import gitlab_config
 
 logger = logging.getLogger(__name__)
@@ -203,4 +204,49 @@ class GitlabProvider(BaseIssueProvider):
         return {
             "message": f"Added labels {labels_to_set} to GitLab issue #{issue_number}",
             "current_labels": issue.labels,
+        }
+
+
+class GitLabWebhookHandler(BaseWebhookHandler):
+    """GitLab webhook handler for issue creation events."""
+
+    def validate(self):
+        """Validate GitLab webhook token using X-Gitlab-Token header.
+
+        :return: True if token matches or no token configured, False otherwise
+        :rtype: bool
+        """
+        token = self.request.headers.get("X-Gitlab-Token")
+        expected_token = os.getenv("ISSUES_WEBHOOK_SECRET", None)
+
+        # Skip validation if no token configured
+        if not expected_token:
+            return True
+
+        return token == expected_token
+
+    def extract_issue_data(self):
+        """Extract issue data from GitLab webhook payload.
+
+        :return: issue data dict if object_kind is 'issue' and action is 'open'
+        :rtype: dict or None
+        """
+        # Check if this is an issue creation event
+        object_kind = self.payload.get("object_kind")
+        action = self.payload.get("object_attributes", {}).get("action")
+
+        if object_kind != "issue" or action != "open":
+            return None
+
+        issue = self.payload.get("object_attributes", {})
+        return {
+            "username": issue.get("author", {}).get("username", ""),
+            "title": issue.get("title", ""),
+            "body": issue.get("description", ""),
+            "raw_content": issue.get("description", ""),
+            "issue_url": issue.get("url", ""),
+            "issue_number": issue.get("iid"),  # GitLab uses iid
+            "project_id": self.payload.get("project", {}).get("id"),
+            "project_name": self.payload.get("project", {}).get("name", ""),
+            "created_at": issue.get("created_at", ""),
         }

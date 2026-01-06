@@ -11,7 +11,10 @@ from django.conf import settings
 
 import utils.mappers
 from core.models import Reward, RewardType, SocialPlatform
-from utils.constants.core import CONTRIBUTOR_TEXT_EXCEPTIONS, GITHUB_ISSUES_START_DATE
+from utils.constants.core import (
+    CONTRIBUTOR_TEXT_EXCEPTIONS,
+    GITHUB_ISSUES_START_DATE,
+)
 from utils.mappers import (
     CustomIssue,
     _build_reward_mapping,
@@ -291,7 +294,9 @@ class TestUtilsMappersHelpers:
         name = provider.capitalize()
         mocker.patch(f"issues.{provider}.{name}Provider._get_client")
         mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
-        mocker.patch(f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=[])
+        mocker.patch(
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=[]
+        )
 
         result = _fetch_and_categorize_issues("valid_token", refetch=False)
 
@@ -439,7 +444,9 @@ class TestUtilsMappersHelpers:
         name = provider.capitalize()
         mocker.patch(f"issues.{provider}.{name}Provider._get_client")
         mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
-        mocker.patch(f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=[])
+        mocker.patch(
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=[]
+        )
         mock_save_issues = mocker.patch("utils.mappers._save_issues")
 
         result = _fetch_and_categorize_issues("valid_token", refetch=True)

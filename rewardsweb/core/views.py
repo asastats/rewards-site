@@ -11,12 +11,19 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Prefetch, Q, Sum
 from django.db.models.functions import Lower
 from django.forms import ValidationError
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
     DetailView,
@@ -52,7 +59,11 @@ from core.models import (
     Issue,
     IssueStatus,
 )
-from issues.main import IssueProvider, issue_data_for_contribution
+from issues.main import (
+    IssueProvider,
+    WebhookHandler,
+    issue_data_for_contribution,
+)
 from updaters.main import UpdateProvider
 from utils.constants.core import (
     ALGORAND_WALLETS,
@@ -1395,3 +1406,42 @@ class RefreshTransparencyDataView(RedirectView):
         refresh_data()
         messages.success(request, "✅ Transparency data refreshed successfully!")
         return super().get(request, *args, **kwargs)
+
+
+class IssueWebhookView(View):
+    """Main webhook endpoint that uses WebhookHandler for provider delegation.
+
+    :var IssueWebhookView.request: Django HTTP request object
+    :type IssueWebhookView.request: class:`django.http.HttpRequest`
+    """
+
+    @method_decorator(csrf_exempt)
+    @method_decorator(require_POST)
+    def dispatch(self, *args, **kwargs):
+        """Override dispatch method to apply decorators to all HTTP methods.
+
+        :param args: positional arguments
+        :param kwargs: keyword arguments
+        :return: HTTP response
+        :rtype: class:`django.http.HttpResponse`
+        """
+        return super().dispatch(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Process incoming issue webhook POST request.
+
+        :param request: Django HTTP request object
+        :type request: class:`django.http.HttpRequest`
+        :return: JSON response with webhook processing result
+        :rtype: class:`django.http.JsonResponse`
+        """
+        try:
+            handler = WebhookHandler(request)
+            return handler.process_webhook()
+
+        except Exception as e:
+            logger.error(f"Webhook processing failed: {str(e)}")
+            return JsonResponse(
+                {"status": "error", "message": f"Internal server error: {str(e)}"},
+                status=500,
+            )

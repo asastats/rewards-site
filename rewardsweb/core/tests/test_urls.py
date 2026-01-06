@@ -125,5 +125,11 @@ class TestCoreUrls:
         assert url.lookup_str == "core.views.RefreshTransparencyDataView"
         assert url.name == "refresh_transparency_data"
 
+    def test_core_urls_issue_webhook(self):
+        url = self._url_from_pattern("webhooks/issue/")
+        assert isinstance(url, URLPattern)
+        assert url.lookup_str == "core.views.IssueWebhookView"
+        assert url.name == "issue_webhook"
+
     def test_core_urls_patterns_count(self):
-        assert len(urls.urlpatterns) == 19
+        assert len(urls.urlpatterns) == 20

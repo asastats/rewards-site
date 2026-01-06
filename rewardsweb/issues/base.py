@@ -1,7 +1,10 @@
 """Module containing base classes for issues and webhooks management."""
 
+import json
 import logging
 from abc import ABC, abstractmethod
+
+from django.http import JsonResponse
 
 from utils.constants.core import GITHUB_ISSUES_START_DATE
 from utils.constants.ui import MISSING_API_TOKEN_TEXT
@@ -265,3 +268,127 @@ class BaseIssueProvider(ABC):
 
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+
+class BaseWebhookHandler(ABC):
+    """Abstract base class for all webhook handlers.
+
+    :var BaseWebhookHandler.request: Django HTTP request object
+    :type BaseWebhookHandler.request: class:`django.http.HttpRequest`
+    :var BaseWebhookHandler.payload: parsed JSON payload from request
+    :type BaseWebhookHandler.payload: dict or None
+    """
+
+    def __init__(self, request):
+        """Initialize webhook handler with request.
+
+        :param request: Django HTTP request object
+        :type request: class:`django.http.HttpRequest`
+        """
+        self.request = request
+        self.payload = None
+        self._parse_payload()
+
+    def process_webhook(self):
+        """Main entry point to process webhook.
+
+        :return: HTTP response with webhook processing result
+        :rtype: class:`django.http.JsonResponse`
+        """
+        # 1. Validate webhook
+        if not self.validate():
+            return self._error_response("Webhook validation failed")
+
+        # 2. Extract and validate issue data
+        issue_data = self.extract_issue_data()
+        if not issue_data:
+            return self._success_response("Not an issue creation event")
+
+        # 3. Issue creation detected, proceed with processing
+        return self._process_issue_creation(issue_data)
+
+    def _parse_payload(self):
+        """Parse JSON payload from request body.
+
+        Sets self.payload to parsed JSON or None if parsing fails.
+        """
+        try:
+            self.payload = json.loads(self.request.body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self.payload = None
+
+    @abstractmethod
+    def validate(self):
+        """Validate webhook signature/token.
+
+        :return: True if validation passes, False otherwise
+        :rtype: bool
+        """
+        pass
+
+    @abstractmethod
+    def extract_issue_data(self):
+        """Extract issue data from payload.
+
+        :return: None if not an issue creation event, dict with issue data if it's an issue creation
+        :rtype: dict or None
+        """
+        pass
+
+    def _process_issue_creation(self, issue_data):
+        """Process a new issue creation.
+
+        :param issue_data: extracted issue data
+        :type issue_data: dict
+        :return: success response with issue data
+        :rtype: class:`django.http.JsonResponse`
+        """
+        return self._success_response(
+            f'Issue #{issue_data.get("issue_number")} processed', issue_data
+        )
+
+    def _success_response(self, message, issue_data=None):
+        """Return success response.
+
+        :param message: success message
+        :type message: str
+        :param issue_data: extracted issue data (optional)
+        :type issue_data: dict or None
+        :return: JSON success response
+        :rtype: class:`django.http.JsonResponse`
+        """
+        response_data = {
+            "status": "success",
+            "message": message,
+            "provider": self.__class__.__name__,
+        }
+
+        if issue_data:
+            response_data.update(
+                {
+                    "issue_title": issue_data.get("title"),
+                    "issue_number": issue_data.get("issue_number"),
+                    "username": issue_data.get("username"),
+                }
+            )
+
+        return JsonResponse(response_data, status=200)
+
+    def _error_response(self, message, status=403):
+        """Return error response.
+
+        :param message: error message
+        :type message: str
+        :param status: HTTP status code (default: 403)
+        :type status: int
+        :return: JSON error response
+        :rtype: class:`django.http.JsonResponse`
+        """
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": message,
+                "provider": self.__class__.__name__,
+            },
+            status=status,
+        )

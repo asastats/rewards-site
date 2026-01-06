@@ -554,4 +554,3 @@ class BaseAsyncMentionTracker(BaseMentionTracker):
         finally:
             # Cleanup
             event_loop.close()
-

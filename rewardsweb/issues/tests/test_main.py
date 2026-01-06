@@ -1,17 +1,23 @@
 """Testing module for :py:mod:`issues.main` module."""
 
+import json
+
 import pytest
+from django.http import JsonResponse
+from django.test import RequestFactory
 
 import issues
 from issues.main import (
     ISSUE_TRACKER_PROVIDERS_REGISTRY,
     IssueProvider,
+    WebhookHandler,
     _contributor_link,
     _prepare_issue_body_from_contribution,
     _prepare_issue_labels_from_contribution,
     _prepare_issue_priority_from_contribution,
     _prepare_issue_title_from_contribution,
     issue_data_for_contribution,
+    settings,
 )
 
 
@@ -57,6 +63,94 @@ class TestIssuesMainIssueProvider:
         assert hasattr(provider, "create_issue")
 
 
+class TestTrackersMainWebhookHandler:
+    """Testing class for :class:`issues.main.WebhookHandler`."""
+
+    def setup_method(self):
+        """Setup test fixtures."""
+        self.factory = RequestFactory()
+
+    # # __init__
+    def test_issues_main_webhookhandler_init_sets_correct_attributes(self, mocker):
+        """Test that __init__ sets correct attributes."""
+        request = self.factory.post(
+            "/", data=json.dumps({}), content_type="application/json"
+        )
+        mock_provider = mocker.patch.object(settings, "ISSUE_TRACKER_PROVIDER")
+        mock_provider.lower.return_value = "github"
+        mock_get_handler = mocker.patch.object(WebhookHandler, "_get_handler_instance")
+        mock_get_handler.return_value = mocker.MagicMock()
+        handler = WebhookHandler(request)
+        assert handler.name == "github"
+        assert handler.request == request
+        mock_get_handler.assert_called_once()
+
+    # # _get_handler_instance
+    def test_issues_main_webhookhandler_get_handler_instance_returns_handler_from_registry(
+        self, mocker
+    ):
+        """Test that _get_handler_instance returns handler from registry."""
+        mock_handler_class = mocker.MagicMock()
+        mock_handler_instance = mocker.MagicMock()
+        mock_handler_class.return_value = mock_handler_instance
+        request = self.factory.post(
+            "/", data=json.dumps({}), content_type="application/json"
+        )
+        mock_provider = mocker.patch.object(settings, "ISSUE_TRACKER_PROVIDER")
+        mock_provider.lower.return_value = "github"
+        mocker.patch.dict(
+            "issues.main.WEBHOOK_HANDLERS_REGISTRY",
+            {"github": mock_handler_class},
+            clear=True,
+        )
+        handler = WebhookHandler(request)
+        result = handler._get_handler_instance()
+        assert result == mock_handler_instance
+        mock_handler_class.assert_called_with(request)
+
+    # # process_webhook
+    def test_issues_main_webhookhandler_process_webhook_delegates_to_handler_instance(
+        self, mocker
+    ):
+        """Test that process_webhook delegates to handler instance."""
+        mock_handler_instance = mocker.MagicMock()
+        mock_handler_instance.process_webhook.return_value = JsonResponse(
+            {"status": "success"}
+        )
+        request = self.factory.post(
+            "/", data=json.dumps({}), content_type="application/json"
+        )
+        mock_provider = mocker.patch.object(settings, "ISSUE_TRACKER_PROVIDER")
+        mock_provider.lower.return_value = "github"
+        mocker.patch.object(
+            WebhookHandler, "_get_handler_instance", return_value=mock_handler_instance
+        )
+        handler = WebhookHandler(request)
+        response = handler.process_webhook()
+        mock_handler_instance.process_webhook.assert_called_once()
+        assert response.status_code == 200
+
+    # # __getattr__
+    def test_issues_main_webhookhandler_getattr_delegates_to_handler_instance(
+        self, mocker
+    ):
+        """Test that __getattr__ delegates to handler instance."""
+        mock_handler_instance = mocker.MagicMock()
+        mock_handler_instance.test_method.return_value = "test_result"
+        request = self.factory.post(
+            "/", data=json.dumps({}), content_type="application/json"
+        )
+        mock_provider = mocker.patch.object(settings, "ISSUE_TRACKER_PROVIDER")
+        mock_provider.lower.return_value = "github"
+        mocker.patch.object(
+            WebhookHandler, "_get_handler_instance", return_value=mock_handler_instance
+        )
+        handler = WebhookHandler(request)
+        result = handler.test_method("arg1", arg2="arg2")
+        mock_handler_instance.test_method.assert_called_once_with("arg1", arg2="arg2")
+        assert result == "test_result"
+
+
 class TestIssuesMainPrepareFunctions:
     """Testing class for :py:mod:`issues.main` issue preparation functions."""
 
@@ -97,9 +191,7 @@ class TestIssuesMainPrepareFunctions:
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
         contribution.url = None
         mocked_link = mocker.patch("issues.main._contributor_link")
-
         result = _prepare_issue_body_from_contribution(contribution, profile)
-
         assert result == "** Please provide the necessary information **"
         mocked_link.assert_not_called()
 
@@ -109,16 +201,12 @@ class TestIssuesMainPrepareFunctions:
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
         contribution.url = "https://discord.com/channels/test"
         contribution.platform.name = "discord"
-
         mocked_link = mocker.patch("issues.main._contributor_link")
-
         mocked_message_from_url = mocker.patch(
             "updaters.discord.DiscordUpdater.message_from_url"
         )
         mocked_message_from_url.return_value = {"success": False}
-
         result = _prepare_issue_body_from_contribution(contribution, profile)
-
         assert result == "** Please provide the necessary information **"
         mocked_message_from_url.assert_called_once_with(contribution.url)
         mocked_link.assert_not_called()
@@ -129,26 +217,21 @@ class TestIssuesMainPrepareFunctions:
         contribution, profile = mocker.MagicMock(), "username"
         contribution.url = "https://discord.com/channels/test"
         contribution.platform.name = "discord"
-
         link = "https://example.com"
         mocked_link = mocker.patch("issues.main._contributor_link", return_value=link)
-
         test_message = {
             "success": True,
             "author": "testuser",
             "timestamp": "2023-10-15T14:30:00.000000+00:00",
             "contribution": "This is a test message\nwith multiple lines",
         }
-
         mocked_message_from_url = mocker.patch(
             "updaters.discord.DiscordUpdater.message_from_url"
         )
         mocked_message_from_url.return_value = test_message
         mocked_datetime = mocker.patch("issues.main.datetime")
         mocked_datetime.strptime.return_value.strftime.return_value = "15 Oct 14:30"
-
         result = _prepare_issue_body_from_contribution(contribution, profile)
-
         expected_body = (
             f"By {link} on 15 Oct 14:30 in [Discord](https://discord.com/channels/test): "
             f"// su: {profile}\n> This is a test message\n> with multiple lines\n"
@@ -166,9 +249,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "Bug Fix"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_labels_from_contribution(contribution)
-
         assert result == ["bug"]
 
     def test_issues_main_prepare_issue_labels_feature_type(self, mocker):
@@ -176,9 +257,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "Feature Request"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_labels_from_contribution(contribution)
-
         assert result == ["feature"]
 
     def test_issues_main_prepare_issue_labels_task_type(self, mocker):
@@ -186,9 +265,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "General Task"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_labels_from_contribution(contribution)
-
         assert result == ["task"]
 
     def test_issues_main_prepare_issue_labels_twitter_type(self, mocker):
@@ -196,9 +273,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "Twitter Engagement"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_labels_from_contribution(contribution)
-
         assert result == ["task"]
 
     def test_issues_main_prepare_issue_labels_research_type(self, mocker):
@@ -206,9 +281,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "Research Work"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_labels_from_contribution(contribution)
-
         assert result == ["research"]
 
     def test_issues_main_prepare_issue_labels_unknown_type(self, mocker):
@@ -216,9 +289,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "Unknown Type"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_labels_from_contribution(contribution)
-
         assert result == []
 
     # # _prepare_issue_priority_from_contribution
@@ -227,9 +298,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "Critical Bug"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_priority_from_contribution(contribution)
-
         assert result == "high priority"
 
     def test_issues_main_prepare_issue_priority_non_bug_type(self, mocker):
@@ -237,9 +306,7 @@ class TestIssuesMainPrepareFunctions:
         reward_type = mocker.MagicMock()
         reward_type.name = "Feature Implementation"
         contribution.reward.type = reward_type
-
         result = _prepare_issue_priority_from_contribution(contribution)
-
         assert result == "medium priority"
 
     # # _prepare_issue_title_from_contribution
@@ -250,9 +317,7 @@ class TestIssuesMainPrepareFunctions:
         contribution.reward.type = reward_type
         contribution.reward.level = "A"
         contribution.comment = "Implement new authentication system"
-
         result = _prepare_issue_title_from_contribution(contribution)
-
         expected_title = "[FEATA] Implement new authentication system"
         assert result == expected_title
 
@@ -263,16 +328,13 @@ class TestIssuesMainPrepareFunctions:
         contribution.reward.type = reward_type
         contribution.reward.level = "B"
         contribution.comment = ""
-
         result = _prepare_issue_title_from_contribution(contribution)
-
         expected_title = "[BUGB] "
         assert result == expected_title
 
     # # issue_data_for_contribution
     def test_issues_main_issue_data_for_contribution_complete_data(self, mocker):
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
-
         # Mock all the helper functions
         mocker.patch(
             "issues.main._prepare_issue_title_from_contribution",
@@ -290,9 +352,7 @@ class TestIssuesMainPrepareFunctions:
             "issues.main._prepare_issue_priority_from_contribution",
             return_value="high priority",
         )
-
         result = issue_data_for_contribution(contribution, profile)
-
         expected_data = {
             "issue_title": "Test Title",
             "issue_body": "Test Body",
@@ -303,7 +363,6 @@ class TestIssuesMainPrepareFunctions:
 
     def test_issues_main_issue_data_for_contribution_calls_all_helpers(self, mocker):
         contribution, profile = mocker.MagicMock(), mocker.MagicMock()
-
         mocked_title = mocker.patch(
             "issues.main._prepare_issue_title_from_contribution"
         )
@@ -314,9 +373,7 @@ class TestIssuesMainPrepareFunctions:
         mocked_priority = mocker.patch(
             "issues.main._prepare_issue_priority_from_contribution"
         )
-
         issue_data_for_contribution(contribution, profile)
-
         mocked_title.assert_called_once_with(contribution)
         mocked_body.assert_called_once_with(contribution, profile)
         mocked_labels.assert_called_once_with(contribution)

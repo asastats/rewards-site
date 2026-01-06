@@ -1,6 +1,9 @@
 """Module containing functions for GitHub issues and webhooks management."""
 
+import hashlib
+import hmac
 import logging
+import os
 from datetime import datetime, timedelta
 
 import jwt
@@ -8,7 +11,7 @@ import requests
 from django.conf import settings
 from github import Auth, Github
 
-from issues.base import BaseIssueProvider
+from issues.base import BaseIssueProvider, BaseWebhookHandler
 from issues.config import github_config
 
 logger = logging.getLogger(__name__)
@@ -275,4 +278,57 @@ class GithubProvider(BaseIssueProvider):
         return {
             "message": f"Added labels {labels_to_set} to issue #{issue_number}",
             "current_labels": [label.name for label in issue.labels],
+        }
+
+
+class GitHubWebhookHandler(BaseWebhookHandler):
+    """GitHub webhook handler for issue creation events."""
+
+    def validate(self):
+        """Validate GitHub webhook signature using X-Hub-Signature-256 header.
+
+        :return: True if signature is valid or no secret configured, False otherwise
+        :rtype: bool
+        """
+        secret = os.getenv("ISSUES_WEBHOOK_SECRET", "").encode()
+
+        # Skip validation if no secret configured (not recommended for production)
+        if not secret:
+            return True
+
+        signature = self.request.headers.get("X-Hub-Signature-256")
+        if not signature:
+            return False
+
+        # Calculate expected signature
+        expected_signature = (
+            "sha256=" + hmac.new(secret, self.request.body, hashlib.sha256).hexdigest()
+        )
+
+        return hmac.compare_digest(signature, expected_signature)
+
+    def extract_issue_data(self):
+        """Extract issue data from GitHub webhook payload.
+
+        :return: issue data dict if action is 'opened', None otherwise
+        :rtype: dict or None
+        """
+        # Check if this is an issue creation event
+        event_type = self.payload.get("action")
+        if event_type != "opened":
+            return None
+
+        issue = self.payload.get("issue", {})
+        if not issue:
+            return None
+
+        return {
+            "username": issue.get("user", {}).get("login", ""),
+            "title": issue.get("title", ""),
+            "body": issue.get("body", ""),
+            "raw_content": issue.get("body", ""),
+            "issue_url": issue.get("html_url", ""),
+            "issue_number": issue.get("number"),
+            "repository": self.payload.get("repository", {}).get("full_name", ""),
+            "created_at": issue.get("created_at", ""),
         }

@@ -1,6 +1,9 @@
 """Module containing functions for Bitbucket issues and webhooks management."""
 
+import hashlib
+import hmac
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -8,7 +11,7 @@ import requests
 from atlassian.bitbucket.cloud import Cloud
 from django.conf import settings
 
-from issues.base import BaseIssueProvider
+from issues.base import BaseIssueProvider, BaseWebhookHandler
 from issues.config import bitbucket_config
 
 logger = logging.getLogger(__name__)
@@ -267,3 +270,114 @@ class BitbucketProvider(BaseIssueProvider):
                 issue.components if hasattr(issue, "components") else []
             ),
         }
+
+
+class BitbucketWebhookHandler(BaseWebhookHandler):
+    """Bitbucket webhook handler for issue creation events."""
+
+    def validate(self):
+        """Validate Bitbucket webhook signature using X-Hub-Signature header.
+
+        :return: True if signature is valid or no secret configured, False otherwise
+        :rtype: bool
+        """
+        secret = os.getenv("ISSUES_WEBHOOK_SECRET", "").encode()
+
+        # Skip validation if no secret configured
+        if not secret:
+            return True
+
+        signature = self.request.headers.get("X-Hub-Signature")
+        if not signature:
+            return False
+
+        # Calculate expected signature
+        expected_signature = (
+            "sha256=" + hmac.new(secret, self.request.body, hashlib.sha256).hexdigest()
+        )
+
+        return hmac.compare_digest(signature, expected_signature)
+
+    def extract_issue_data(self):
+        """Extract issue data from Bitbucket webhook payload.
+
+        :return: issue data dict if issue creation detected, None otherwise
+        :rtype: dict or None
+        """
+        # Bitbucket has different payload structures for Cloud vs Server
+
+        # Try Bitbucket Cloud format first
+        issue_data = self._extract_bitbucket_cloud_data()
+        if issue_data:
+            return issue_data
+
+        # Try Bitbucket Server format
+        issue_data = self._extract_bitbucket_server_data()
+        if issue_data:
+            return issue_data
+
+        return None
+
+    def _extract_bitbucket_cloud_data(self):
+        """Extract data from Bitbucket Cloud webhook payload.
+
+        :return: issue data dict if issue creation detected, None otherwise
+        :rtype: dict or None
+        """
+        changes = self.payload.get("changes", {})
+
+        # Check for issue creation
+        if "created" in changes:
+            issue = self.payload.get("issue", {})
+            if issue:
+                return {
+                    "username": issue.get("reporter", {}).get("display_name", ""),
+                    "title": issue.get("title", ""),
+                    "body": issue.get("content", {}).get("raw", ""),
+                    "raw_content": issue.get("content", {}).get("raw", ""),
+                    "issue_url": issue.get("links", {}).get("html", {}).get("href", ""),
+                    "issue_number": issue.get("id"),
+                    "repository": self.payload.get("repository", {}).get(
+                        "full_name", ""
+                    ),
+                    "created_at": issue.get("created_on", ""),
+                }
+
+        # Also check if it's a new issue by state
+        issue = self.payload.get("issue", {})
+        if issue and issue.get("state") == "new":
+            return {
+                "username": issue.get("reporter", {}).get("display_name", ""),
+                "title": issue.get("title", ""),
+                "body": issue.get("content", {}).get("raw", ""),
+                "raw_content": issue.get("content", {}).get("raw", ""),
+                "issue_url": issue.get("links", {}).get("html", {}).get("href", ""),
+                "issue_number": issue.get("id"),
+                "repository": self.payload.get("repository", {}).get("full_name", ""),
+                "created_at": issue.get("created_on", ""),
+            }
+
+        return None
+
+    def _extract_bitbucket_server_data(self):
+        """Extract data from Bitbucket Server webhook payload.
+
+        :return: issue data dict if new issue detected, None otherwise
+        :rtype: dict or None
+        """
+        issue = self.payload.get("issue", {})
+
+        # Bitbucket Server webhook for new issues
+        if issue and issue.get("state") == "new":
+            return {
+                "username": issue.get("reporter", {}).get("displayName", ""),
+                "title": issue.get("title", ""),
+                "body": issue.get("description", ""),
+                "raw_content": issue.get("description", ""),
+                "issue_url": "",  # May need to construct from repository URL
+                "issue_number": issue.get("id"),
+                "repository": self.payload.get("repository", {}).get("name", ""),
+                "created_at": issue.get("createdDate", ""),
+            }
+
+        return None

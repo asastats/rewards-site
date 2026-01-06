@@ -287,10 +287,11 @@ class TestUtilsMappersHelpers:
         }
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
 
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
-        mocker.patch("issues.providers.BaseIssueProvider.fetch_issues", return_value=[])
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
+        mocker.patch(f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=[])
 
         result = _fetch_and_categorize_issues("valid_token", refetch=False)
 
@@ -317,11 +318,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_fetch_issues = mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=new_issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=new_issues
         )
         mocker.patch("utils.mappers._save_issues")
 
@@ -351,11 +353,12 @@ class TestUtilsMappersHelpers:
             issues.append(issue)
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=issues
         )
         mock_save_issues = mocker.patch("utils.mappers._save_issues")
 
@@ -381,11 +384,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_fetch_issues = mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=new_issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=new_issues
         )
         mocker.patch("utils.mappers._save_issues")
 
@@ -410,11 +414,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mock_fetch_issues = mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=new_issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=new_issues
         )
         mocker.patch("utils.mappers._save_issues")
 
@@ -430,10 +435,11 @@ class TestUtilsMappersHelpers:
     def test_utils_mappers_fetch_and_categorize_issues_empty_fetch(self, mocker):
         """Test _fetch_and_categorize_issues handles empty fetch results."""
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
-        mocker.patch("issues.providers.BaseIssueProvider.fetch_issues", return_value=[])
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
+        mocker.patch(f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=[])
         mock_save_issues = mocker.patch("utils.mappers._save_issues")
 
         result = _fetch_and_categorize_issues("valid_token", refetch=True)
@@ -460,11 +466,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=issues
         )
         mock_save_issues = mocker.patch("utils.mappers._save_issues")
 
@@ -489,11 +496,12 @@ class TestUtilsMappersHelpers:
             issues.append(issue)
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=issues
         )
         mocker.patch("utils.mappers._save_issues")
         mock_print = mocker.patch("builtins.print")
@@ -534,11 +542,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=issues
         )
         mocker.patch("utils.mappers._save_issues")
         mock_print = mocker.patch("builtins.print")
@@ -578,11 +587,12 @@ class TestUtilsMappersHelpers:
         ]
 
         mocker.patch("utils.mappers._load_saved_issues", return_value=defaultdict(list))
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=issues
         )
         mocker.patch("utils.mappers._save_issues")
 
@@ -611,11 +621,12 @@ class TestUtilsMappersHelpers:
         # Mock _load_saved_issues to return a dict without 'open' key
         saved_issues = {"closed": [], "timestamp": datetime(2024, 1, 1)}
         mocker.patch("utils.mappers._load_saved_issues", return_value=saved_issues)
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mocker.patch(
-            "issues.providers.BaseIssueProvider.fetch_issues", return_value=issues
+            f"issues.{provider}.BaseIssueProvider.fetch_issues", return_value=issues
         )
         mocker.patch("utils.mappers._save_issues")
         mock_print = mocker.patch("builtins.print")

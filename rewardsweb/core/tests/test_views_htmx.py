@@ -41,12 +41,12 @@ class TestIssueModalHTMX:
     ):
         """IssueDetailView._handle_labels_submission should return HTMX partial on success."""
         client.force_login(superuser)
-
-        name = settings.ISSUE_TRACKER_PROVIDER.capitalize()
-        mocker.patch(f"issues.providers.{name}Provider._get_client")
-        mocker.patch(f"issues.providers.{name}Provider._get_repository")
+        provider = settings.ISSUE_TRACKER_PROVIDER.lower()
+        name = provider.capitalize()
+        mocker.patch(f"issues.{provider}.{name}Provider._get_client")
+        mocker.patch(f"issues.{provider}.{name}Provider._get_repository")
         mocker.patch(
-            "issues.providers.BaseIssueProvider.set_labels_to_issue",
+            f"issues.{provider}.BaseIssueProvider.set_labels_to_issue",
             return_value={
                 "success": True,
                 "message": "some message",

@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from allauth.account.views import LoginView as AllauthLoginView
 from allauth.account.views import SignupView as AllauthSignupView
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
@@ -60,7 +59,6 @@ from utils.constants.core import (
     ISSUE_CREATION_LABEL_CHOICES,
     ISSUE_PRIORITY_CHOICES,
 )
-from utils.constants.ui import MISSING_API_TOKEN_TEXT
 from utils.helpers import calculate_transpareny_report_period
 
 logger = logging.getLogger(__name__)
@@ -252,7 +250,6 @@ class ContributionInvalidateView(UpdateView):
                 if not reply_success:
                     failed_operations.append("reply")
             except Exception as e:
-                logger = logging.getLogger(__name__)
                 logger.error(f"Failed to add reply: {str(e)}")
                 failed_operations.append("reply")
 
@@ -267,7 +264,6 @@ class ContributionInvalidateView(UpdateView):
                 failed_operations.append("reaction")
 
         except Exception as e:
-            logger = logging.getLogger(__name__)
             logger.error(f"Failed to add reaction: {str(e)}")
             failed_operations.append("reaction")
 

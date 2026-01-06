@@ -2,7 +2,7 @@
 
 import pytest
 
-from issues import providers
+import issues
 from issues.main import (
     ISSUE_TRACKER_PROVIDERS_REGISTRY,
     IssueProvider,
@@ -25,7 +25,7 @@ class TestIssuesMainConstants:
     )
     def test_issues_main_issue_tracker_providers_registry_functionality(self, provider):
         assert ISSUE_TRACKER_PROVIDERS_REGISTRY[provider] == getattr(
-            providers, f"{provider.capitalize()}Provider"
+            getattr(issues, provider), f"{provider.capitalize()}Provider"
         )
 
 
@@ -50,8 +50,8 @@ class TestIssuesMainIssueProvider:
 
     # # __getattr__
     def test_issues_main_issueprovider_getattr(self, mocker):
-        mocker.patch("issues.providers.Auth.Token")
-        mocker.patch("issues.providers.Github")
+        mocker.patch("issues.github.Auth.Token")
+        mocker.patch("issues.github.Github")
         user = mocker.MagicMock()
         provider = IssueProvider(user, name="github")
         assert hasattr(provider, "create_issue")

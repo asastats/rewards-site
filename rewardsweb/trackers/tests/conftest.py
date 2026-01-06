@@ -1,3 +1,5 @@
+"""Pytest configuration for trackers package tests."""
+
 import pytest
 
 

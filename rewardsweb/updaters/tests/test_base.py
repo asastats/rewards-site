@@ -21,7 +21,7 @@ class DummyBaseUpdater(BaseUpdater):
 
 
 class TestBaseUpdater:
-    """Testing class for :class:`issues.providers.BaseUpdater` interface."""
+    """Testing class for :class:`issues.updaters.BaseUpdater` interface."""
 
     def test_updaters_base_baseupdater_is_abstract(self):
         with pytest.raises(TypeError) as exc_info:

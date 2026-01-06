@@ -6,7 +6,9 @@ from datetime import datetime
 from django.conf import settings
 
 from core.models import Contributor
-from issues.providers import BitbucketProvider, GithubProvider, GitlabProvider
+from issues.bitbucket import BitbucketProvider
+from issues.github import GithubProvider
+from issues.gitlab import GitlabProvider
 from updaters.main import UpdateProvider
 
 ISSUE_TRACKER_PROVIDERS_REGISTRY = {

@@ -12,8 +12,8 @@ import aiohttp
 import requests
 from asgiref.sync import sync_to_async
 
-from trackers.config import REWARDS_API_BASE_URL
 from trackers.models import Mention, MentionLog
+from utils.constants.core import REWARDS_API_BASE_URL
 from utils.helpers import get_env_variable, social_platform_prefixes
 
 

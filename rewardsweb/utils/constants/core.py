@@ -97,3 +97,5 @@ ALGORAND_WALLETS = [
 WALLET_CONNECT_NONCE_PREFIX = "Login to Rewards Suite website: "
 
 WALLET_CONNECT_NETWORK_OPTIONS = ["testnet", "mainnet"]
+
+REWARDS_API_BASE_URL = os.getenv("REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api")

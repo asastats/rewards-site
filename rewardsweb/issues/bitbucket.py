@@ -275,28 +275,114 @@ class BitbucketProvider(BaseIssueProvider):
 class BitbucketWebhookHandler(BaseWebhookHandler):
     """Bitbucket webhook handler for issue creation events."""
 
-    def validate(self):
-        """Validate Bitbucket webhook signature using X-Hub-Signature header.
+    def _extract_bitbucket_cloud_data(self):
+        """Extract data from Bitbucket Cloud webhook payload.
 
-        :return: True if signature is valid or no secret configured, False otherwise
-        :rtype: bool
+        :var changes: Bitbucket object data
+        :type changes: dict
+        :var issue: Bitbucket issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
+        :return: issue data dict if issue creation detected, None otherwise
+        :rtype: dict or None
         """
-        secret = os.getenv("ISSUES_WEBHOOK_SECRET", "").encode()
+        changes = self.payload.get("changes", {})
+        # Check for issue creation
+        if "created" in changes:
+            issue = self.payload.get("issue", {})
+            if issue:
+                labels = self._extract_bitbucket_labels(issue)
+                return {
+                    "username": self._formatted_username(
+                        issue.get("reporter", {}).get("display_name", "")
+                    ),
+                    "comment": issue.get("title", ""),
+                    "type": self._parse_type_from_labels(labels),
+                    "body": issue.get("content", {}).get("raw", ""),
+                    "raw_content": issue.get("content", {}).get("raw", ""),
+                    "url": issue.get("links", {}).get("html", {}).get("href", ""),
+                    "issue_number": issue.get("id"),
+                    "repository": self.payload.get("repository", {}).get(
+                        "full_name", ""
+                    ),
+                    "created_at": issue.get("created_on", ""),
+                }
 
-        # Skip validation if no secret configured
-        if not secret:
-            return True
+        # Also check if it's a new issue by state
+        issue = self.payload.get("issue", {})
+        if issue and issue.get("state") == "new":
+            labels = self._extract_bitbucket_labels(issue)
+            return {
+                "username": self._formatted_username(
+                    issue.get("reporter", {}).get("display_name", "")
+                ),
+                "comment": issue.get("title", ""),
+                "type": self._parse_type_from_labels(labels),
+                "body": issue.get("content", {}).get("raw", ""),
+                "raw_content": issue.get("content", {}).get("raw", ""),
+                "url": issue.get("links", {}).get("html", {}).get("href", ""),
+                "issue_number": issue.get("id"),
+                "repository": self.payload.get("repository", {}).get("full_name", ""),
+                "created_at": issue.get("created_on", ""),
+            }
 
-        signature = self.request.headers.get("X-Hub-Signature")
-        if not signature:
-            return False
+        return None
 
-        # Calculate expected signature
-        expected_signature = (
-            "sha256=" + hmac.new(secret, self.request.body, hashlib.sha256).hexdigest()
-        )
+    def _extract_bitbucket_labels(self, issue):
+        """Extract and return labels collection from Bitbucket issue instance.
 
-        return hmac.compare_digest(signature, expected_signature)
+        :param issue: Bitbucket issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
+        :return: collection of label names
+        :rtype: list
+        """
+        labels = []
+
+        if issue.get("kind"):
+            labels.append(issue.get("kind"))
+
+        if issue.get("component"):
+            labels.append(issue.get("component").get("name"))
+
+        if issue.get("milestone"):
+            labels.append(issue.get("milestone").get("name"))
+
+        return labels
+
+    def _extract_bitbucket_server_data(self):
+        """Extract data from Bitbucket Server webhook payload.
+
+        :var issue: Bitbucket issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
+        :return: issue data dict if new issue detected, None otherwise
+        :rtype: dict or None
+        """
+        issue = self.payload.get("issue", {})
+
+        # Bitbucket Server webhook for new issues
+        if issue and issue.get("state") == "new":
+            labels = self._extract_bitbucket_labels(issue)
+            return {
+                "username": self._formatted_username(
+                    issue.get("reporter", {}).get("displayName", "")
+                ),
+                "platform": settings.ISSUE_TRACKER_PROVIDER,
+                "comment": issue.get("title", ""),
+                "type": self._parse_type_from_labels(labels),
+                "body": issue.get("description", ""),
+                "raw_content": issue.get("description", ""),
+                "url": "https://bitbucket.org",  # May need to construct from repo URL
+                "issue_number": issue.get("id"),
+                "repository": self.payload.get("repository", {}).get("name", ""),
+                "created_at": issue.get("createdDate", ""),
+            }
+
+        return None
 
     def extract_issue_data(self):
         """Extract issue data from Bitbucket webhook payload.
@@ -320,110 +406,25 @@ class BitbucketWebhookHandler(BaseWebhookHandler):
 
         return None
 
-    def _extract_bitbucket_labels(self, issue):
-        """Extract and return labels collection from Bitbucket issue instance.
+    def validate(self):
+        """Validate Bitbucket webhook signature using X-Hub-Signature header.
 
-        TODO: tests
-
-        :param issue: Bitbucket issue data
-        :type issue: dict
-        :var labels: collection of label names
-        :type labels: list
-        :return: collection of label names
-        :rtype: list
+        :return: True if signature is valid or no secret configured, False otherwise
+        :rtype: bool
         """
-        labels = []
+        secret = os.getenv("ISSUES_WEBHOOK_SECRET", "").encode()
 
-        if issue.get("kind"):
-            labels.append(issue.get("kind"))
+        # Skip validation if no secret configured
+        if not secret:
+            return True
 
-        if issue.get("component"):
-            labels.append(issue.get("component").get("name"))
+        signature = self.request.headers.get("X-Hub-Signature")
+        if not signature:
+            return False
 
-        if issue.get("milestone"):
-            labels.append(issue.get("milestone").get("name"))
+        # Calculate expected signature
+        expected_signature = (
+            "sha256=" + hmac.new(secret, self.request.body, hashlib.sha256).hexdigest()
+        )
 
-        return labels
-
-    def _extract_bitbucket_cloud_data(self):
-        """Extract data from Bitbucket Cloud webhook payload.
-
-        TODO: tests
-
-        :var changes: Bitbucket object data
-        :type changes: dict
-        :var issue: Bitbucket issue data
-        :type issue: dict
-        :var labels: collection of label names
-        :type labels: list
-        :return: issue data dict if issue creation detected, None otherwise
-        :rtype: dict or None
-        """
-        changes = self.payload.get("changes", {})
-        # Check for issue creation
-        if "created" in changes:
-            issue = self.payload.get("issue", {})
-            if issue:
-                labels = self._extract_bitbucket_labels(issue)
-                return {
-                    "username": issue.get("reporter", {}).get("display_name", ""),
-                    "title": issue.get("title", ""),
-                    "type": self._parse_type_from_labels(labels),
-                    "body": issue.get("content", {}).get("raw", ""),
-                    "raw_content": issue.get("content", {}).get("raw", ""),
-                    "issue_url": issue.get("links", {}).get("html", {}).get("href", ""),
-                    "issue_number": issue.get("id"),
-                    "repository": self.payload.get("repository", {}).get(
-                        "full_name", ""
-                    ),
-                    "created_at": issue.get("created_on", ""),
-                }
-
-        # Also check if it's a new issue by state
-        issue = self.payload.get("issue", {})
-        if issue and issue.get("state") == "new":
-            labels = self._extract_bitbucket_labels(issue)
-            return {
-                "username": issue.get("reporter", {}).get("display_name", ""),
-                "title": issue.get("title", ""),
-                "type": self._parse_type_from_labels(labels),
-                "body": issue.get("content", {}).get("raw", ""),
-                "raw_content": issue.get("content", {}).get("raw", ""),
-                "issue_url": issue.get("links", {}).get("html", {}).get("href", ""),
-                "issue_number": issue.get("id"),
-                "repository": self.payload.get("repository", {}).get("full_name", ""),
-                "created_at": issue.get("created_on", ""),
-            }
-
-        return None
-
-    def _extract_bitbucket_server_data(self):
-        """Extract data from Bitbucket Server webhook payload.
-
-        TODO: tests
-
-        :var issue: Bitbucket issue data
-        :type issue: dict
-        :var labels: collection of label names
-        :type labels: list
-        :return: issue data dict if new issue detected, None otherwise
-        :rtype: dict or None
-        """
-        issue = self.payload.get("issue", {})
-
-        # Bitbucket Server webhook for new issues
-        if issue and issue.get("state") == "new":
-            labels = self._extract_bitbucket_labels(issue)
-            return {
-                "username": issue.get("reporter", {}).get("displayName", ""),
-                "title": issue.get("title", ""),
-                "type": self._parse_type_from_labels(labels),
-                "body": issue.get("description", ""),
-                "raw_content": issue.get("description", ""),
-                "issue_url": "",  # May need to construct from repository URL
-                "issue_number": issue.get("id"),
-                "repository": self.payload.get("repository", {}).get("name", ""),
-                "created_at": issue.get("createdDate", ""),
-            }
-
-        return None
+        return hmac.compare_digest(signature, expected_signature)

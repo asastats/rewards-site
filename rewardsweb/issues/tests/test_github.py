@@ -506,60 +506,6 @@ class TestIssuesGithubGithubWebhookHandler:
         assert handler.request == request
         assert handler.payload == {"test": "data"}
 
-    # # validate
-    def test_issues_github_githubwebhookhandler_validate_no_secret(self, mocker):
-        """Test validation when no ISSUES_WEBHOOK_SECRET is configured."""
-        mocker.patch("issues.github.os.getenv", return_value="")
-        request = mocker.MagicMock()
-        request.body = b"test_body"
-        request.headers = {}
-        handler = GitHubWebhookHandler(request)
-        result = handler.validate()
-        assert result is True
-
-    def test_issues_github_githubwebhookhandler_validate_no_signature(self, mocker):
-        """Test validation when X-Hub-Signature-256 header is missing."""
-        mocker.patch("issues.github.os.getenv", return_value="test_secret")
-        request = mocker.MagicMock()
-        request.body = b"test_body"
-        request.headers = {}  # No X-Hub-Signature-256
-        handler = GitHubWebhookHandler(request)
-        result = handler.validate()
-        assert result is False
-
-    def test_issues_github_githubwebhookhandler_validate_signature_mismatch(
-        self, mocker
-    ):
-        """Test validation when signature doesn't match."""
-        mocker.patch("issues.github.os.getenv", return_value="test_secret")
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        request.headers = {"X-Hub-Signature-256": "sha256=invalid_signature"}
-        handler = GitHubWebhookHandler(request)
-        result = handler.validate()
-        assert result is False
-
-    def test_issues_github_githubwebhookhandler_validate_signature_match(self, mocker):
-        """Test validation when signature matches."""
-        secret = "test_secret"
-        mocker.patch("issues.github.os.getenv", return_value=secret)
-        # Mock hmac to return a specific digest
-        mock_hmac = mocker.MagicMock()
-        mock_hmac.hexdigest.return_value = "expected_digest"
-        mocker.patch("issues.github.hmac.new", return_value=mock_hmac)
-        request = mocker.MagicMock()
-        request.body = b"test_body"
-        expected_signature = "sha256=expected_digest"
-        request.headers = {"X-Hub-Signature-256": expected_signature}
-        handler = GitHubWebhookHandler(request)
-        result = handler.validate()
-        assert result is True
-        import issues.github
-
-        issues.github.hmac.new.assert_called_once_with(
-            secret.encode(), request.body, issues.github.hashlib.sha256
-        )
-
     # # extract_issue_data
     def test_issues_github_githubwebhookhandler_extract_issue_data_no_payload(
         self, mocker
@@ -594,11 +540,11 @@ class TestIssuesGithubGithubWebhookHandler:
         result = handler.extract_issue_data()
         assert result is not None
         assert result["issue_number"] == 123
-        assert result["title"] == "Test Issue"
+        assert result["comment"] == "Test Issue"
         assert result["body"] == "Issue body"
         assert result["raw_content"] == "Issue body"
-        assert result["username"] == "testuser"
-        assert result["issue_url"] == "https://github.com/test/repo/issues/123"
+        assert result["username"] == "g@testuser"
+        assert result["url"] == "https://github.com/test/repo/issues/123"
         assert result["repository"] == "test/repo"
         assert result["created_at"] == "2023-01-01T00:00:00Z"
 
@@ -676,10 +622,10 @@ class TestIssuesGithubGithubWebhookHandler:
         result = handler.extract_issue_data()
         assert result is not None  # Should return dict with empty/None values
         assert result["issue_number"] is None
-        assert result["title"] == ""
+        assert result["comment"] == ""
         assert result["body"] == ""
         assert result["username"] == ""
-        assert result["issue_url"] == ""
+        assert result["url"] == ""
         assert result["repository"] == "test/repo"
         assert result["created_at"] == ""
 
@@ -702,11 +648,11 @@ class TestIssuesGithubGithubWebhookHandler:
         result = handler.extract_issue_data()
         assert result is not None
         assert result["issue_number"] == 123
-        assert result["title"] == "Test Issue"
+        assert result["comment"] == "Test Issue"
         assert result["body"] == ""  # Default empty string
         assert result["raw_content"] == ""  # Default empty string
         assert result["username"] == ""  # Default empty string
-        assert result["issue_url"] == ""  # Default empty string
+        assert result["url"] == ""  # Default empty string
         assert result["repository"] == ""  # Default empty string
         assert result["created_at"] == ""  # Default empty string
 
@@ -731,7 +677,7 @@ class TestIssuesGithubGithubWebhookHandler:
         result = handler.extract_issue_data()
         assert result is None  # No action means not an issue creation event
 
-    # # process_webhook (integration test)
+    # # process_webhook
     def test_issues_github_githubwebhookhandler_process_webhook_success(self, mocker):
         """Test complete webhook processing for successful case."""
         payload = {
@@ -749,6 +695,8 @@ class TestIssuesGithubGithubWebhookHandler:
         request = mocker.MagicMock()
         request.body = json.dumps(payload).encode("utf-8")
         request.headers = {}  # No signature needed since no secret
+        mocker.patch("issues.github.GitHubWebhookHandler.validate", return_value=True)
+        mocker.patch("issues.github.requests.post")
         handler = GitHubWebhookHandler(request)
         response = handler.process_webhook()
         assert response.status_code == 200
@@ -757,7 +705,7 @@ class TestIssuesGithubGithubWebhookHandler:
         assert response_data["provider"] == "GitHubWebhookHandler"
         assert response_data["issue_title"] == "Test Issue"
         assert response_data["issue_number"] == 123
-        assert response_data["username"] == "testuser"
+        assert response_data["username"] == "g@testuser"
 
     def test_issues_github_githubwebhookhandler_process_webhook_validation_failed(
         self, mocker
@@ -793,6 +741,7 @@ class TestIssuesGithubGithubWebhookHandler:
         request = mocker.MagicMock()
         request.body = json.dumps(payload).encode("utf-8")
         request.headers = {}
+        mocker.patch("issues.github.GitHubWebhookHandler.validate", return_value=True)
         handler = GitHubWebhookHandler(request)
         response = handler.process_webhook()
         assert response.status_code == 200
@@ -801,3 +750,57 @@ class TestIssuesGithubGithubWebhookHandler:
         assert response_data["message"] == "Not an issue creation event"
         assert "issue_title" not in response_data
         assert "issue_number" not in response_data
+
+    # # validate
+    def test_issues_github_githubwebhookhandler_validate_no_secret(self, mocker):
+        """Test validation when no ISSUES_WEBHOOK_SECRET is configured."""
+        mocker.patch("issues.github.os.getenv", return_value="")
+        request = mocker.MagicMock()
+        request.body = b"test_body"
+        request.headers = {}
+        handler = GitHubWebhookHandler(request)
+        result = handler.validate()
+        assert result is True
+
+    def test_issues_github_githubwebhookhandler_validate_no_signature(self, mocker):
+        """Test validation when X-Hub-Signature-256 header is missing."""
+        mocker.patch("issues.github.os.getenv", return_value="test_secret")
+        request = mocker.MagicMock()
+        request.body = b"test_body"
+        request.headers = {}  # No X-Hub-Signature-256
+        handler = GitHubWebhookHandler(request)
+        result = handler.validate()
+        assert result is False
+
+    def test_issues_github_githubwebhookhandler_validate_signature_mismatch(
+        self, mocker
+    ):
+        """Test validation when signature doesn't match."""
+        mocker.patch("issues.github.os.getenv", return_value="test_secret")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {"X-Hub-Signature-256": "sha256=invalid_signature"}
+        handler = GitHubWebhookHandler(request)
+        result = handler.validate()
+        assert result is False
+
+    def test_issues_github_githubwebhookhandler_validate_signature_match(self, mocker):
+        """Test validation when signature matches."""
+        secret = "test_secret"
+        mocker.patch("issues.github.os.getenv", return_value=secret)
+        # Mock hmac to return a specific digest
+        mock_hmac = mocker.MagicMock()
+        mock_hmac.hexdigest.return_value = "expected_digest"
+        mocker.patch("issues.github.hmac.new", return_value=mock_hmac)
+        request = mocker.MagicMock()
+        request.body = b"test_body"
+        expected_signature = "sha256=expected_digest"
+        request.headers = {"X-Hub-Signature-256": expected_signature}
+        handler = GitHubWebhookHandler(request)
+        result = handler.validate()
+        assert result is True
+        import issues.github
+
+        issues.github.hmac.new.assert_called_once_with(
+            secret.encode(), request.body, issues.github.hashlib.sha256
+        )

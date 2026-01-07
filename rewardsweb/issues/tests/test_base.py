@@ -1,8 +1,11 @@
 """Testing module for :py:mod:`issues.base` module."""
 
 import json
+from unittest import mock
 
 import pytest
+import requests
+from django.conf import settings
 from django.http import JsonResponse
 
 from issues.base import BaseIssueProvider, BaseWebhookHandler
@@ -114,7 +117,7 @@ class DummyBaseWebhookHandler(BaseWebhookHandler):
 
     def extract_issue_data(self):
         """Dummy extraction that returns sample issue data."""
-        return {"title": "Test Issue", "issue_number": 123, "username": "testuser"}
+        return {"comment": "Test Issue", "issue_number": 123, "username": "testuser"}
 
 
 class InvalidDummyWebhookHandler(BaseWebhookHandler):
@@ -151,6 +154,7 @@ class TestBaseWebhookHandler:
 
         assert "Can't instantiate abstract class" in str(exc_info.value)
 
+    # # __init__
     def test_issues_base_basewebhookhandler_init_with_valid_json(self, mocker):
         """Test initialization with valid JSON payload."""
         request = mocker.MagicMock()
@@ -175,43 +179,153 @@ class TestBaseWebhookHandler:
         assert handler.request == request
         assert handler.payload is None
 
-    # _process_issue_creation
-    def test_issues_base_basewebhookhandler_process_issue_creation_success(
-        self, mocker
+    def test_issues_base_basewebhookhandler_abstract_methods(self):
+        """Test that abstract methods are defined."""
+        assert hasattr(BaseWebhookHandler, "validate")
+        assert hasattr(BaseWebhookHandler, "extract_issue_data")
+
+        BaseWebhookHandler.validate(None)
+        BaseWebhookHandler.extract_issue_data(None)
+
+    # # _error_response
+    def test_issues_base_basewebhookhandler_error_response_default_status(self, mocker):
+        """Test _error_response method with default status code."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+
+        response = handler._error_response("Error message")
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 403
+
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        assert response_data["message"] == "Error message"
+        assert response_data["provider"] == "DummyBaseWebhookHandler"
+
+    def test_issues_base_basewebhookhandler_error_response_custom_status(self, mocker):
+        """Test _error_response method with custom status code."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+
+        response = handler._error_response("Error message", status=400)
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 400
+
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        assert response_data["message"] == "Error message"
+        assert response_data["provider"] == "DummyBaseWebhookHandler"
+
+    # # _formatted_username
+    def test_issues_base_basewebhookhandle_formatted_username_no_username(self, mocker):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+        returned = handler._formatted_username(None)
+        assert returned == ""
+
+    @pytest.mark.parametrize(
+        "provider,prefix",
+        [("GitHub", "g@"), ("GitLab", "g@"), ("BitBucket", "g@")],
+    )
+    def test_issues_base_basewebhookhandle_formatted_username_functionality(
+        self, provider, prefix, mocker
     ):
         request = mocker.MagicMock()
         request.body = json.dumps({"test": "data"}).encode("utf-8")
         handler = DummyBaseWebhookHandler(request)
-        response = handler.process_webhook()        
+        mocker.patch.object(settings, "ISSUE_TRACKER_PROVIDER", provider)
+        username = "username"
+        returned = handler._formatted_username(username)
+        assert returned == f"{prefix}{username}"
 
+    # # _parse_payload
+    @pytest.mark.parametrize(
+        "exception",
+        [json.JSONDecodeError("", "", 0), UnicodeDecodeError("", b"", 0, 0, "")],
+    )
+    def test_issues_base_basewebhookhandle_parse_payload_for_exception(
+        self, exception, mocker
+    ):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+        with mock.patch("issues.base.json.loads", side_effect=exception):
+            handler._parse_payload()
+            assert handler.payload is None
+
+    def test_issues_base_basewebhookhandle_parse_payload_functionality(self, mocker):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+        handler.payload = None
+        handler._parse_payload()
+        assert handler.payload == {"test": "data"}
+
+    # # _parse_type_from_labels
+    @pytest.mark.parametrize(
+        "labels,result",
+        [
+            [("foo", "bug", "feature"), "[B] Bug Report"],
+            [("foo", "bar", "feature"), "[F] Feature Request"],
+            [("task", "bar", "feature"), "[AT] Admin Task"],
+            [("content task", "bar", "feature"), "[CT] Content Task"],
+            [("development", "feature"), "[D] Development"],
+            [("foobar", "research", "feature"), "[ER] Ecosystem Research"],
+            [("foo", "bar"), "[F] Feature Request"],
+            [("dev",), "[D] Development"],
+            [(), "[F] Feature Request"],
+        ],
+    )
+    def test_issues_base_basewebhookhandle_parse_type_from_labels_functionality(
+        self, labels, result, mocker
+    ):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+        returned = handler._parse_type_from_labels(labels)
+        assert returned == result
+
+    # # _process_issue_creation
+    def test_issues_base_basewebhookhandler_process_issue_creation_success(
+        self, mocker
+    ):
         mock_requests_post = mocker.patch("requests.post")
         mock_response = mocker.MagicMock()
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {"success": True}
         mock_requests_post.return_value = mock_response
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        contribution_data = {"username": "test_user", "platform": "Testplatform"}
-        result = instance._process_issue_creation(contribution_data)
+        mock_success = mocker.patch("issues.base.BaseWebhookHandler._success_response")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        instance = DummyBaseWebhookHandler(request)
+        issue_data = {"issue_number": 200, "platform": "GitHub"}
+        result = instance._process_issue_creation(issue_data)
         mock_requests_post.assert_called_once_with(
-            "http://127.0.0.1:8000/api/addcontribution",
-            json=contribution_data,
+            "http://127.0.0.1:8000/api/addissue",
+            json=issue_data,
             headers={"Content-Type": "application/json"},
             timeout=30,
         )
-        assert result == {"success": True}
+        assert result == mock_success.return_value
+        mock_success.assert_called_once_with("Issue #200 processed", issue_data)
 
     def test_issues_base_basewebhookhandler_process_issue_creation_connection_error(
         self, mocker
     ):
         mock_requests_post = mocker.patch("requests.post")
         mock_requests_post.side_effect = requests.exceptions.ConnectionError()
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        instance = DummyBaseWebhookHandler(request)
+        issue_data = {"issue_number": 200, "platform": "GitHub"}
         with pytest.raises(
             Exception,
             match="Cannot connect to the API server. Make sure it's running on localhost.",
         ):
-            instance._process_issue_creation(contribution_data)
+            instance._process_issue_creation(issue_data)
 
     def test_issues_base_basewebhookhandler_process_issue_creation_http_error(
         self, mocker
@@ -223,20 +337,24 @@ class TestBaseWebhookHandler:
         mock_requests_post.side_effect = requests.exceptions.HTTPError(
             response=mock_response
         )
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        instance = DummyBaseWebhookHandler(request)
+        issue_data = {"issue_number": 200, "platform": "GitHub"}
         with pytest.raises(Exception, match="API returned error: 400 - Bad Request"):
-            instance._process_issue_creation(contribution_data)
+            instance._process_issue_creation(issue_data)
 
     def test_issues_base_basewebhookhandler_process_issue_creation_timeout(
         self, mocker
     ):
         mock_requests_post = mocker.patch("requests.post")
         mock_requests_post.side_effect = requests.exceptions.Timeout()
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        instance = DummyBaseWebhookHandler(request)
+        issue_data = {"issue_number": 200, "platform": "GitHub"}
         with pytest.raises(Exception, match="API request timed out."):
-            instance._process_issue_creation(contribution_data)
+            instance._process_issue_creation(issue_data)
 
     def test_issues_base_basewebhookhandler_process_issue_creation_request_exception(
         self, mocker
@@ -245,33 +363,12 @@ class TestBaseWebhookHandler:
         mock_requests_post.side_effect = requests.exceptions.RequestException(
             "Generic error"
         )
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        instance = DummyBaseWebhookHandler(request)
+        issue_data = {"issue_number": 200, "platform": "GitHub"}
         with pytest.raises(Exception, match="API request failed: Generic error"):
-            instance._process_issue_creation(contribution_data)
-
-    def test_issues_base_basewebhookhandler_process_issue_creation_changed_base_url(
-        self, mocker
-    ):
-        mocker.patch.object(
-            trackers.base,
-            "REWARDS_API_BASE_URL",
-            "http://test-api:8000/api",
-        )
-        mock_requests_post = mocker.patch("requests.post")
-        mock_response = mocker.MagicMock()
-        mock_response.raise_for_status.return_value = None
-        mock_response.json.return_value = {"success": True}
-        mock_requests_post.return_value = mock_response
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        contribution_data = {"username": "test_user", "platform": "Testplatform"}
-        instance._process_issue_creation(contribution_data)
-        mock_requests_post.assert_called_once_with(
-            "http://test-api:8000/api/addcontribution",
-            json=contribution_data,
-            headers={"Content-Type": "application/json"},
-            timeout=30,
-        )
+            instance._process_issue_creation(issue_data)
 
     def test_issues_base_basewebhookhandler_process_issue_creation_default_base_url(
         self, mocker
@@ -281,20 +378,65 @@ class TestBaseWebhookHandler:
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {"success": True}
         mock_requests_post.return_value = mock_response
-        instance = BaseMentionTracker("test_platform", lambda x: None)
-        contribution_data = {"username": "test_user", "platform": "Testplatform"}
-        instance._process_issue_creation(contribution_data)
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        instance = DummyBaseWebhookHandler(request)
+        issue_data = {"issue_number": 200, "platform": "GitHub"}
+        instance._process_issue_creation(issue_data)
         mock_requests_post.assert_called_once_with(
-            "http://127.0.0.1:8000/api/addcontribution",
-            json=contribution_data,
+            "http://127.0.0.1:8000/api/addissue",
+            json=issue_data,
             headers={"Content-Type": "application/json"},
             timeout=30,
         )
 
+    # # _success_response
+    def test_issues_base_basewebhookhandler_success_response_with_data(self, mocker):
+        """Test _success_response method with issue data."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
 
+        issue_data = {
+            "comment": "Test Issue",
+            "issue_number": 456,
+            "username": "anotheruser",
+        }
 
+        response = handler._success_response("Test message", issue_data)
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 200
+
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["message"] == "Test message"
+        assert response_data["provider"] == "DummyBaseWebhookHandler"
+        assert response_data["issue_title"] == "Test Issue"
+        assert response_data["issue_number"] == 456
+        assert response_data["username"] == "anotheruser"
+
+    def test_issues_base_basewebhookhandler_success_response_without_data(self, mocker):
+        """Test _success_response method without issue data."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+
+        response = handler._success_response("Test message")
+        assert isinstance(response, JsonResponse)
+        assert response.status_code == 200
+
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["message"] == "Test message"
+        assert response_data["provider"] == "DummyBaseWebhookHandler"
+        assert "issue_title" not in response_data
+        assert "issue_number" not in response_data
+        assert "username" not in response_data
+
+    # # process_webhook
     def test_issues_base_basewebhookhandler_process_webhook_success(self, mocker):
         """Test successful webhook processing."""
+        mocker.patch("requests.post")
         request = mocker.MagicMock()
         request.body = json.dumps({"test": "data"}).encode("utf-8")
         handler = DummyBaseWebhookHandler(request)
@@ -341,113 +483,3 @@ class TestBaseWebhookHandler:
         assert "issue_title" not in response_data
         assert "issue_number" not in response_data
         assert "username" not in response_data
-
-    def test_issues_base_basewebhookhandler_success_response_with_data(self, mocker):
-        """Test _success_response method with issue data."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = DummyBaseWebhookHandler(request)
-
-        issue_data = {
-            "title": "Test Issue",
-            "issue_number": 456,
-            "username": "anotheruser",
-        }
-
-        response = handler._success_response("Test message", issue_data)
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "success"
-        assert response_data["message"] == "Test message"
-        assert response_data["provider"] == "DummyBaseWebhookHandler"
-        assert response_data["issue_title"] == "Test Issue"
-        assert response_data["issue_number"] == 456
-        assert response_data["username"] == "anotheruser"
-
-    def test_issues_base_basewebhookhandler_success_response_without_data(self, mocker):
-        """Test _success_response method without issue data."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = DummyBaseWebhookHandler(request)
-
-        response = handler._success_response("Test message")
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "success"
-        assert response_data["message"] == "Test message"
-        assert response_data["provider"] == "DummyBaseWebhookHandler"
-        assert "issue_title" not in response_data
-        assert "issue_number" not in response_data
-        assert "username" not in response_data
-
-    def test_issues_base_basewebhookhandler_error_response_default_status(self, mocker):
-        """Test _error_response method with default status code."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = DummyBaseWebhookHandler(request)
-
-        response = handler._error_response("Error message")
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 403
-
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "error"
-        assert response_data["message"] == "Error message"
-        assert response_data["provider"] == "DummyBaseWebhookHandler"
-
-    def test_issues_base_basewebhookhandler_error_response_custom_status(self, mocker):
-        """Test _error_response method with custom status code."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = DummyBaseWebhookHandler(request)
-
-        response = handler._error_response("Error message", status=400)
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 400
-
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "error"
-        assert response_data["message"] == "Error message"
-        assert response_data["provider"] == "DummyBaseWebhookHandler"
-
-    def test_issues_base_basewebhookhandler_process_issue_creation(self, mocker):
-        """Test _process_issue_creation method."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = DummyBaseWebhookHandler(request)
-
-        issue_data = {
-            "title": "Test Issue",
-            "issue_number": 789,
-            "username": "testuser",
-        }
-
-        response = handler._process_issue_creation(issue_data)
-        assert isinstance(response, JsonResponse)
-        assert response.status_code == 200
-
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "success"
-        assert (
-            f'Issue #{issue_data["issue_number"]} processed' in response_data["message"]
-        )
-        assert response_data["provider"] == "DummyBaseWebhookHandler"
-        assert response_data["issue_title"] == "Test Issue"
-        assert response_data["issue_number"] == 789
-        assert response_data["username"] == "testuser"
-
-
-class TestIssuesBaseBaseWebhookHandler:
-    """Testing class for :py:mod:`issues.base.BaseWebhookHandler` class."""
-
-    def test_issues_base_basewebhookhandler_abstract_methods(self):
-        """Test that abstract methods are defined."""
-        assert hasattr(BaseWebhookHandler, "validate")
-        assert hasattr(BaseWebhookHandler, "extract_issue_data")
-
-        BaseWebhookHandler.validate(None)
-        BaseWebhookHandler.extract_issue_data(None)

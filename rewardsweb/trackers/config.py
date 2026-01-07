@@ -2,10 +2,6 @@
 
 from utils.helpers import get_env_variable
 
-REWARDS_API_BASE_URL = get_env_variable(
-    "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
-)
-
 
 def discord_config():
     """Return Discord configuration from environment variables.

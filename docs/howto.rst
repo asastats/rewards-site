@@ -65,7 +65,7 @@ GitHub webhook
 
 Go to your repo → Settings → Webhooks → Add webhook
 
-Payload URL: https://rewards.asastats.com/webhooks/github/
+Payload URL: https://rewards.yourdomain.com/webhooks/issue/
 
 Content type: application/json
 
@@ -121,7 +121,7 @@ GitLab webhook
 
 Go to Project → Settings → Webhooks
 
-Add URL: https://yourdomain.com/webhooks/gitlab/
+Add URL: https://rewards.yourdomain.com/webhooks/issue/
 
 Add Secret Token (optional but recommended)
 
@@ -166,7 +166,7 @@ Bitbucket webhook
 
 Go to Repository → Repository settings → Webhooks
 
-Add URL: https://yourdomain.com/webhooks/bitbucket/
+Add URL: https://rewards.yourdomain.com/webhooks/issue/
 
 Select "Issue: Created, Updated, Deleted"
 

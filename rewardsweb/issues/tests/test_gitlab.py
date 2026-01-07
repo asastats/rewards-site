@@ -364,62 +364,6 @@ class TestIssuesGitlabGitlabWebhookHandler:
         assert handler.request == request
         assert handler.payload == {"test": "data"}
 
-    # # validate
-    def test_issues_gitlab_gitlabwebhookhandler_validate_no_token_configured(
-        self, mocker
-    ):
-        """Test validation when no ISSUES_WEBHOOK_SECRET is configured."""
-        mocker.patch("issues.gitlab.os.getenv", return_value=None)
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        request.headers = {}  # No X-Gitlab-Token
-        handler = GitLabWebhookHandler(request)
-        result = handler.validate()
-        assert result is True
-
-    def test_issues_gitlab_gitlabwebhookhandler_validate_empty_token_configured(
-        self, mocker
-    ):
-        """Test validation when empty ISSUES_WEBHOOK_SECRET is configured."""
-        mocker.patch("issues.gitlab.os.getenv", return_value="")
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        request.headers = {}  # No X-Gitlab-Token
-        handler = GitLabWebhookHandler(request)
-        result = handler.validate()
-        assert result is True
-
-    def test_issues_gitlab_gitlabwebhookhandler_validate_no_header_token(self, mocker):
-        """Test validation when X-Gitlab-Token header is missing but token is configured."""
-        mocker.patch("issues.gitlab.os.getenv", return_value="expected_token")
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        request.headers = {}  # No X-Gitlab-Token
-        handler = GitLabWebhookHandler(request)
-        result = handler.validate()
-        assert result is False
-
-    def test_issues_gitlab_gitlabwebhookhandler_validate_token_mismatch(self, mocker):
-        """Test validation when token doesn't match."""
-        mocker.patch("issues.gitlab.os.getenv", return_value="expected_token")
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        request.headers = {"X-Gitlab-Token": "wrong_token"}
-        handler = GitLabWebhookHandler(request)
-        result = handler.validate()
-        assert result is False
-
-    def test_issues_gitlab_gitlabwebhookhandler_validate_token_match(self, mocker):
-        """Test validation when token matches."""
-        expected_token = "expected_token"
-        mocker.patch("issues.gitlab.os.getenv", return_value=expected_token)
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        request.headers = {"X-Gitlab-Token": expected_token}
-        handler = GitLabWebhookHandler(request)
-        result = handler.validate()
-        assert result is True
-
     # # extract_issue_data
     def test_issues_gitlab_gitlabwebhookhandler_extract_issue_data_no_payload(
         self, mocker
@@ -466,11 +410,11 @@ class TestIssuesGitlabGitlabWebhookHandler:
         result = handler.extract_issue_data()
         assert result is not None
         assert result["issue_number"] == 123
-        assert result["title"] == "Test Issue"
+        assert result["comment"] == "Test Issue"
         assert result["body"] == "Issue description"
         assert result["raw_content"] == "Issue description"
-        assert result["username"] == "testuser"
-        assert result["issue_url"] == "https://gitlab.com/test/repo/issues/123"
+        assert result["username"] == "g@testuser"
+        assert result["url"] == "https://gitlab.com/test/repo/issues/123"
         assert result["project_id"] == 456
         assert result["project_name"] == "test-project"
         assert result["created_at"] == "2023-01-01T00:00:00Z"
@@ -578,11 +522,11 @@ class TestIssuesGitlabGitlabWebhookHandler:
         result = handler.extract_issue_data()
         assert result is not None  # Should return dict with default values
         assert result["issue_number"] == 123
-        assert result["title"] == "Test Issue"
+        assert result["comment"] == "Test Issue"
         assert result["body"] == ""  # Default empty string
         assert result["raw_content"] == ""  # Default empty string
         assert result["username"] == ""  # Default empty string
-        assert result["issue_url"] == ""  # Default empty string
+        assert result["url"] == ""  # Default empty string
         assert result["project_id"] is None  # Default None
         assert result["project_name"] == ""  # Default empty string
         assert result["created_at"] == ""  # Default empty string
@@ -610,11 +554,11 @@ class TestIssuesGitlabGitlabWebhookHandler:
         result = handler.extract_issue_data()
         assert result is not None
         assert result["issue_number"] == 123
-        assert result["title"] == "Test Issue"
+        assert result["comment"] == "Test Issue"
         assert result["project_id"] is None
         assert result["project_name"] == ""
 
-    # # process_webhook (integration test)
+    # # process_webhook
     def test_issues_gitlab_gitlabwebhookhandler_process_webhook_success(self, mocker):
         """Test complete webhook processing for successful case."""
         payload = {
@@ -633,6 +577,8 @@ class TestIssuesGitlabGitlabWebhookHandler:
         request = mocker.MagicMock()
         request.body = json.dumps(payload).encode("utf-8")
         request.headers = {}  # No token needed since no secret
+        mocker.patch("issues.gitlab.GitLabWebhookHandler.validate", return_value=True)
+        mocker.patch("requests.post")
         handler = GitLabWebhookHandler(request)
         response = handler.process_webhook()
         assert response.status_code == 200
@@ -641,7 +587,7 @@ class TestIssuesGitlabGitlabWebhookHandler:
         assert response_data["provider"] == "GitLabWebhookHandler"
         assert response_data["issue_title"] == "Test Issue"
         assert response_data["issue_number"] == 123
-        assert response_data["username"] == "testuser"
+        assert response_data["username"] == "g@testuser"
 
     def test_issues_gitlab_gitlabwebhookhandler_process_webhook_validation_failed(
         self, mocker
@@ -678,6 +624,7 @@ class TestIssuesGitlabGitlabWebhookHandler:
         request = mocker.MagicMock()
         request.body = json.dumps(payload).encode("utf-8")
         request.headers = {}
+        mocker.patch("issues.gitlab.GitLabWebhookHandler.validate", return_value=True)
         handler = GitLabWebhookHandler(request)
         response = handler.process_webhook()
         assert response.status_code == 200
@@ -686,3 +633,59 @@ class TestIssuesGitlabGitlabWebhookHandler:
         assert response_data["message"] == "Not an issue creation event"
         assert "issue_title" not in response_data
         assert "issue_number" not in response_data
+
+    # # validate
+    def test_issues_gitlab_gitlabwebhookhandler_validate_no_token_configured(
+        self, mocker
+    ):
+        """Test validation when no ISSUES_WEBHOOK_SECRET is configured."""
+        mocker.patch("issues.gitlab.os.getenv", return_value=None)
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {}  # No X-Gitlab-Token
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is True
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_empty_token_configured(
+        self, mocker
+    ):
+        """Test validation when empty ISSUES_WEBHOOK_SECRET is configured."""
+        mocker.patch("issues.gitlab.os.getenv", return_value="")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {}  # No X-Gitlab-Token
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is True
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_no_header_token(self, mocker):
+        """Test validation when X-Gitlab-Token header is missing but token is configured."""
+        mocker.patch("issues.gitlab.os.getenv", return_value="expected_token")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {}  # No X-Gitlab-Token
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is False
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_token_mismatch(self, mocker):
+        """Test validation when token doesn't match."""
+        mocker.patch("issues.gitlab.os.getenv", return_value="expected_token")
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {"X-Gitlab-Token": "wrong_token"}
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is False
+
+    def test_issues_gitlab_gitlabwebhookhandler_validate_token_match(self, mocker):
+        """Test validation when token matches."""
+        expected_token = "expected_token"
+        mocker.patch("issues.gitlab.os.getenv", return_value=expected_token)
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        request.headers = {"X-Gitlab-Token": expected_token}
+        handler = GitLabWebhookHandler(request)
+        result = handler.validate()
+        assert result is True

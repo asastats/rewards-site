@@ -4,10 +4,17 @@ import json
 import logging
 from abc import ABC, abstractmethod
 
+import requests
+from django.conf import settings
 from django.http import JsonResponse
 
-from utils.constants.core import GITHUB_ISSUES_START_DATE
+from utils.constants.core import (
+    GITHUB_ISSUES_START_DATE,
+    REWARDS_API_BASE_URL,
+    REWARDS_COLLECTION,
+)
 from utils.constants.ui import MISSING_API_TOKEN_TEXT
+from utils.helpers import social_platform_prefixes
 
 logger = logging.getLogger(__name__)
 
@@ -289,34 +296,6 @@ class BaseWebhookHandler(ABC):
         self.payload = None
         self._parse_payload()
 
-    def process_webhook(self):
-        """Main entry point to process webhook.
-
-        :return: HTTP response with webhook processing result
-        :rtype: class:`django.http.JsonResponse`
-        """
-        # 1. Validate webhook
-        if not self.validate():
-            return self._error_response("Webhook validation failed")
-
-        # 2. Extract and validate issue data
-        issue_data = self.extract_issue_data()
-        if not issue_data:
-            return self._success_response("Not an issue creation event")
-
-        # 3. Issue creation detected, proceed with processing
-        return self._process_issue_creation(issue_data)
-
-    def _parse_payload(self):
-        """Parse JSON payload from request body.
-
-        Sets self.payload to parsed JSON or None if parsing fails.
-        """
-        try:
-            self.payload = json.loads(self.request.body.decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            self.payload = None
-
     @abstractmethod
     def validate(self):
         """Validate webhook signature/token.
@@ -335,17 +314,118 @@ class BaseWebhookHandler(ABC):
         """
         pass
 
+    def _error_response(self, message, status=403):
+        """Return error response.
+
+        :param message: error message
+        :type message: str
+        :param status: HTTP status code (default: 403)
+        :type status: int
+        :return: JSON error response
+        :rtype: class:`django.http.JsonResponse`
+        """
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": message,
+                "provider": self.__class__.__name__,
+            },
+            status=status,
+        )
+
+    def _formatted_username(self, username):
+        """Return username formatted by platform for use in the rewards website.
+
+        :param username: issue creator's username
+        :type username: str
+        :var prefix: characters to prefix username with
+        :type prefix: str
+        :return: formatted username
+        :rtype: str
+        """
+        try:
+            prefix = next(
+                item[1]
+                for item in social_platform_prefixes()
+                if item[0] == settings.ISSUE_TRACKER_PROVIDER
+            )
+
+        except StopIteration:
+            prefix = next(
+                item[1] for item in social_platform_prefixes() if item[0] == "GitHub"
+            )
+
+        return f"{prefix}{username}" if username else ""
+
+    def _parse_payload(self):
+        """Parse JSON payload from request body.
+
+        Sets self.payload to parsed JSON or None if parsing fails.
+        """
+        try:
+            self.payload = json.loads(self.request.body.decode("utf-8"))
+
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self.payload = None
+
+    def _parse_type_from_labels(self, labels):
+        """Return issue type from provided labels collection.
+
+        :param labels: collection of label names
+        :type labels: list
+        :return: issue type
+        :rtype: str
+        """
+        return next(
+            (
+                item[0]
+                for label in [label.lower() for label in labels]
+                for item in REWARDS_COLLECTION
+                if label in item[0].lower()
+            ),
+            REWARDS_COLLECTION[0][0],
+        )
+
     def _process_issue_creation(self, issue_data):
         """Process a new issue creation.
 
         :param issue_data: extracted issue data
         :type issue_data: dict
+        :var base_url: Rewards API base endpoints URL
+        :type base_url: str
+        :var response: requests' response instance
+        :type response: :class:`requests.Response`
         :return: success response with issue data
         :rtype: class:`django.http.JsonResponse`
         """
-        return self._success_response(
-            f'Issue #{issue_data.get("issue_number")} processed', issue_data
-        )
+        try:
+            response = requests.post(
+                f"{REWARDS_API_BASE_URL}/addissue",
+                json=issue_data,
+                headers={"Content-Type": "application/json"},
+                timeout=30,
+            )
+            response.raise_for_status()  # Raises an HTTPError for bad responses
+
+            return self._success_response(
+                f'Issue #{issue_data.get("issue_number")} processed', issue_data
+            )
+
+        except requests.exceptions.ConnectionError:
+            raise Exception(
+                "Cannot connect to the API server. Make sure it's running on localhost."
+            )
+
+        except requests.exceptions.HTTPError as e:
+            raise Exception(
+                f"API returned error: {e.response.status_code} - {e.response.text}"
+            )
+
+        except requests.exceptions.Timeout:
+            raise Exception("API request timed out.")
+
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"API request failed: {e}")
 
     def _success_response(self, message, issue_data=None):
         """Return success response.
@@ -366,7 +446,7 @@ class BaseWebhookHandler(ABC):
         if issue_data:
             response_data.update(
                 {
-                    "issue_title": issue_data.get("title"),
+                    "issue_title": issue_data.get("comment"),
                     "issue_number": issue_data.get("issue_number"),
                     "username": issue_data.get("username"),
                 }
@@ -374,21 +454,20 @@ class BaseWebhookHandler(ABC):
 
         return JsonResponse(response_data, status=200)
 
-    def _error_response(self, message, status=403):
-        """Return error response.
+    def process_webhook(self):
+        """Main entry point to process webhook.
 
-        :param message: error message
-        :type message: str
-        :param status: HTTP status code (default: 403)
-        :type status: int
-        :return: JSON error response
+        :return: HTTP response with webhook processing result
         :rtype: class:`django.http.JsonResponse`
         """
-        return JsonResponse(
-            {
-                "status": "error",
-                "message": message,
-                "provider": self.__class__.__name__,
-            },
-            status=status,
-        )
+        # 1. Validate webhook
+        if not self.validate():
+            return self._error_response("Webhook validation failed")
+
+        # 2. Extract and validate issue data
+        issue_data = self.extract_issue_data()
+        if not issue_data:
+            return self._success_response("Not an issue creation event")
+
+        # 3. Issue creation detected, proceed with processing
+        return self._process_issue_creation(issue_data)

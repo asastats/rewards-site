@@ -427,6 +427,434 @@ class TestIssuesBitbucketBitbucketWebhookHandler:
         assert handler.request == request
         assert handler.payload == {"test": "data"}
 
+    # # _extract_bitbucket_cloud_data
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_created(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_cloud_data with created change."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {
+            "changes": {"created": True},
+            "issue": {
+                "id": 123,
+                "title": "Cloud Issue",
+                "content": {"raw": "Cloud content"},
+                "reporter": {"display_name": "clouduser"},
+                "links": {"html": {"href": "https://example.com/issue"}},
+                "created_on": "2023-01-01T00:00:00Z",
+            },
+            "repository": {"full_name": "cloud/repo"},
+        }
+        result = handler._extract_bitbucket_cloud_data()
+        assert result is not None
+        assert result["issue_number"] == 123
+        assert result["comment"] == "Cloud Issue"
+        assert result["username"] == "g@clouduser"
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_data_new(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_cloud_data with new state."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {
+            "changes": {},
+            "issue": {
+                "id": 456,
+                "title": "New Cloud Issue",
+                "content": {"raw": "New cloud content"},
+                "reporter": {"display_name": "newuser"},
+                "links": {"html": {"href": "https://example.com/new"}},
+                "created_on": "2023-01-02T00:00:00Z",
+                "state": "new",
+            },
+            "repository": {"full_name": "cloud/repo"},
+        }
+        result = handler._extract_bitbucket_cloud_data()
+        assert result is not None
+        assert result["issue_number"] == 456
+        assert result["comment"] == "New Cloud Issue"
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_created_no_issue(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_cloud_data with new state."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {
+            "changes": {"created": True},
+            "repository": {"full_name": "cloud/repo"},
+        }
+        result = handler._extract_bitbucket_cloud_data()
+        assert result is None
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_data_no(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_cloud_data when no issue in payload."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {"changes": {}, "repository": {"full_name": "cloud/repo"}}
+        result = handler._extract_bitbucket_cloud_data()
+        assert result is None
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_not_new(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_cloud_data when issue is not new."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {
+            "changes": {},
+            "issue": {"state": "resolved"},  # Not new
+            "repository": {"full_name": "cloud/repo"},
+        }
+        result = handler._extract_bitbucket_cloud_data()
+        assert result is None
+
+    # # _extract_bitbucket_labels
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_labels_kind(
+        self, mocker
+    ):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        issue = {"kind": "bug"}
+        result = handler._extract_bitbucket_labels(issue)
+        assert result == ["bug"]
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_labels_comp(
+        self, mocker
+    ):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        issue = {
+            "component": {"name": "comp"},
+        }
+        result = handler._extract_bitbucket_labels(issue)
+        assert result == ["comp"]
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_labels_empty(
+        self, mocker
+    ):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        issue = {}
+        result = handler._extract_bitbucket_labels(issue)
+        assert result == []
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_labels_funct(
+        self, mocker
+    ):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        issue = {
+            "kind": "bug",
+            "component": {"name": "foo"},
+            "milestone": {"name": "bar"},
+        }
+        result = handler._extract_bitbucket_labels(issue)
+        assert result == ["bug", "foo", "bar"]
+
+    # # _extract_bitbucket_server_data
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_data_new(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_server_data with new issue."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {
+            "issue": {
+                "id": 789,
+                "title": "Server Issue",
+                "description": "Server description",
+                "reporter": {"displayName": "serveruser"},
+                "state": "new",
+                "createdDate": "2023-01-03T00:00:00Z",
+            },
+            "repository": {"name": "server-repo"},
+        }
+        result = handler._extract_bitbucket_server_data()
+        assert result is not None
+        assert result["issue_number"] == 789
+        assert result["comment"] == "Server Issue"
+        assert result["username"] == "g@serveruser"
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_not_new(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_server_data when issue is not new."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {
+            "issue": {"state": "closed"},  # Not new
+            "repository": {"name": "server-repo"},
+        }
+        result = handler._extract_bitbucket_server_data()
+        assert result is None
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_no_issue(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_server_data when no issue in payload."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {"repository": {"name": "server-repo"}}
+        result = handler._extract_bitbucket_server_data()
+        assert result is None
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_missing(
+        self, mocker
+    ):
+        """Test _extract_bitbucket_server_data with missing fields."""
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {
+            "issue": {
+                "state": "new"
+                # Missing other required fields
+            },
+            "repository": {},
+        }
+        result = handler._extract_bitbucket_server_data()
+        assert result is not None  # Should still return data with empty/None values
+        assert result["issue_number"] is None
+        assert result["comment"] == ""
+        assert result["username"] == ""
+
+    # # extract_issue_data
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_no_payload(
+        self, mocker
+    ):
+        """Test extract_issue_data when payload is None."""
+        request = mocker.MagicMock()
+        request.body = b"invalid_json"
+        handler = BitbucketWebhookHandler(request)
+        handler.payload = {}
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_cloud_created(
+        self, mocker
+    ):
+        """Test extract_issue_data for Bitbucket Cloud created event."""
+        payload = {
+            "changes": {"created": True},
+            "issue": {
+                "id": 123,
+                "title": "Test Issue",
+                "content": {"raw": "Issue body"},
+                "reporter": {"display_name": "testuser"},
+                "links": {
+                    "html": {"href": "https://bitbucket.org/test/repo/issues/123"}
+                },
+                "created_on": "2023-01-01T00:00:00Z",
+                "state": "new",
+            },
+            "repository": {"full_name": "test/repo"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is not None
+        assert result["issue_number"] == 123
+        assert result["comment"] == "Test Issue"
+        assert result["body"] == "Issue body"
+        assert result["raw_content"] == "Issue body"
+        assert result["username"] == "g@testuser"
+        assert result["url"] == "https://bitbucket.org/test/repo/issues/123"
+        assert result["repository"] == "test/repo"
+        assert result["created_at"] == "2023-01-01T00:00:00Z"
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_cloud_new_state(
+        self, mocker
+    ):
+        """Test extract_issue_data for Bitbucket Cloud new issue state."""
+        payload = {
+            "changes": {},
+            "issue": {
+                "id": 456,
+                "title": "New Issue",
+                "content": {"raw": "New issue body"},
+                "reporter": {"display_name": "anotheruser"},
+                "links": {
+                    "html": {"href": "https://bitbucket.org/test/repo/issues/456"}
+                },
+                "created_on": "2023-01-02T00:00:00Z",
+                "state": "new",
+            },
+            "repository": {"full_name": "test/repo"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is not None
+        assert result["issue_number"] == 456
+        assert result["comment"] == "New Issue"
+        assert result["username"] == "g@anotheruser"
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_cloud_no_issue(
+        self, mocker
+    ):
+        """Test extract_issue_data for Bitbucket Cloud non-issue event."""
+        payload = {
+            "changes": {},
+            "issue": {"state": "closed"},  # Not a new issue
+            "repository": {"full_name": "test/repo"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_server_new(
+        self, mocker
+    ):
+        """Test extract_issue_data for Bitbucket Server new issue."""
+        mocker.patch(
+            "issues.bitbucket.BitbucketWebhookHandler._extract_bitbucket_cloud_data",
+            return_value=None,
+        )
+        payload = {
+            "issue": {
+                "id": 789,
+                "title": "Server Issue",
+                "description": "Server issue description",
+                "reporter": {"displayName": "serveruser"},
+                "state": "new",
+                "createdDate": "2023-01-03T00:00:00Z",
+            },
+            "repository": {"name": "test-repo"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is not None
+        assert result["issue_number"] == 789
+        assert result["comment"] == "Server Issue"
+        assert result["body"] == "Server issue description"
+        assert result["raw_content"] == "Server issue description"
+        assert result["username"] == "g@serveruser"
+        assert result["repository"] == "test-repo"
+        assert result["created_at"] == "2023-01-03T00:00:00Z"
+        assert result["url"] == "https://bitbucket.org"
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_server_no_issue(
+        self, mocker
+    ):
+        """Test extract_issue_data for Bitbucket Server non-issue event."""
+        payload = {
+            "issue": {"state": "resolved"},  # Not a new issue
+            "repository": {"name": "test-repo"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is None
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_empty_payload(
+        self, mocker
+    ):
+        """Test extract_issue_data with empty payload."""
+        payload = {}
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        handler = BitbucketWebhookHandler(request)
+        result = handler.extract_issue_data()
+        assert result is None
+
+    # # process_webhook
+    def test_issues_bitbucket_bitbucketwebhookhandler_process_webhook_success(
+        self, mocker
+    ):
+        """Test complete webhook processing for successful case."""
+        payload = {
+            "changes": {"created": True},
+            "issue": {
+                "id": 123,
+                "title": "Test Issue",
+                "content": {"raw": "Issue body"},
+                "reporter": {"display_name": "testuser"},
+                "links": {"html": {"href": "https://example.com/issue"}},
+                "created_on": "2023-01-01T00:00:00Z",
+                "state": "new",
+            },
+            "repository": {"full_name": "test/repo"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        request.headers = {}  # No signature needed since no secret
+        mocker.patch(
+            "issues.bitbucket.BitbucketWebhookHandler.validate", return_value=True
+        )
+        mocker.patch("requests.post")
+        handler = BitbucketWebhookHandler(request)
+        response = handler.process_webhook()
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["provider"] == "BitbucketWebhookHandler"
+        assert response_data["issue_title"] == "Test Issue"
+        assert response_data["issue_number"] == 123
+        assert response_data["username"] == "g@testuser"
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_process_webhook_validation_failed(
+        self, mocker
+    ):
+        """Test webhook processing when validation fails."""
+        mocker.patch("issues.bitbucket.os.getenv", return_value="test_secret")
+        request = mocker.MagicMock()
+        request.body = b"test_body"
+        request.headers = {}  # No signature
+        handler = BitbucketWebhookHandler(request)
+        response = handler.process_webhook()
+        assert response.status_code == 403
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "error"
+        assert "Webhook validation failed" in response_data["message"]
+
+    def test_issues_bitbucket_bitbucketwebhookhandler_process_webhook_no_issue_data(
+        self, mocker
+    ):
+        """Test webhook processing when no issue data is found."""
+        payload = {
+            "changes": {},
+            "issue": {"state": "closed"},  # Not a new issue
+            "repository": {"full_name": "test/repo"},
+        }
+        request = mocker.MagicMock()
+        request.body = json.dumps(payload).encode("utf-8")
+        request.headers = {}
+        mocker.patch(
+            "issues.bitbucket.BitbucketWebhookHandler.validate", return_value=True
+        )
+        handler = BitbucketWebhookHandler(request)
+        response = handler.process_webhook()
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["status"] == "success"
+        assert response_data["message"] == "Not an issue creation event"
+        assert "comment" not in response_data
+        assert "issue_number" not in response_data
+
     # # validate
     def test_issues_bitbucket_bitbucketwebhookhandler_validate_no_secret(self, mocker):
         """Test validation when no ISSUES_WEBHOOK_SECRET is configured."""
@@ -484,377 +912,3 @@ class TestIssuesBitbucketBitbucketWebhookHandler:
         issues.bitbucket.hmac.new.assert_called_once_with(
             secret.encode(), request.body, issues.bitbucket.hashlib.sha256
         )
-
-    # # extract_issue_data
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_no_payload(
-        self, mocker
-    ):
-        """Test extract_issue_data when payload is None."""
-        request = mocker.MagicMock()
-        request.body = b"invalid_json"
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {}
-        result = handler.extract_issue_data()
-        assert result is None
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_cloud_created(
-        self, mocker
-    ):
-        """Test extract_issue_data for Bitbucket Cloud created event."""
-        payload = {
-            "changes": {"created": True},
-            "issue": {
-                "id": 123,
-                "title": "Test Issue",
-                "content": {"raw": "Issue body"},
-                "reporter": {"display_name": "testuser"},
-                "links": {
-                    "html": {"href": "https://bitbucket.org/test/repo/issues/123"}
-                },
-                "created_on": "2023-01-01T00:00:00Z",
-                "state": "new",
-            },
-            "repository": {"full_name": "test/repo"},
-        }
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        result = handler.extract_issue_data()
-        assert result is not None
-        assert result["issue_number"] == 123
-        assert result["title"] == "Test Issue"
-        assert result["body"] == "Issue body"
-        assert result["raw_content"] == "Issue body"
-        assert result["username"] == "testuser"
-        assert result["issue_url"] == "https://bitbucket.org/test/repo/issues/123"
-        assert result["repository"] == "test/repo"
-        assert result["created_at"] == "2023-01-01T00:00:00Z"
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_cloud_new_state(
-        self, mocker
-    ):
-        """Test extract_issue_data for Bitbucket Cloud new issue state."""
-        payload = {
-            "changes": {},
-            "issue": {
-                "id": 456,
-                "title": "New Issue",
-                "content": {"raw": "New issue body"},
-                "reporter": {"display_name": "anotheruser"},
-                "links": {
-                    "html": {"href": "https://bitbucket.org/test/repo/issues/456"}
-                },
-                "created_on": "2023-01-02T00:00:00Z",
-                "state": "new",
-            },
-            "repository": {"full_name": "test/repo"},
-        }
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        result = handler.extract_issue_data()
-        assert result is not None
-        assert result["issue_number"] == 456
-        assert result["title"] == "New Issue"
-        assert result["username"] == "anotheruser"
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_cloud_no_issue(
-        self, mocker
-    ):
-        """Test extract_issue_data for Bitbucket Cloud non-issue event."""
-        payload = {
-            "changes": {},
-            "issue": {"state": "closed"},  # Not a new issue
-            "repository": {"full_name": "test/repo"},
-        }
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        result = handler.extract_issue_data()
-        assert result is None
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_server_new(
-        self, mocker
-    ):
-        """Test extract_issue_data for Bitbucket Server new issue."""
-        mocker.patch(
-            "issues.bitbucket.BitbucketWebhookHandler._extract_bitbucket_cloud_data",
-            return_value=None,
-        )
-        payload = {
-            "issue": {
-                "id": 789,
-                "title": "Server Issue",
-                "description": "Server issue description",
-                "reporter": {"displayName": "serveruser"},
-                "state": "new",
-                "createdDate": "2023-01-03T00:00:00Z",
-            },
-            "repository": {"name": "test-repo"},
-        }
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        result = handler.extract_issue_data()
-        assert result is not None
-        assert result["issue_number"] == 789
-        assert result["title"] == "Server Issue"
-        assert result["body"] == "Server issue description"
-        assert result["raw_content"] == "Server issue description"
-        assert result["username"] == "serveruser"
-        assert result["repository"] == "test-repo"
-        assert result["created_at"] == "2023-01-03T00:00:00Z"
-        assert result["issue_url"] == ""  # Empty for server
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_server_no_issue(
-        self, mocker
-    ):
-        """Test extract_issue_data for Bitbucket Server non-issue event."""
-        payload = {
-            "issue": {"state": "resolved"},  # Not a new issue
-            "repository": {"name": "test-repo"},
-        }
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        result = handler.extract_issue_data()
-        assert result is None
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_issue_data_empty_payload(
-        self, mocker
-    ):
-        """Test extract_issue_data with empty payload."""
-        payload = {}
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        result = handler.extract_issue_data()
-        assert result is None
-
-    # # _extract_bitbucket_cloud_data
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_created(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_cloud_data with created change."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {
-            "changes": {"created": True},
-            "issue": {
-                "id": 123,
-                "title": "Cloud Issue",
-                "content": {"raw": "Cloud content"},
-                "reporter": {"display_name": "clouduser"},
-                "links": {"html": {"href": "https://example.com/issue"}},
-                "created_on": "2023-01-01T00:00:00Z",
-            },
-            "repository": {"full_name": "cloud/repo"},
-        }
-        result = handler._extract_bitbucket_cloud_data()
-        assert result is not None
-        assert result["issue_number"] == 123
-        assert result["title"] == "Cloud Issue"
-        assert result["username"] == "clouduser"
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_data_new(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_cloud_data with new state."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {
-            "changes": {},
-            "issue": {
-                "id": 456,
-                "title": "New Cloud Issue",
-                "content": {"raw": "New cloud content"},
-                "reporter": {"display_name": "newuser"},
-                "links": {"html": {"href": "https://example.com/new"}},
-                "created_on": "2023-01-02T00:00:00Z",
-                "state": "new",
-            },
-            "repository": {"full_name": "cloud/repo"},
-        }
-        result = handler._extract_bitbucket_cloud_data()
-        assert result is not None
-        assert result["issue_number"] == 456
-        assert result["title"] == "New Cloud Issue"
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_created_no_issue(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_cloud_data with new state."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {
-            "changes": {"created": True},
-            "repository": {"full_name": "cloud/repo"},
-        }
-        result = handler._extract_bitbucket_cloud_data()
-        assert result is None
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_data_no(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_cloud_data when no issue in payload."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {"changes": {}, "repository": {"full_name": "cloud/repo"}}
-        result = handler._extract_bitbucket_cloud_data()
-        assert result is None
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_cloud_not_new(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_cloud_data when issue is not new."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {
-            "changes": {},
-            "issue": {"state": "resolved"},  # Not new
-            "repository": {"full_name": "cloud/repo"},
-        }
-        result = handler._extract_bitbucket_cloud_data()
-        assert result is None
-
-    # # _extract_bitbucket_server_data
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_data_new(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_server_data with new issue."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {
-            "issue": {
-                "id": 789,
-                "title": "Server Issue",
-                "description": "Server description",
-                "reporter": {"displayName": "serveruser"},
-                "state": "new",
-                "createdDate": "2023-01-03T00:00:00Z",
-            },
-            "repository": {"name": "server-repo"},
-        }
-        result = handler._extract_bitbucket_server_data()
-        assert result is not None
-        assert result["issue_number"] == 789
-        assert result["title"] == "Server Issue"
-        assert result["username"] == "serveruser"
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_not_new(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_server_data when issue is not new."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {
-            "issue": {"state": "closed"},  # Not new
-            "repository": {"name": "server-repo"},
-        }
-        result = handler._extract_bitbucket_server_data()
-        assert result is None
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_no_issue(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_server_data when no issue in payload."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {"repository": {"name": "server-repo"}}
-        result = handler._extract_bitbucket_server_data()
-        assert result is None
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_extract_bitbucket_server_missing(
-        self, mocker
-    ):
-        """Test _extract_bitbucket_server_data with missing fields."""
-        request = mocker.MagicMock()
-        request.body = json.dumps({"test": "data"}).encode("utf-8")
-        handler = BitbucketWebhookHandler(request)
-        handler.payload = {
-            "issue": {
-                "state": "new"
-                # Missing other required fields
-            },
-            "repository": {},
-        }
-        result = handler._extract_bitbucket_server_data()
-        assert result is not None  # Should still return data with empty/None values
-        assert result["issue_number"] is None
-        assert result["title"] == ""
-        assert result["username"] == ""
-
-    # # process_webhook (integration test)
-    def test_issues_bitbucket_bitbucketwebhookhandler_process_webhook_success(
-        self, mocker
-    ):
-        """Test complete webhook processing for successful case."""
-        payload = {
-            "changes": {"created": True},
-            "issue": {
-                "id": 123,
-                "title": "Test Issue",
-                "content": {"raw": "Issue body"},
-                "reporter": {"display_name": "testuser"},
-                "links": {"html": {"href": "https://example.com/issue"}},
-                "created_on": "2023-01-01T00:00:00Z",
-                "state": "new",
-            },
-            "repository": {"full_name": "test/repo"},
-        }
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        request.headers = {}  # No signature needed since no secret
-        handler = BitbucketWebhookHandler(request)
-        response = handler.process_webhook()
-        assert response.status_code == 200
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "success"
-        assert response_data["provider"] == "BitbucketWebhookHandler"
-        assert response_data["issue_title"] == "Test Issue"
-        assert response_data["issue_number"] == 123
-        assert response_data["username"] == "testuser"
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_process_webhook_validation_failed(
-        self, mocker
-    ):
-        """Test webhook processing when validation fails."""
-        mocker.patch("issues.bitbucket.os.getenv", return_value="test_secret")
-        request = mocker.MagicMock()
-        request.body = b"test_body"
-        request.headers = {}  # No signature
-        handler = BitbucketWebhookHandler(request)
-        response = handler.process_webhook()
-        assert response.status_code == 403
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "error"
-        assert "Webhook validation failed" in response_data["message"]
-
-    def test_issues_bitbucket_bitbucketwebhookhandler_process_webhook_no_issue_data(
-        self, mocker
-    ):
-        """Test webhook processing when no issue data is found."""
-        payload = {
-            "changes": {},
-            "issue": {"state": "closed"},  # Not a new issue
-            "repository": {"full_name": "test/repo"},
-        }
-        request = mocker.MagicMock()
-        request.body = json.dumps(payload).encode("utf-8")
-        request.headers = {}
-        handler = BitbucketWebhookHandler(request)
-        response = handler.process_webhook()
-        assert response.status_code == 200
-        response_data = json.loads(response.content)
-        assert response_data["status"] == "success"
-        assert response_data["message"] == "Not an issue creation event"
-        assert "issue_title" not in response_data
-        assert "issue_number" not in response_data

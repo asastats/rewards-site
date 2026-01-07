@@ -8,6 +8,7 @@ from api.serializers import (
     ContributorSerializer,
     CycleSerializer,
     HumanizedContributionSerializer,
+    IssueSerializer,
     RewardSerializer,
     RewardTypeSerializer,
     SocialPlatformSerializer,
@@ -16,6 +17,8 @@ from core.models import (
     Contribution,
     Contributor,
     Cycle,
+    Issue,
+    IssueStatus,
     Reward,
     RewardType,
     SocialPlatform,
@@ -294,4 +297,27 @@ class TestApiSerializersContributionSerializer:
             "comment",
             "confirmed",
         }
+        assert set(serializer.fields.keys()) == expected_fields
+
+
+class TestApiSerializersIssueSerializer:
+    """Testing class for :py:class:`api.serializers.IssueSerializer`."""
+
+    def test_api_serializers_issue_serializer_creation(self, mocker):
+        # Create a mock issue instance
+        mock_issue = mocker.MagicMock(spec=Issue)
+        mock_issue.id = 1
+        mock_issue.number = 100
+        mock_issue.status = IssueStatus.WONTFIX
+
+        # Test serialization (object to dict)
+        serializer = IssueSerializer(mock_issue)
+        data = serializer.data
+        assert "id" in data
+        assert "number" in data
+        assert "status" in data
+
+    def test_api_serializers_issue_serializer_fields(self):
+        serializer = IssueSerializer()
+        expected_fields = {"id", "number", "status"}
         assert set(serializer.fields.keys()) == expected_fields

@@ -1,22 +1,19 @@
 """Module containing base tracker class."""
 
 import asyncio
-import json
 import logging
 import os
 import signal
 import time
-from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
 
 import aiohttp
 import requests
 from asgiref.sync import sync_to_async
-from django.http import JsonResponse
 
-from trackers.config import REWARDS_API_BASE_URL
 from trackers.models import Mention, MentionLog
+from utils.constants.core import REWARDS_API_BASE_URL
 from utils.helpers import get_env_variable, social_platform_prefixes
 
 

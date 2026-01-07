@@ -13,11 +13,13 @@ from api.serializers import (
     ContributionSerializer,
     CycleSerializer,
     HumanizedContributionSerializer,
+    IssueSerializer,
 )
 from core.models import (
     Contribution,
     Contributor,
     Cycle,
+    IssueStatus,
     Reward,
     RewardType,
     SocialPlatform,
@@ -227,72 +229,136 @@ class ContributionsTailView(LocalhostAPIView):
         return await contributions_response(queryset)
 
 
+@sync_to_async
+def process_contribution(raw_data, confirmed=False):
+    """Process contribution data synchronously in thread pool.
+
+    :param raw_data: raw contribution data from request
+    :type raw_data: dict
+    :param confirmed: should contribution be created as confirmed or not
+    :type confirmed: Boolean
+    :var contributor: contributor instance
+    :type contributor: :class:`core.models.Contributor`
+    :var cycle: rewards cycle instance
+    :type cycle: :class:`core.models.Cycle`
+    :var platform: social platform instance
+    :type platform: :class:`core.models.SocialPlatform`
+    :var label: reward name
+    :type label: str
+    :var name: reward label
+    :type name: int
+    :var reward_type: reward type instance
+    :type reward_type: :class:`core.models.RewardType`
+    :var rewards: queryset of Reward objects
+    :type rewards: :class:`django.db.models.QuerySet`
+    :var data: prepared contribution data
+    :type data: dict
+    :var serializer: contribution serializer instance
+    :type serializer: :class:`api.serializers.ContributionSerializer`
+    :return: tuple of (serialized_data, errors)
+    :rtype: two-tuple
+    """
+    contributor = Contributor.objects.from_full_handle(raw_data.get("username"))
+    cycle = Cycle.objects.latest("start")
+    platform = SocialPlatform.objects.get(name=raw_data.get("platform"))
+    label, name = (
+        raw_data.get("type").split(" ", 1)[0].strip("[]"),
+        raw_data.get("type").split(" ", 1)[1].strip(),
+    )
+    reward_type = get_object_or_404(RewardType, label=label, name=name)
+    rewards = Reward.objects.filter(
+        type=reward_type, level=int(raw_data.get("level", 1)), active=True
+    )
+    data = {
+        "contributor": contributor.id,
+        "cycle": cycle.id,
+        "platform": platform.id,
+        "reward": rewards[0].id,
+        "percentage": 1,
+        "url": raw_data.get("url"),
+        "comment": raw_data.get("comment"),
+        "confirmed": confirmed,
+    }
+
+    serializer = ContributionSerializer(data=data)
+    if serializer.is_valid():
+        with transaction.atomic():
+            serializer.save()
+
+        return serializer.data, None
+
+    return None, serializer.errors
+
+
+@sync_to_async
+def process_issue(raw_data):
+    """Process issue data synchronously in thread pool.
+
+    :param raw_data: raw issue data from request
+    :type raw_data: dict
+    :var data: prepared issue data
+    :type data: dict
+    :var serializer: issue serializer instance
+    :type serializer: :class:`api.serializers.IssueSerializer`
+    :return: tuple of (serialized_data, errors)
+    :rtype: tuple
+    """
+    data = {"number": raw_data.get("issue_number"), "status": IssueStatus.CREATED}
+    serializer = IssueSerializer(data=data)
+    if serializer.is_valid():
+        with transaction.atomic():
+            serializer.save()
+
+        return serializer.data, None
+
+    return None, serializer.errors
+
+
 class AddContributionView(LocalhostAPIView):
-    """API view to add new contributions."""
+    """API view to add new contribution."""
 
     async def post(self, request):
         """Handle POST request to create a new contribution.
 
         :param request: HTTP request object with contribution data
         :type request: :class:`rest_framework.request.Request`
-        :var username: contributor username
-        :type username: str
-        :var platform: social platform name
-        :type platform: str
-        :var type: reward type in format "[label] name"
-        :type type: str
-        :var level: contribution level
-        :type level: int
-        :var url: contribution URL
-        :type url: str
-        :var comment: optional comment
-        :type comment: str
+        :var data: prepared contribution data
+        :type data: dict
+        :var errors: collection of error messages
+        :type errors: dict
         :return: created contribution data or validation errors
         :rtype: :class:`rest_framework.response.Response`
         """
-
-        @sync_to_async
-        def process_contribution(raw_data):
-            """Process contribution data synchronously in thread pool.
-
-            :param raw_data: raw contribution data from request
-            :type raw_data: dict
-            :return: tuple of (serialized_data, errors)
-            :rtype: tuple
-            """
-            contributor = Contributor.objects.from_full_handle(raw_data.get("username"))
-            cycle = Cycle.objects.latest("start")
-            platform = SocialPlatform.objects.get(name=raw_data.get("platform"))
-            label, name = (
-                raw_data.get("type").split(" ", 1)[0].strip("[]"),
-                raw_data.get("type").split(" ", 1)[1].strip(),
-            )
-            reward_type = get_object_or_404(RewardType, label=label, name=name)
-            rewards = Reward.objects.filter(
-                type=reward_type, level=int(raw_data.get("level", 1)), active=True
-            )
-            data = {
-                "contributor": contributor.id,
-                "cycle": cycle.id,
-                "platform": platform.id,
-                "reward": rewards[0].id,
-                "percentage": 1,
-                "url": raw_data.get("url"),
-                "comment": raw_data.get("comment"),
-                "confirmed": False,
-            }
-
-            serializer = ContributionSerializer(data=data)
-            if serializer.is_valid():
-                with transaction.atomic():
-                    serializer.save()
-
-                return serializer.data, None
-
-            return None, serializer.errors
-
         data, errors = await process_contribution(request.data)
         if data:
             return Response(data, status=status.HTTP_201_CREATED)
+
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddIssueView(LocalhostAPIView):
+    """API view to add new issue and related contribution."""
+
+    async def post(self, request):
+        """Handle POST request to create a new issue.
+
+        :param request: HTTP request object with issue data
+        :type request: :class:`rest_framework.request.Request`
+        :var contribution_data: prepared contribution data
+        :type contribution_data: dict
+        :var data: prepared issue data
+        :type data: dict
+        :var errors: collection of error messages
+        :type errors: dictomment
+        :return: created issue data or validation errors
+        :rtype: :class:`rest_framework.response.Response`
+        """
+        contribution_data, errors = await process_contribution(
+            request.data, confirmed=True
+        )
+        if contribution_data:
+            data, errors = await process_issue(request.data)
+            if data:
+                return Response(data, status=status.HTTP_201_CREATED)
 
         return Response(errors, status=status.HTTP_400_BAD_REQUEST)

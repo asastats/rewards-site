@@ -69,9 +69,17 @@ class TestApiUrls:
         assert hasattr(url.callback, "view_class")
         assert url.callback.view_class.__name__ == "AddContributionView"
 
+    def test_api_urls_add_issue(self):
+        """Test add issue endpoint URL configuration."""
+        url = self._url_from_pattern("addissue")
+        assert isinstance(url, URLPattern)
+        assert url.name == "add-issue"
+        assert hasattr(url.callback, "view_class")
+        assert url.callback.view_class.__name__ == "AddIssueView"
+
     def test_api_urls_pattern_count(self):
         """Test that all expected URL patterns are present."""
-        assert len(urls.urlpatterns) == 7
+        assert len(urls.urlpatterns) == 8
 
     def test_api_urls_all_patterns_are_urlpatterns(self):
         """Test that all URL patterns are valid URLPattern instances."""

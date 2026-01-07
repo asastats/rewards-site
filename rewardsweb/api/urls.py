@@ -32,4 +32,5 @@ urlpatterns = [
     path(
         "addcontribution", views.AddContributionView.as_view(), name="add-contribution"
     ),
+    path("addissue", views.AddIssueView.as_view(), name="add-issue"),
 ]

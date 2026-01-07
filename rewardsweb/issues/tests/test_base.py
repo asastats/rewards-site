@@ -175,6 +175,124 @@ class TestBaseWebhookHandler:
         assert handler.request == request
         assert handler.payload is None
 
+    # _process_issue_creation
+    def test_issues_base_basewebhookhandler_process_issue_creation_success(
+        self, mocker
+    ):
+        request = mocker.MagicMock()
+        request.body = json.dumps({"test": "data"}).encode("utf-8")
+        handler = DummyBaseWebhookHandler(request)
+        response = handler.process_webhook()        
+
+        mock_requests_post = mocker.patch("requests.post")
+        mock_response = mocker.MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {"success": True}
+        mock_requests_post.return_value = mock_response
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        result = instance._process_issue_creation(contribution_data)
+        mock_requests_post.assert_called_once_with(
+            "http://127.0.0.1:8000/api/addcontribution",
+            json=contribution_data,
+            headers={"Content-Type": "application/json"},
+            timeout=30,
+        )
+        assert result == {"success": True}
+
+    def test_issues_base_basewebhookhandler_process_issue_creation_connection_error(
+        self, mocker
+    ):
+        mock_requests_post = mocker.patch("requests.post")
+        mock_requests_post.side_effect = requests.exceptions.ConnectionError()
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        with pytest.raises(
+            Exception,
+            match="Cannot connect to the API server. Make sure it's running on localhost.",
+        ):
+            instance._process_issue_creation(contribution_data)
+
+    def test_issues_base_basewebhookhandler_process_issue_creation_http_error(
+        self, mocker
+    ):
+        mock_requests_post = mocker.patch("requests.post")
+        mock_response = mocker.MagicMock()
+        mock_response.status_code = 400
+        mock_response.text = "Bad Request"
+        mock_requests_post.side_effect = requests.exceptions.HTTPError(
+            response=mock_response
+        )
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        with pytest.raises(Exception, match="API returned error: 400 - Bad Request"):
+            instance._process_issue_creation(contribution_data)
+
+    def test_issues_base_basewebhookhandler_process_issue_creation_timeout(
+        self, mocker
+    ):
+        mock_requests_post = mocker.patch("requests.post")
+        mock_requests_post.side_effect = requests.exceptions.Timeout()
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        with pytest.raises(Exception, match="API request timed out."):
+            instance._process_issue_creation(contribution_data)
+
+    def test_issues_base_basewebhookhandler_process_issue_creation_request_exception(
+        self, mocker
+    ):
+        mock_requests_post = mocker.patch("requests.post")
+        mock_requests_post.side_effect = requests.exceptions.RequestException(
+            "Generic error"
+        )
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        with pytest.raises(Exception, match="API request failed: Generic error"):
+            instance._process_issue_creation(contribution_data)
+
+    def test_issues_base_basewebhookhandler_process_issue_creation_changed_base_url(
+        self, mocker
+    ):
+        mocker.patch.object(
+            trackers.base,
+            "REWARDS_API_BASE_URL",
+            "http://test-api:8000/api",
+        )
+        mock_requests_post = mocker.patch("requests.post")
+        mock_response = mocker.MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {"success": True}
+        mock_requests_post.return_value = mock_response
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        instance._process_issue_creation(contribution_data)
+        mock_requests_post.assert_called_once_with(
+            "http://test-api:8000/api/addcontribution",
+            json=contribution_data,
+            headers={"Content-Type": "application/json"},
+            timeout=30,
+        )
+
+    def test_issues_base_basewebhookhandler_process_issue_creation_default_base_url(
+        self, mocker
+    ):
+        mock_requests_post = mocker.patch("requests.post")
+        mock_response = mocker.MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {"success": True}
+        mock_requests_post.return_value = mock_response
+        instance = BaseMentionTracker("test_platform", lambda x: None)
+        contribution_data = {"username": "test_user", "platform": "Testplatform"}
+        instance._process_issue_creation(contribution_data)
+        mock_requests_post.assert_called_once_with(
+            "http://127.0.0.1:8000/api/addcontribution",
+            json=contribution_data,
+            headers={"Content-Type": "application/json"},
+            timeout=30,
+        )
+
+
+
     def test_issues_base_basewebhookhandler_process_webhook_success(self, mocker):
         """Test successful webhook processing."""
         request = mocker.MagicMock()

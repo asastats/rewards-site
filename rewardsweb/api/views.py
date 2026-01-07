@@ -2,6 +2,7 @@
 
 from adrf.views import APIView
 from asgiref.sync import sync_to_async
+from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -13,11 +14,13 @@ from api.serializers import (
     ContributionSerializer,
     CycleSerializer,
     HumanizedContributionSerializer,
+    IssueSerializer,
 )
 from core.models import (
     Contribution,
     Contributor,
     Cycle,
+    IssueStatus,
     Reward,
     RewardType,
     SocialPlatform,
@@ -228,7 +231,7 @@ class ContributionsTailView(LocalhostAPIView):
 
 
 class AddContributionView(LocalhostAPIView):
-    """API view to add new contributions."""
+    """API view to add new contribution."""
 
     async def post(self, request):
         """Handle POST request to create a new contribution.
@@ -292,6 +295,92 @@ class AddContributionView(LocalhostAPIView):
             return None, serializer.errors
 
         data, errors = await process_contribution(request.data)
+        if data:
+            return Response(data, status=status.HTTP_201_CREATED)
+
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddIssueView(LocalhostAPIView):
+    """API view to add new issue and related contribution.
+    
+    TODO: docstring and tests
+    """
+
+    async def post(self, request):
+        """Handle POST request to create a new issue.
+
+        :param request: HTTP request object with issue data
+        :type request: :class:`rest_framework.request.Request`
+        :var username: contributor username
+        :type username: str
+        :var platform: social platform name
+        :type platform: str
+        :var type: reward type in format "[label] name"
+        :type type: str
+        :var level: contribution level
+        :type level: int
+        :var url: issue URL
+        :type url: str
+        :var comment: optional comment
+        :type comment: str
+        :return: created issue data or validation errors
+        :rtype: :class:`rest_framework.response.Response`
+        """
+
+        @sync_to_async
+        def process_issue(raw_data):
+            """Process issue data synchronously in thread pool.
+
+            TODO: implement, docstring, and tests
+
+            :param raw_data: raw issue data from request
+            :type raw_data: dict
+            :return: tuple of (serialized_data, errors)
+            :rtype: tuple
+            """
+            contributor = Contributor.objects.from_full_handle(raw_data.get("username"))
+            cycle = Cycle.objects.latest("start")
+            platform = SocialPlatform.objects.get(name=settings.ISSUE_TRACKER_PROVIDER)
+            label, name = (
+                raw_data.get("type").split(" ", 1)[0].strip("[]"),
+                raw_data.get("type").split(" ", 1)[1].strip(),
+            )
+            reward_type = get_object_or_404(RewardType, label=label, name=name)
+            rewards = Reward.objects.filter(
+                type=reward_type, level=int(raw_data.get("level", 1)), active=True
+            )
+            contrib_data = {
+                "contributor": contributor.id,
+                "cycle": cycle.id,
+                "platform": platform.id,
+                "reward": rewards[0].id,
+                "percentage": 1,
+                "url": raw_data.get("issue_url"),
+                "comment": raw_data.get("title"),
+                "confirmed": True,
+            }
+            contrib_serializer = ContributionSerializer(data=contrib_data)
+            if contrib_serializer.is_valid():
+                with transaction.atomic():
+                    contrib_serializer.save()
+
+                issue_data = { 
+                    "number": raw_data.get("issue_number"),
+                    "status": IssueStatus.CREATED,
+                }
+                issue_serializer = IssueSerializer(data=issue_data)
+                if issue_serializer.is_valid():
+                    with transaction.atomic():
+                        issue_serializer.save()
+
+                    return issue_serializer.data, None
+                
+                return None, issue_serializer.errors
+
+            return None, contrib_serializer.errors
+
+        data, errors = await process_issue(request.data)
         if data:
             return Response(data, status=status.HTTP_201_CREATED)
 

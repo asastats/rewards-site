@@ -301,6 +301,8 @@ class BitbucketWebhookHandler(BaseWebhookHandler):
     def extract_issue_data(self):
         """Extract issue data from Bitbucket webhook payload.
 
+        :var issue_data: prepared Bitbucket issue data
+        :type issue_data: dict
         :return: issue data dict if issue creation detected, None otherwise
         :rtype: dict or None
         """
@@ -318,21 +320,55 @@ class BitbucketWebhookHandler(BaseWebhookHandler):
 
         return None
 
+    def _extract_bitbucket_labels(self, issue):
+        """Extract and return labels collection from Bitbucket issue instance.
+
+        TODO: tests
+
+        :param issue: Bitbucket issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
+        :return: collection of label names
+        :rtype: list
+        """
+        labels = []
+
+        if issue.get("kind"):
+            labels.append(issue.get("kind"))
+
+        if issue.get("component"):
+            labels.append(issue.get("component").get("name"))
+
+        if issue.get("milestone"):
+            labels.append(issue.get("milestone").get("name"))
+
+        return labels
+
     def _extract_bitbucket_cloud_data(self):
         """Extract data from Bitbucket Cloud webhook payload.
 
+        TODO: tests
+
+        :var changes: Bitbucket object data
+        :type changes: dict
+        :var issue: Bitbucket issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
         :return: issue data dict if issue creation detected, None otherwise
         :rtype: dict or None
         """
         changes = self.payload.get("changes", {})
-
         # Check for issue creation
         if "created" in changes:
             issue = self.payload.get("issue", {})
             if issue:
+                labels = self._extract_bitbucket_labels(issue)
                 return {
                     "username": issue.get("reporter", {}).get("display_name", ""),
                     "title": issue.get("title", ""),
+                    "type": self._parse_type_from_labels(labels),
                     "body": issue.get("content", {}).get("raw", ""),
                     "raw_content": issue.get("content", {}).get("raw", ""),
                     "issue_url": issue.get("links", {}).get("html", {}).get("href", ""),
@@ -346,9 +382,11 @@ class BitbucketWebhookHandler(BaseWebhookHandler):
         # Also check if it's a new issue by state
         issue = self.payload.get("issue", {})
         if issue and issue.get("state") == "new":
+            labels = self._extract_bitbucket_labels(issue)
             return {
                 "username": issue.get("reporter", {}).get("display_name", ""),
                 "title": issue.get("title", ""),
+                "type": self._parse_type_from_labels(labels),
                 "body": issue.get("content", {}).get("raw", ""),
                 "raw_content": issue.get("content", {}).get("raw", ""),
                 "issue_url": issue.get("links", {}).get("html", {}).get("href", ""),
@@ -362,6 +400,12 @@ class BitbucketWebhookHandler(BaseWebhookHandler):
     def _extract_bitbucket_server_data(self):
         """Extract data from Bitbucket Server webhook payload.
 
+        TODO: tests
+
+        :var issue: Bitbucket issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
         :return: issue data dict if new issue detected, None otherwise
         :rtype: dict or None
         """
@@ -369,9 +413,11 @@ class BitbucketWebhookHandler(BaseWebhookHandler):
 
         # Bitbucket Server webhook for new issues
         if issue and issue.get("state") == "new":
+            labels = self._extract_bitbucket_labels(issue)
             return {
                 "username": issue.get("reporter", {}).get("displayName", ""),
                 "title": issue.get("title", ""),
+                "type": self._parse_type_from_labels(labels),
                 "body": issue.get("description", ""),
                 "raw_content": issue.get("description", ""),
                 "issue_url": "",  # May need to construct from repository URL

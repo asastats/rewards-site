@@ -15,6 +15,7 @@ from core.models import (
     Contribution,
     Contributor,
     Cycle,
+    Issue,
     Reward,
     RewardType,
     SocialPlatform,
@@ -192,3 +193,19 @@ class ContributionSerializer(ModelSerializer):
             "comment",
             "confirmed",
         )
+
+
+class IssueSerializer(ModelSerializer):
+    """Serializer for Issue model.
+
+    :var id: issue identifier
+    :type id: :class:`rest_framework.serializers.IntegerField`
+    :var number: issue number defined by issue tracker provider
+    :type number: :class:`rest_framework.serializers.IntegerField`
+    :var status: issue status
+    :type status: :class:`rest_framework.serializers.IntegerField`
+    """
+
+    class Meta:
+        model = Issue
+        fields = ("id", "number", "status")

@@ -2,6 +2,7 @@
 
 from utils.helpers import get_env_variable
 
+# TODO: move this constant to utils.constants.base
 REWARDS_API_BASE_URL = get_env_variable(
     "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
 )

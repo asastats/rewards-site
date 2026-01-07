@@ -4,9 +4,11 @@ import json
 import logging
 from abc import ABC, abstractmethod
 
+import requests
 from django.http import JsonResponse
 
-from utils.constants.core import GITHUB_ISSUES_START_DATE
+from trackers.config import REWARDS_API_BASE_URL
+from utils.constants.core import GITHUB_ISSUES_START_DATE, REWARDS_COLLECTION
 from utils.constants.ui import MISSING_API_TOKEN_TEXT
 
 logger = logging.getLogger(__name__)
@@ -335,17 +337,73 @@ class BaseWebhookHandler(ABC):
         """
         pass
 
+    def _parse_type_from_labels(self, labels):
+        """Return issue type from provided labels collection.
+
+        TODO: tests
+
+        :param labels: collection of label names
+        :type labels: list
+        :return: issue type
+        :rtype: str
+        """
+        return next(
+            (
+                item[0]
+                for label in [label.lower() for label in labels]
+                for item in REWARDS_COLLECTION
+                if label in item[0].lower()
+            ),
+            REWARDS_COLLECTION[0][0],
+        )
+
     def _process_issue_creation(self, issue_data):
         """Process a new issue creation.
 
+        TODO: implement, docstring, and tests
+
         :param issue_data: extracted issue data
         :type issue_data: dict
+        :var base_url: Rewards API base endpoints URL
+        :type base_url: str
+        :var response: requests' response instance
+        :type response: :class:`requests.Response`
+        :return: response data from Rewards API
+        :rtype: dict
+
         :return: success response with issue data
         :rtype: class:`django.http.JsonResponse`
         """
-        return self._success_response(
-            f'Issue #{issue_data.get("issue_number")} processed', issue_data
-        )
+
+        try:
+            response = requests.post(
+                f"{REWARDS_API_BASE_URL}/addcontribution",
+                json=issue_data,
+                headers={"Content-Type": "application/json"},
+                timeout=30,
+            )
+            response.raise_for_status()  # Raises an HTTPError for bad responses
+
+            return self._success_response(
+                f'Issue #{issue_data.get("issue_number")} processed', issue_data
+            )
+            # return response.json()
+
+        except requests.exceptions.ConnectionError:
+            raise Exception(
+                "Cannot connect to the API server. Make sure it's running on localhost."
+            )
+
+        except requests.exceptions.HTTPError as e:
+            raise Exception(
+                f"API returned error: {e.response.status_code} - {e.response.text}"
+            )
+
+        except requests.exceptions.Timeout:
+            raise Exception("API request timed out.")
+
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"API request failed: {e}")
 
     def _success_response(self, message, issue_data=None):
         """Return success response.

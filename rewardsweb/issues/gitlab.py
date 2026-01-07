@@ -228,6 +228,16 @@ class GitLabWebhookHandler(BaseWebhookHandler):
     def extract_issue_data(self):
         """Extract issue data from GitLab webhook payload.
 
+        TODO: tests
+
+        :var object_kind: GitLab object kind
+        :type object_kind: str
+        :var action: GitLab event type
+        :type action: str
+        :var issue: GitLab issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
         :return: issue data dict if object_kind is 'issue' and action is 'open'
         :rtype: dict or None
         """
@@ -239,9 +249,12 @@ class GitLabWebhookHandler(BaseWebhookHandler):
             return None
 
         issue = self.payload.get("object_attributes", {})
+        labels = [label.get("title") for label in issue.get("labels", [])]
+
         return {
             "username": issue.get("author", {}).get("username", ""),
             "title": issue.get("title", ""),
+            "type": self._parse_type_from_labels(labels),
             "body": issue.get("description", ""),
             "raw_content": issue.get("description", ""),
             "issue_url": issue.get("url", ""),

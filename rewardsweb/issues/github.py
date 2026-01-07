@@ -310,6 +310,14 @@ class GitHubWebhookHandler(BaseWebhookHandler):
     def extract_issue_data(self):
         """Extract issue data from GitHub webhook payload.
 
+        TODO: tests
+
+        :var event_type: GitHub issue event type
+        :type event_type: str
+        :var issue: GitHub issue data
+        :type issue: dict
+        :var labels: collection of label names
+        :type labels: list
         :return: issue data dict if action is 'opened', None otherwise
         :rtype: dict or None
         """
@@ -322,9 +330,12 @@ class GitHubWebhookHandler(BaseWebhookHandler):
         if not issue:
             return None
 
+        labels = [label.get("name") for label in issue.get("labels", [])]
+
         return {
             "username": issue.get("user", {}).get("login", ""),
             "title": issue.get("title", ""),
+            "type": self._parse_type_from_labels(labels),
             "body": issue.get("body", ""),
             "raw_content": issue.get("body", ""),
             "issue_url": issue.get("html_url", ""),

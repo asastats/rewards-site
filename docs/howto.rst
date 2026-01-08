@@ -166,9 +166,11 @@ Bitbucket webhook
 
 Go to Repository → Repository settings → Webhooks
 
+Add webhook
+
 Add URL: https://rewards.yourdomain.com/webhooks/issue/
 
-Select "Issue: Created, Updated, Deleted"
+Select "Issue: Created"
 
 Add Secret (for Cloud only)
 

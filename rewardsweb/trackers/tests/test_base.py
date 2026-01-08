@@ -275,6 +275,9 @@ class TestTrackersBaseMentionTracker:
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {"success": True}
         mock_requests_post.return_value = mock_response
+        mocker.patch.object(
+            trackers.base, "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
+        )
         instance = BaseMentionTracker("test_platform", lambda x: None)
         contribution_data = {"username": "test_user", "platform": "Testplatform"}
         result = instance.post_new_contribution(contribution_data)
@@ -367,6 +370,9 @@ class TestTrackersBaseMentionTracker:
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {"success": True}
         mock_requests_post.return_value = mock_response
+        mocker.patch.object(
+            trackers.base, "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
+        )
         instance = BaseMentionTracker("test_platform", lambda x: None)
         contribution_data = {"username": "test_user", "platform": "Testplatform"}
         instance.post_new_contribution(contribution_data)
@@ -804,6 +810,9 @@ class TestBaseAsyncMentionTracker:
 
         mocker.patch.object(instance, "initialize_session", side_effect=mock_initialize)
 
+        mocker.patch.object(
+            trackers.base, "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
+        )
         # Call the method
         contribution_data = {"username": "test_user", "platform": "Testplatform"}
         result = await instance.post_new_contribution_async(contribution_data)

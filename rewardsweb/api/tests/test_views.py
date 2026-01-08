@@ -1149,6 +1149,7 @@ class TestApiViewsAddIssueView:
         mock_process_issue = mocker.patch("api.views.process_issue")
         mock_issue_data = {"id": 1, "number": 200, "status": 5}
         mock_process_issue.return_value = (mock_issue_data, None)
+        mocked_assign = mocker.patch("api.views.Contribution.objects.assign_issue")
 
         response = await view.post(mock_request)
 
@@ -1161,6 +1162,7 @@ class TestApiViewsAddIssueView:
         # Verify response
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data == mock_issue_data
+        mocked_assign.assert_called_once_with(1, 1)
 
     @pytest.mark.asyncio
     async def test_api_views_addissueview_post_validation_error_on_contribution(

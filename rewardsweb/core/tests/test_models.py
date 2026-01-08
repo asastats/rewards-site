@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import DataError, models
 from django.db.utils import IntegrityError
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from core.models import (
@@ -3189,6 +3190,57 @@ class TestContributionManager:
             "VW55KZ3NF4GDOWI7IPWLGZDFWNXWKSRD5PETRLDABZVU5XPKRJJRK3CBSU",
         ]
         assert amounts == [6000, 2500]
+
+    # # assign_issue
+    def test_contributionmanager_assign_issue_functionality(self):
+        contributor1 = Contributor.objects.create(
+            name="user-addressed-2",
+            address="2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU",
+        )
+        issue_1 = Issue.objects.create(number=1524, status=IssueStatus.ARCHIVED)
+        issue_2 = Issue.objects.create(number=1525, status=IssueStatus.CREATED)
+        cycle = Cycle.objects.create(start="2025-05-02")
+        platform = SocialPlatform.objects.create(name="GitHub")
+        reward_type = RewardType.objects.create(label="B1", name="Bug Fix")
+        reward1 = Reward.objects.create(type=reward_type, level=1, amount=1000)
+        reward2 = Reward.objects.create(type=reward_type, level=3, amount=5000)
+        Contribution.objects.create(
+            cycle=cycle,
+            issue=issue_1,
+            contributor=contributor1,
+            platform=platform,
+            reward=reward1,
+        )
+        contribution = Contribution.objects.create(
+            cycle=cycle,
+            contributor=contributor1,
+            platform=platform,
+            reward=reward2,
+        )
+        assert contribution.issue is None
+        Contribution.objects.assign_issue(issue_2.id, contribution.id)
+        contribution = get_object_or_404(Contribution, id=contribution.id)
+        assert contribution.issue == issue_2
+
+    def test_contributionmanager_assign_issue_does_nothing_for_invalid_issue_id(self):
+        contributor1 = Contributor.objects.create(
+            name="user-addressed-3",
+            address="2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU",
+        )
+        cycle = Cycle.objects.create(start="2025-05-02")
+        platform = SocialPlatform.objects.create(name="GitHub")
+        reward_type = RewardType.objects.create(label="B1", name="Bug Fix")
+        reward = Reward.objects.create(type=reward_type, level=3, amount=5000)
+        contribution = Contribution.objects.create(
+            cycle=cycle,
+            contributor=contributor1,
+            platform=platform,
+            reward=reward,
+        )
+        assert contribution.issue is None
+        Contribution.objects.assign_issue(15000, contribution.id)
+        contribution = get_object_or_404(Contribution, id=contribution.id)
+        assert contribution.issue is None
 
     # # update_issue_statuses_for_addresses
     def test_contributionmanager_update_issue_statuses_for_addresses_functionality(

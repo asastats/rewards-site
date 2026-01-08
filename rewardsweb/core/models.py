@@ -767,6 +767,27 @@ class ContributionManager(models.Manager):
         )
         return self.addresses_and_amounts_from_contributions(contributions)
 
+    def assign_issue(self, issue_id, contribution_id):
+        """Assign issue `issue_id` to the contribution defined by `contribution_id`.
+
+        :param issue_id: issue object's identifier
+        :type issue_id: int
+        :param contribution_id: contribution object's identifier
+        :type contribution_id: int
+        :var issue: target issue instance
+        :type issue: :class:`core.models.Contribution`
+        :var contribution: contribution to assign to the issue
+        :type contribution: :class:`core.models.Contribution`
+        """
+        try:
+            issue = get_object_or_404(Issue, id=issue_id)
+            contribution = get_object_or_404(Contribution, id=contribution_id)
+            contribution.issue = issue
+            contribution.save()
+
+        except Http404:
+            pass
+
     def update_issue_statuses_for_addresses(self, addresses, contributions):
         """Create collection of addresses and related amounts from `contributions`.
 

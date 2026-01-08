@@ -369,6 +369,9 @@ class AddIssueView(LocalhostAPIView):
         if contribution_data:
             data, errors = await process_issue(request.data)
             if data:
+                Contribution.objects.assign_issue(
+                    data.get("id"), contribution_data.get("id")
+                )
                 return Response(data, status=status.HTTP_201_CREATED)
 
         return Response(errors, status=status.HTTP_400_BAD_REQUEST)

@@ -8,6 +8,7 @@ import requests
 from django.conf import settings
 from django.http import JsonResponse
 
+import issues.base
 from issues.base import BaseIssueProvider, BaseWebhookHandler
 
 
@@ -298,6 +299,9 @@ class TestBaseWebhookHandler:
         mock_response.json.return_value = {"success": True}
         mock_requests_post.return_value = mock_response
         mock_success = mocker.patch("issues.base.BaseWebhookHandler._success_response")
+        mocker.patch.object(
+            issues.base, "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
+        )
         request = mocker.MagicMock()
         request.body = json.dumps({"test": "data"}).encode("utf-8")
         instance = DummyBaseWebhookHandler(request)
@@ -380,6 +384,9 @@ class TestBaseWebhookHandler:
         mock_requests_post.return_value = mock_response
         request = mocker.MagicMock()
         request.body = json.dumps({"test": "data"}).encode("utf-8")
+        mocker.patch.object(
+            issues.base, "REWARDS_API_BASE_URL", "http://127.0.0.1:8000/api"
+        )
         instance = DummyBaseWebhookHandler(request)
         issue_data = {"issue_number": 200, "platform": "GitHub"}
         instance._process_issue_creation(issue_data)

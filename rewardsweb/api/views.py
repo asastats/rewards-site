@@ -1,5 +1,7 @@
 """Module containing Rewards Suite API views."""
 
+import logging
+
 from adrf.views import APIView
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -26,6 +28,8 @@ from core.models import (
 )
 from utils.constants.core import CONTRIBUTIONS_TAIL_SIZE
 from utils.helpers import humanize_contributions
+
+logger = logging.getLogger(__name__)
 
 
 class IsLocalhostPermission(BasePermission):
@@ -280,13 +284,16 @@ def process_contribution(raw_data, confirmed=False):
         "confirmed": confirmed,
     }
 
+    logger.info(f"Contribution received: {raw_data.get('url')}")
     serializer = ContributionSerializer(data=data)
     if serializer.is_valid():
         with transaction.atomic():
             serializer.save()
 
+        logger.info(f"Contribution saved: {serializer.data.get('id')}")
         return serializer.data, None
 
+    logger.error(f"Errors: {serializer.errors}")
     return None, serializer.errors
 
 
@@ -304,13 +311,16 @@ def process_issue(raw_data):
     :rtype: tuple
     """
     data = {"number": raw_data.get("issue_number"), "status": IssueStatus.CREATED}
+    logger.info(f"Issue received: {raw_data.get('issue_number')}")
     serializer = IssueSerializer(data=data)
     if serializer.is_valid():
         with transaction.atomic():
             serializer.save()
 
+        logger.info(f"Issue saved: {serializer.data.get('id')}")
         return serializer.data, None
 
+    logger.error(f"Errors: {serializer.errors}")
     return None, serializer.errors
 
 

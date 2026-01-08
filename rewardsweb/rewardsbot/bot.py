@@ -79,7 +79,8 @@ class RewardsBot(commands.Bot):
             logger.warning("BASE_URL not configured - API features will not work")
 
         logger.info(
-            f"✅ Configuration validated - API Base: {getattr(config, 'BASE_URL', 'Not set')}"
+            f"✅ Configuration validated - API Base: "
+            f"{getattr(config, 'BASE_URL', 'Not set')}"
         )
 
     async def _setup_commands(self):
@@ -92,16 +93,6 @@ class RewardsBot(commands.Bot):
             logger.info(f"✅ Synced {len(synced)} global command(s)")
 
             logger.info(f"🔍 Synced global commands: {[cmd.name for cmd in synced]}")
-
-            # # Sync guild-specific commands if configured
-            # # NOTE: meanwhile env variable changed to comma separated list
-            # if hasattr(config, "GUILD_IDS") and config.GUILD_IDS:
-            #     guild = discord.Object(id=config.GUILD_IDS)
-            #     self.tree.copy_global_to(guild=guild)
-            #     synced_guild = await self.tree.sync(guild=guild)
-            #     logger.info(
-            #         f"✅ Synced {len(synced_guild)} command(s) to guild {config.GUILD_IDS}"
-            #     )
 
         except Exception as e:
             logger.error(f"❌ Failed to setup commands: {e}")

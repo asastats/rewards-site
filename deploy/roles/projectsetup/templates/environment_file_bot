@@ -1,4 +1,4 @@
 DISCORD_BOT_TOKEN={{ hostvars['localhost'].env_vars.DISCORD_BOT_TOKEN }}
 DISCORD_CLIENT_ID={{ hostvars['localhost'].env_vars.DISCORD_CLIENT_ID }}
 DISCORD_GUILD_IDS={{ hostvars['localhost'].env_vars.DISCORD_GUILD_IDS }}
-REWARDS_API_BASE_URL=http://127.0.0.1/api
+REWARDS_API_BASE_URL={{ site_name }}/api

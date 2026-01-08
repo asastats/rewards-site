@@ -42,7 +42,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {
         "file": {
-            "level": "WARNING",
+            "level": "INFO",
             "class": "logging.FileHandler",
             "filename": BASE_DIR.parent.parent.parent / "logs" / "django-warning.log",
         },
@@ -50,7 +50,7 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["file"],
-            "level": "WARNING",
+            "level": "INFO",
             "propagate": True,
         },
     },

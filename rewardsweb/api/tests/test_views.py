@@ -554,6 +554,99 @@ class TestApiViewsProcessFunctions:
         assert errors is None
 
     @pytest.mark.asyncio
+    async def test_api_views_process_contribution_truncated_comment(self, mocker):
+        """Test successful contribution processing."""
+        # Mock request data
+        raw_data = {
+            "username": "testuser",
+            "platform": "twitter",
+            "type": "[reward] Test Reward",
+            "level": 1,
+            "url": "http://example.io/contribution",
+            "comment": "Test " * 55,
+        }
+
+        # Mock all database objects
+        mock_contributor = mocker.MagicMock(spec=Contributor)
+        mock_contributor.id = 1
+
+        mock_cycle = mocker.MagicMock(spec=Cycle)
+        mock_cycle.id = 1
+
+        mock_platform = mocker.MagicMock(spec=SocialPlatform)
+        mock_platform.id = 1
+
+        mock_reward_type = mocker.MagicMock(spec=RewardType)
+
+        mock_reward = mocker.MagicMock(spec=Reward)
+        mock_reward.id = 1
+
+        mock_rewards_queryset = mocker.MagicMock()
+        mock_rewards_queryset.__getitem__.return_value = mock_reward
+
+        mock_serializer = mocker.MagicMock()
+        mock_serializer_data = {"id": 1, "contributor": 1, "cycle": 1}
+        mock_serializer.is_valid.return_value = True
+        mock_serializer.data = mock_serializer_data
+
+        # Mock database calls
+        mock_cntrs = mocker.patch("api.views.Contributor.objects")
+        mock_cntrs.from_full_handle.return_value = mock_contributor
+        mock_cycle_objs = mocker.patch("api.views.Cycle.objects")
+        mock_cycle_objs.latest.return_value = mock_cycle
+        mock_platform_objs = mocker.patch("api.views.SocialPlatform.objects")
+        mock_platform_objs.get.return_value = mock_platform
+        mock_get_object = mocker.patch("api.views.get_object_or_404")
+        mock_get_object.return_value = mock_reward_type
+        mock_reward_objs = mocker.patch("api.views.Reward.objects")
+        mock_reward_objs.filter.return_value = mock_rewards_queryset
+        mock_serializer_class = mocker.patch("api.views.ContributionSerializer")
+        mock_serializer_class.return_value = mock_serializer
+        mocker.patch("api.views.transaction.atomic")
+
+        # Mock sync_to_async to bypass async wrapper and call function directly
+        def sync_wrapper(func):
+            async def async_func(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            return async_func
+
+        mock_sync_to_async = mocker.patch("api.views.sync_to_async")
+        mock_sync_to_async.side_effect = sync_wrapper
+
+        # Call the function
+        data, errors = await process_contribution(raw_data)
+
+        # Verify database calls with correct parsing
+        mock_cntrs.from_full_handle.assert_called_once_with("testuser")
+        mock_cycle_objs.latest.assert_called_once_with("start")
+        mock_platform_objs.get.assert_called_once_with(name="twitter")
+        mock_get_object.assert_called_once_with(
+            RewardType,
+            label="reward",
+            name="Test Reward",
+        )
+        mock_reward_objs.filter.assert_called_once_with(
+            type=mock_reward_type, level=1, active=True
+        )
+        mock_serializer_class.assert_called_once_with(
+            data={
+                "contributor": 1,
+                "cycle": 1,
+                "platform": 1,
+                "reward": 1,
+                "percentage": 1,
+                "url": "http://example.io/contribution",
+                "comment": "Test " * 51,
+                "confirmed": False,
+            }
+        )
+
+        # Verify results
+        assert data == mock_serializer_data
+        assert errors is None
+
+    @pytest.mark.asyncio
     async def test_api_views_process_contribution_validation_error(self, mocker):
         """Test contribution processing with validation errors."""
         raw_data = {

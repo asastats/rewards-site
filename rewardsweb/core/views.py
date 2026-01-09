@@ -1449,6 +1449,6 @@ class IssueWebhookView(View):
         except Exception as e:
             logger.error(f"Webhook processing failed: {str(e)}")
             return JsonResponse(
-                {"status": "error", "message": f"Internal server error: {str(e)}"},
+                {"status": "error", "message": "Internal server error"},
                 status=500,
             )

@@ -11,13 +11,13 @@ class TestUpdatersTelegramTelegramUpdater:
     ):
         assert (
             TelegramUpdater().add_reaction_to_message("some_url", "some_reaction")
-            is None
+            is True
         )
 
     def test_updaters_telegram_telegramupdater_add_reply_to_message_functionality(
         self,
     ):
-        assert TelegramUpdater().add_reply_to_message("some_url", "some_text") is None
+        assert TelegramUpdater().add_reply_to_message("some_url", "some_text") is True
 
     def test_updaters_telegram_telegramupdater_message_from_url_for_no_message_found(
         self, mocker

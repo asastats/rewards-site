@@ -10,13 +10,13 @@ class TestUpdatersRedditRedditUpdater:
         self,
     ):
         assert (
-            RedditUpdater().add_reaction_to_message("some_url", "some_reaction") is None
+            RedditUpdater().add_reaction_to_message("some_url", "some_reaction") is True
         )
 
     def test_updaters_reddit_redditupdater_add_reply_to_message_functionality(
         self,
     ):
-        assert RedditUpdater().add_reply_to_message("some_url", "some_text") is None
+        assert RedditUpdater().add_reply_to_message("some_url", "some_text") is True
 
     def test_updaters_reddit_redditupdater_message_from_url_for_no_message_found(
         self, mocker

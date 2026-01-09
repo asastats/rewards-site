@@ -11,13 +11,13 @@ class TestUpdatersTwitterTwitterUpdater:
     ):
         assert (
             TwitterUpdater().add_reaction_to_message("some_url", "some_reaction")
-            is None
+            is True
         )
 
     def test_updaters_twitter_twitterupdater_add_reply_to_message_functionality(
         self,
     ):
-        assert TwitterUpdater().add_reply_to_message("some_url", "some_text") is None
+        assert TwitterUpdater().add_reply_to_message("some_url", "some_text") is True
 
     def test_updaters_twitter_twitterupdater_message_from_url_functionality(
         self, mocker

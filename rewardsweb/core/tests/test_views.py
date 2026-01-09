@@ -850,7 +850,7 @@ class TestIssueWebhookView:
         assert response.status_code == 500
         response_data = json.loads(response.content)
         assert response_data["status"] == "error"
-        assert "Internal server error: Test error" in response_data["message"]
+        assert "Internal server error" in response_data["message"]
         mock_logger.error.assert_called_once_with(
             "Webhook processing failed: Test error"
         )
@@ -872,9 +872,7 @@ class TestIssueWebhookView:
         assert response.status_code == 500
         response_data = json.loads(response.content)
         assert response_data["status"] == "error"
-        assert (
-            "Internal server error: Handler creation failed" in response_data["message"]
-        )
+        assert "Internal server error" in response_data["message"]
         mock_logger.error.assert_called_once_with(
             "Webhook processing failed: Handler creation failed"
         )

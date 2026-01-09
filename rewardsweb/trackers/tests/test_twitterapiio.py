@@ -182,9 +182,10 @@ class TestTrackersTwitterApiIOTracker:
         mentions = list(tracker._get_all_mentions(since_time=since_time))
         assert len(mentions) == 1
         mock_requests_get.assert_called_once_with(
-            "https://api.twitterapi.io/twitter/user/mentions",
+            "https://api.twitterapi.io/twitter/tweet/advanced_search",
             params={
-                "userName": tracker.target_handle,
+                "queryType": "Latest",
+                "query": "%40test_target_handle%20-from%3Atest_target_handle",
                 "sinceTime": since_time,
                 "cursor": "",
             },

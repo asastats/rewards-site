@@ -136,7 +136,10 @@ class TwitterapiioTracker(BaseMentionTracker):
         :type parent_tweets: dict
         """
         headers = {"X-API-Key": self.api_key}
-        params = {"userName": self.target_handle}
+        params = {
+            "queryType": "Latest",
+            "query": f"%40{self.target_handle}%20-from%3A{self.target_handle}",
+        }
         if since_time:
             params["sinceTime"] = since_time
 
@@ -147,7 +150,7 @@ class TwitterapiioTracker(BaseMentionTracker):
             params["cursor"] = cursor
             try:
                 response = requests.get(
-                    f"{TWITTERAPIIO_BASE_URL}/user/mentions",
+                    f"{TWITTERAPIIO_BASE_URL}/tweet/advanced_search",
                     headers=headers,
                     params=params,
                 )

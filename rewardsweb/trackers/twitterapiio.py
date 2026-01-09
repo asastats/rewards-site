@@ -161,9 +161,9 @@ class TwitterapiioTracker(BaseMentionTracker):
                 self.logger.error(f"An error occurred while fetching mentions: {e}")
                 break
 
-            if data.get("status") != "success":
-                self.logger.error(f"API Error: {data.get('message', 'Unknown error')}")
-                break
+            # if data.get("status") != "success":
+            #     self.logger.error(f"API Error: {data.get('message', 'Unknown error')}")
+            #     break
 
             tweets_page = data.get("tweets", [])
             mentions_batch.extend(tweets_page)

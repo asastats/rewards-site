@@ -864,7 +864,7 @@ class TestContributionInvalidateViewDb:
         assert "Confirm as Duplicate" in content
 
     def test_contributioninvalidateview_original_comment_in_context_message_success(
-        self, client, superuser, invalidate_url, mock_message_from_url
+        self, client, superuser, invalidate_url, mock_message_from_url_no_ms
     ):
         """Test that original comment is included when message_from_url returns success."""
         client.force_login(superuser)

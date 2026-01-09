@@ -175,6 +175,7 @@ def _prepare_issue_body_from_contribution(contribution, profile):
         timestamp = datetime.strptime(
             message.get("timestamp"), "%Y-%m-%dT%H:%M:%S.%f%z"
         ).strftime("%d %b %H:%M")
+
         contributor = _contributor_link(message.get("author"))
         issue_body = (
             f"By {contributor} on {timestamp} in [{contribution.platform.name.title()}]"

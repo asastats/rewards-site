@@ -1,47 +1,20 @@
 ---
-- name: Add SSH login banner to /etc/issue.net
-  ansible.builtin.lineinfile:
-    path: /etc/issue.net
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
+- name: Add SSH login banner to /etc/ssh/sshd-banner
+  ansible.builtin.template:
+    src: sshd-banner.txt
+    dest: /etc/ssh/sshd-banner
+    owner: root
+    group: root
+    mode: "0644"
   become: true
-  loop:
-    - { regexp: '^#################', line: '####################################################################' }
-    - { regexp: '^# evidence from s', line: '# evidence from such monitoring to law enforcement officials.      #' }
-    - { regexp: '^# evidence of cri', line: '# evidence of criminal activity, system personnel may provide the  #' }
-    - { regexp: '^# and is advised ', line: '# and is advised that if such monitoring reveals possible          #' }
-    - { regexp: '^# Anyone using th', line: '# Anyone using this system expressly consents to such monitoring   #' }
-    - { regexp: '^#                ', line: '#                                                                  #' }
-    - { regexp: '^# this system may', line: '# this system may be monitored and recorded by system personnel.   #' }
-    - { regexp: '^# This system is ', line: '# This system is for the use of authorized users only.  Usage of   #' }
-    - { regexp: '^ ################', line: ' ###################################################################' }
-  notify: Restart ssh
-  tags: [audit, audit-banners]
-
-- name: Add SSH login banner to /etc/issue
-  ansible.builtin.lineinfile:
-    path: /etc/issue
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  become: true
-  loop:
-    - { regexp: '^#################', line: '####################################################################' }
-    - { regexp: '^# evidence from s', line: '# evidence from such monitoring to law enforcement officials.      #' }
-    - { regexp: '^# evidence of cri', line: '# evidence of criminal activity, system personnel may provide the  #' }
-    - { regexp: '^# and is advised ', line: '# and is advised that if such monitoring reveals possible          #' }
-    - { regexp: '^# Anyone using th', line: '# Anyone using this system expressly consents to such monitoring   #' }
-    - { regexp: '^#                ', line: '#                                                                  #' }
-    - { regexp: '^# this system may', line: '# this system may be monitored and recorded by system personnel.   #' }
-    - { regexp: '^# This system is ', line: '# This system is for the use of authorized users only.  Usage of   #' }
-    - { regexp: '^ ################', line: ' ###################################################################' }
   notify: Restart ssh
   tags: [audit, audit-banners]
 
 - name: Enable banner in sshd_config
   ansible.builtin.replace:
     path: /etc/ssh/sshd_config
-    regexp: "^#Banner /etc/issue.net"
-    replace: "Banner /etc/issue.net"
+    regexp: "^#Banner none"
+    replace: "Banner /etc/ssh/sshd-banner"
   become: true
   when: not is_molecule_test | default(false)
   notify: Restart ssh

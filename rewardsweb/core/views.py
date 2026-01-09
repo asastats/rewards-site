@@ -224,9 +224,16 @@ class ContributionInvalidateView(UpdateView):
         message = updater.message_from_url(contribution.url)
         if message.get("success"):
             author = message.get("author")
-            timestamp = datetime.strptime(
-                message.get("timestamp"), "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).strftime("%d %b %H:%M")
+            try:
+                timestamp = datetime.strptime(
+                    message.get("timestamp"), "%Y-%m-%dT%H:%M:%S.%f%z"
+                ).strftime("%d %b %H:%M")
+
+            except ValueError:
+                timestamp = datetime.strptime(
+                    message.get("timestamp"), "%Y-%m-%dT%H:%M:%S%z"
+                ).strftime("%d %b %H:%M")
+
             original_comment = f"    {author} - {timestamp}\n\n"
             for line in message.get("contribution").split("\n"):
                 original_comment += f"{line}\n"

@@ -113,3 +113,18 @@ def mock_message_from_url():
         }
         mock_update_provider.return_value = mock_updater_instance
         yield mock_update_provider
+
+
+@pytest.fixture
+def mock_message_from_url_no_ms():
+    """Mock the message_from_url function."""
+    with mock.patch("core.views.UpdateProvider") as mock_update_provider:
+        mock_updater_instance = mock.MagicMock()
+        mock_updater_instance.message_from_url.return_value = {
+            "success": True,
+            "author": "test_user_string",
+            "timestamp": "2024-01-01T12:00:00+00:00",
+            "contribution": "Test message content",
+        }
+        mock_update_provider.return_value = mock_updater_instance
+        yield mock_update_provider

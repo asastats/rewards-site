@@ -49,7 +49,6 @@ by uncommenting the related line in the `deploy/site_playbook.yml`.
 Issue trackers setup
 --------------------
 
-
 GitHub
 ^^^^^^
 
@@ -58,7 +57,8 @@ GitHub bot
 
 Create rewards-bot as a GitHub App and then install it under your organization's settings page.
 
-Assign created app's token to GITHUB_BOT_TOKEN constant in `rewardsweb/.env` file.
+Copy created app's private key to `rewardsweb/fixtures/` directory.
+
 
 GitHub webhook
 ~~~~~~~~~~~~~~

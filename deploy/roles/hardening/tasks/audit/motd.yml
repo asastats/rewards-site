@@ -1,4 +1,11 @@
 ---
+- name: Make sure landscape-sysinfo is installed
+  ansible.builtin.apt:
+    name: landscape-common
+    state: present
+  become: true
+  tags: [audit, audit-motd]
+
 - name: Deploy custom /etc/motd
   ansible.builtin.template:
     src: motd.txt
@@ -9,7 +16,7 @@
   become: true
   tags: [audit, audit-motd]
 
-- name: Remove default MOTD help text
+- name: Update default MOTD help text
   ansible.builtin.lineinfile:
     path: /etc/update-motd.d/10-help-text
     state: absent

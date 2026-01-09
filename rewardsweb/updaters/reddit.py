@@ -17,7 +17,7 @@ class RedditUpdater(BaseUpdater):
         :param reaction_name: name of the reaction to add (e.g. "duplicate")
         :type reaction_name: str
         """
-        return None
+        return True
 
     def add_reply_to_message(self, url, text):
         """Add reply to message.
@@ -29,7 +29,7 @@ class RedditUpdater(BaseUpdater):
         :param text: text to reply with
         :type text: str
         """
-        return None
+        return True
 
     def message_from_url(self, url):
         """Retrieve message content from provided Reddit `url`.

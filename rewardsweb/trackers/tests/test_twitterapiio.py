@@ -177,7 +177,7 @@ class TestTrackersTwitterApiIOTracker:
             "next_cursor": "",
         }
         mock_requests_get.return_value = mock_response
-        since_time = 123456789
+        since_time = 1765905715
         tracker = TwitterapiioTracker(lambda x: True, twitterapiio_config)
         mentions = list(tracker._get_all_mentions(since_time=since_time))
         assert len(mentions) == 1
@@ -185,8 +185,10 @@ class TestTrackersTwitterApiIOTracker:
             "https://api.twitterapi.io/twitter/tweet/advanced_search",
             params={
                 "queryType": "Latest",
-                "query": "%40test_target_handle%20-from%3Atest_target_handle",
-                "sinceTime": since_time,
+                "query": (
+                    "@test_target_handle -from:test_target_handle "
+                    "since:2025-12-16_17:21:55_UTC"
+                ),
                 "cursor": "",
             },
             headers={"X-API-Key": tracker.api_key},

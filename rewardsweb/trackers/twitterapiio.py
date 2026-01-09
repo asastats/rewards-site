@@ -1,7 +1,7 @@
 "Module containing class for tracking mentions on X using TwitterAPI.io."
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 import requests
@@ -138,10 +138,13 @@ class TwitterapiioTracker(BaseMentionTracker):
         headers = {"X-API-Key": self.api_key}
         params = {
             "queryType": "Latest",
-            "query": f"%40{self.target_handle}%20-from%3A{self.target_handle}",
+            "query": f"@{self.target_handle} -from:{self.target_handle}",
         }
         if since_time:
-            params["sinceTime"] = since_time
+            formatted = datetime.fromtimestamp(since_time, tz=timezone.utc).strftime(
+                " since:%Y-%m-%d_%H:%M:%S_UTC"
+            )
+            params["query"] += formatted
 
         cursor = ""
         mentions_batch = []
@@ -160,10 +163,6 @@ class TwitterapiioTracker(BaseMentionTracker):
             except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
                 self.logger.error(f"An error occurred while fetching mentions: {e}")
                 break
-
-            # if data.get("status") != "success":
-            #     self.logger.error(f"API Error: {data.get('message', 'Unknown error')}")
-            #     break
 
             tweets_page = data.get("tweets", [])
             mentions_batch.extend(tweets_page)

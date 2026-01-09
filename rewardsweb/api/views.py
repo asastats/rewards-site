@@ -280,7 +280,7 @@ def process_contribution(raw_data, confirmed=False):
         "reward": rewards[0].id,
         "percentage": 1,
         "url": raw_data.get("url"),
-        "comment": raw_data.get("comment"),
+        "comment": raw_data.get("comment", "")[:255],
         "confirmed": confirmed,
     }
 

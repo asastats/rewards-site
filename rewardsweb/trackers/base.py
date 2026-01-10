@@ -152,6 +152,9 @@ class BaseMentionTracker:
                 return False
 
             parsed_message = self.parse_message_callback(data.get("content"), username)
+            if parsed_message is None:
+                return None
+
             contribution_data = self.prepare_contribution_data(parsed_message, data)
             self.post_new_contribution(contribution_data)
             self.mark_processed(item_id, data)

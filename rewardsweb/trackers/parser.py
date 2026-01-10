@@ -140,9 +140,6 @@ class MessageParser:
         :return: A dictionary containing the parsed type, level, and title.
         :rtype: dict
         """
-        if arg not in message:
-            return None
-
         result = {"type": None, "level": 1, "comment": ""}
 
         work_message = self._clean_message(message, arg)

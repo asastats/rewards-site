@@ -14,6 +14,18 @@ class TestTrackersParser:
         return MessageParser()
 
     @pytest.mark.parametrize(
+        "message, arg, expected",
+        [
+            ("  @myhandle  message  ", "@myhandle", "message"),
+            ("message with no arg", "@myhandle", "message with no arg"),
+            ("  multiple   spaces  ", "arg", "multiple spaces"),
+        ],
+    )
+    def test_trackers_parser_clean_message(self, parser, message, arg, expected):
+        """Test the _clean_message method."""
+        assert parser._clean_message(message, arg) == expected
+
+    @pytest.mark.parametrize(
         "code,typ",
         [
             ("F", "[F] Feature Request"),
@@ -29,18 +41,6 @@ class TestTrackersParser:
     def test_trackers_parser_full_type_from_parsed_type(self, parser, code, typ):
         """Test the _clean_message method."""
         assert parser._full_type_from_parsed_type(code) == typ
-
-    @pytest.mark.parametrize(
-        "message, arg, expected",
-        [
-            ("  @myhandle  message  ", "@myhandle", "message"),
-            ("message with no arg", "@myhandle", "message with no arg"),
-            ("  multiple   spaces  ", "arg", "multiple spaces"),
-        ],
-    )
-    def test_trackers_parser_clean_message(self, parser, message, arg, expected):
-        """Test the _clean_message method."""
-        assert parser._clean_message(message, arg) == expected
 
     @pytest.mark.parametrize(
         "message, expected_type, expected_level, expected_remaining",

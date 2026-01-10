@@ -148,7 +148,7 @@ class BaseMentionTracker:
         :rtype: bool
         """
         try:
-            if self.is_processed(item_id):
+            if self.is_processed(item_id) or username not in data.get("content"):
                 return False
 
             parsed_message = self.parse_message_callback(data.get("content"), username)

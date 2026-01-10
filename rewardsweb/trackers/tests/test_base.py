@@ -121,7 +121,22 @@ class TestTrackersBaseMentionTracker:
         mock_is_processed.return_value = True
         mock_callback, username = mocker.MagicMock(), mocker.MagicMock()
         instance = BaseMentionTracker("test_platform", mock_callback)
-        result = instance.process_mention("test_item_id", {}, username)
+        username = "username"
+        test_data = {"suggester": "test_user", "content": f"content {username}"}
+        result = instance.process_mention("test_item_id", test_data, username)
+        assert result is False
+        mock_callback.assert_not_called()
+
+    def test_trackers_base_basementiontracker_process_mention_username_not_in_content(
+        self, mocker
+    ):
+        mock_is_processed = mocker.patch.object(BaseMentionTracker, "is_processed")
+        mock_is_processed.return_value = False
+        mock_callback, username = mocker.MagicMock(), mocker.MagicMock()
+        instance = BaseMentionTracker("test_platform", mock_callback)
+        test_data = {"suggester": "test_user", "content": "content"}
+        username = "username"
+        result = instance.process_mention("test_item_id", test_data, username)
         assert result is False
         mock_callback.assert_not_called()
 
@@ -144,11 +159,11 @@ class TestTrackersBaseMentionTracker:
         mock_callback = mocker.MagicMock(return_value={"parsed": "data"})
         instance = BaseMentionTracker("test_platform", mock_callback)
         instance.logger = mock_logger
-        test_data = {"suggester": "test_user", "content": "content"}
         username = "username"
+        test_data = {"suggester": "test_user", "content": f"content {username}"}
         result = instance.process_mention("test_item_id", test_data, username)
         assert result is True
-        mock_callback.assert_called_once_with("content", "username")
+        mock_callback.assert_called_once_with(f"content {username}", "username")
         mock_prepare_contribution_data.assert_called_once_with(
             {"parsed": "data"}, test_data
         )
@@ -168,7 +183,9 @@ class TestTrackersBaseMentionTracker:
         mock_callback = mocker.MagicMock(side_effect=Exception("Test error"))
         instance = BaseMentionTracker("test_platform", mock_callback)
         instance.logger = mock_logger
-        result = instance.process_mention("test_item_id", {}, "username")
+        username = "username"
+        test_data = {"suggester": "test_user", "content": f"content {username}"}
+        result = instance.process_mention("test_item_id", test_data, username)
         assert result is False
         mock_logger.error.assert_called_once_with(
             "Error processing mention test_item_id: Test error"
